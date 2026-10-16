@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/jpeg" href="images/zglf-logo.jpg">
+  <title>Zee Glow Link Foundation — Hope · Empowerment · Service</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter','sans-serif'], serif: ['Playfair Display','serif'] },
+          colors: {
+            azure: { 50:'#eef4ff',100:'#d9e6ff',200:'#bcd3ff',300:'#8eb6ff',400:'#5990ff',500:'#3366ff',600:'#2148e6',700:'#1a37b8',800:'#122660',900:'#0c1a42',950:'#070f28' },
+            gold: { 400:'#f5c842',500:'#e6b01a',600:'#c4910f' },
+            cream: '#fdf8ef'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;}
+    html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+    body{font-family:'Inter',sans-serif;color:#0c1a42;margin:0;overflow-x:hidden;background:#fff;}
+    img{max-width:100%;height:auto;display:block;}
+
+    .gold-text{background:linear-gradient(135deg,#f5c842 0%,#ffdf7e 50%,#f5c842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .glass{background:rgba(255,255,255,0.14);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.2);box-shadow:0 4px 20px rgba(0,0,0,0.3);}
+    .card-hover{transition:all .35s cubic-bezier(.4,0,.2,1);}
+    .card-hover:hover{transform:translateY(-6px);box-shadow:0 25px 50px -12px rgba(12,26,66,.25);}
+    .btn-gold{background:linear-gradient(135deg,#e6b01a,#f5c842);color:#0c1a42;font-weight:700;transition:all .3s;box-shadow:0 4px 20px rgba(245,200,66,.35);display:inline-flex;align-items:center;gap:.5rem;white-space:nowrap;}
+    .btn-gold:hover{box-shadow:0 8px 30px rgba(245,200,66,.55);transform:translateY(-2px);}
+    .btn-outline{border:2px solid rgba(255,255,255,.4);color:#fff;font-weight:600;transition:all .3s;background:transparent;display:inline-flex;align-items:center;gap:.5rem;}
+    .btn-outline:hover{border-color:#f5c842;color:#f5c842;background:rgba(245,200,66,.08);}
+    .btn-outline-dark{border:2px solid #1a37b8;color:#1a37b8;font-weight:600;transition:all .3s;background:transparent;}
+    .btn-outline-dark:hover{background:#1a37b8;color:#fff;}
+
+    /* HERO - much darker with subtle background image */
+    .hero-bg{background:#030611;background:linear-gradient(160deg,#030611 0%,#050a1a 30%,#070f28 60%,#0c1a42 100%);min-height:100vh;position:relative;overflow:hidden;}
+    .hero-bg-img{position:absolute;inset:0;background-image:url('images/hero-bg.jpg');background-size:cover;background-position:center;opacity:0.22;mix-blend-mode:overlay;pointer-events:none;}
+    .hero-bg::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 30%,rgba(26,55,184,0.2) 0%,transparent 55%);pointer-events:none;}
+    .hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(3,6,17,0.4) 0%,rgba(3,6,17,0.2) 50%,rgba(3,6,17,0.7) 100%);pointer-events:none;}
+    .hero-bg > *{position:relative;z-index:2;}
+    .radiance{position:absolute;border-radius:50%;filter:blur(100px);opacity:.2;animation:radiate 7s ease-in-out infinite;pointer-events:none;}
+    @keyframes radiate{0%,100%{transform:scale(1);opacity:.15}50%{transform:scale(1.1);opacity:.25}}
+    .blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.15;animation:blob 10s ease-in-out infinite;pointer-events:none;}
+    @keyframes blob{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-30px) scale(1.08)}66%{transform:translate(-20px,20px) scale(.95)}}
+    .dot-pattern{background-image:radial-gradient(circle,rgba(255,255,255,.06) 1px,transparent 1px);background-size:28px 28px;}
+    .dot-pattern-light{background-image:radial-gradient(circle,rgba(12,26,66,.05) 1px,transparent 1px);background-size:28px 28px;}
+    .glow{box-shadow:0 0 60px rgba(245,200,66,.25),0 0 120px rgba(51,102,255,.15);}
+    .dove-float{animation:dovefloat 6s ease-in-out infinite;}
+    @keyframes dovefloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
+    .star-ray{animation:twinkle 3s ease-in-out infinite;}
+    @keyframes twinkle{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.15)}}
+    .scroll-indicator{animation:bounce 2s infinite;}
+    @keyframes bounce{0%,20%,50%,80%,100%{transform:translateY(0)}40%{transform:translateY(-10px)}60%{transform:translateY(-5px)}}
+
+    /* NAV - solid */
+    #navbar{background:rgba(7,15,40,.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(245,200,66,.08);position:fixed;top:0;left:0;right:0;z-index:50;}
+    #navbar.scrolled{background:rgba(7,15,40,.99);box-shadow:0 4px 20px rgba(0,0,0,.3);}
+    .nav-link{position:relative;color:rgba(255,255,255,.78);font-size:.9rem;font-weight:500;transition:color .2s;text-decoration:none;}
+    .nav-link:hover,.nav-link.active{color:#f5c842;}
+    .nav-link.active::after{content:'';position:absolute;bottom:-6px;left:0;right:0;height:2px;background:linear-gradient(90deg,#f5c842,#e6b01a);border-radius:2px;}
+
+    /* Mobile menu */
+    .mobile-menu{position:fixed;inset:0;z-index:60;background:#070f28;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);overflow-y:auto;}
+    .mobile-menu.open{transform:translateX(0);}
+
+    /* Reveal on scroll */
+    .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease;}
+    .reveal.in{opacity:1;transform:translateY(0);}
+
+    /* SPA page transition */
+    #app-page{opacity:0;transform:translateY(8px);transition:opacity .3s ease,transform .3s ease;min-height:400px;}
+    #app-page.mounted{opacity:1;transform:translateY(0);}
+
+    /* Skeleton */
+    .skeleton{background:linear-gradient(90deg,#eef1f6 25%,#f6f7fa 50%,#eef1f6 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px;}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+    /* Partners ticker */
+    .ticker-wrap{overflow:hidden;position:relative;}
+    .ticker-track{display:flex;gap:1.5rem;animation:scroll-left 50s linear infinite;width:max-content;}
+    .ticker-wrap:hover .ticker-track{animation-play-state:paused;}
+    @keyframes scroll-left{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+    .ticker-fade-l,.ticker-fade-r{position:absolute;top:0;bottom:0;width:80px;z-index:2;pointer-events:none;}
+    .ticker-fade-l{left:0;background:linear-gradient(90deg,#fdf8ef,transparent);}
+    .ticker-fade-r{right:0;background:linear-gradient(270deg,#fdf8ef,transparent);}
+    .partner-tile{flex-shrink:0;width:190px;min-height:82px;border-radius:12px;background:#fff;border:1px solid #e5e9f2;display:flex;align-items:center;justify-content:center;gap:.6rem;font-weight:700;color:#1a37b8;font-size:.8rem;text-align:center;padding:.75rem .75rem;transition:all .3s;cursor:default;}
+    .partner-tile.linked{cursor:pointer;}
+    .partner-tile.linked:hover{box-shadow:0 10px 25px -10px rgba(33,72,230,.3);border-color:#f5c842;transform:translateY(-3px);}
+    .partner-logo{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75rem;color:#fff;flex-shrink:0;}
+
+    /* Hero carousel */
+    .hero-photo{position:absolute;inset:0;opacity:0;transition:opacity 1.2s ease-in-out;background-size:cover;background-position:center;}
+    .hero-photo.active{opacity:1;}
+    .carousel-dot{width:28px;height:3px;background:rgba(255,255,255,.3);border-radius:2px;cursor:pointer;transition:all .3s;border:0;padding:0;}
+    .carousel-dot.active{background:#f5c842;width:42px;}
+
+    /* Hero text shadow for readability */
+    .hero-text-shadow{text-shadow:0 2px 25px rgba(0,0,0,1),0 0 50px rgba(0,0,0,0.8)!important;color:#fff !important;}
+    .hero-text-shadow-sm{text-shadow:0 2px 18px rgba(0,0,0,0.95),0 0 30px rgba(0,0,0,0.5)!important;color:rgba(255,255,255,0.95) !important;}
+    /* Mobile pills more visible */
+    .hero-pill{background:rgba(255,255,255,0.18) !important;border:1px solid rgba(255,255,255,0.28) !important;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+    /* Ensure buttons have icons and text centered */
+    .btn-gold,.btn-outline{text-align:center;}
+    form button[type="submit"]{width:100%;display:flex;justify-content:center;align-items:center;}
+
+    /* NEC portrait */
+    .nec-portrait{aspect-ratio:1/1;object-fit:cover;width:100%;border-radius:1rem;}
+
+    /* Program card link */
+    .program-card-link{cursor:pointer;text-decoration:none;color:inherit;display:block;}
+    .program-card-link:hover .program-arrow{transform:translateX(4px);}
+    .program-arrow{transition:transform .3s;}
+
+    /* Back button */
+    .back-link{display:inline-flex;align-items:center;gap:.5rem;color:#1a37b8;font-weight:600;font-size:.9rem;text-decoration:none;transition:color .2s;}
+    .back-link:hover{color:#c4910f;}
+
+    /* Responsive tweaks */
+    @media(max-width:1023px){
+      .hero-text-h1{font-size:2.75rem !important;line-height:1.1 !important;}
+    }
+    @media(max-width:640px){
+      .hero-text-h1{font-size:2.25rem !important;}
+      .section-py{padding-top:4rem !important;padding-bottom:4rem !important;}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav id="navbar">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 sm:py-3">
+      <div class="flex items-center justify-between">
+        <a href="#/" class="flex items-center gap-2.5 shrink-0">
+          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-white/10 backdrop-blur-sm p-1 shadow-md border border-gold-400/20 shrink-0"><img src="images/zglf-logo.jpg" alt="ZGLF" class="w-full h-full object-contain rounded-md"></div>
+          <div class="leading-tight">
+            <span class="block text-[14px] sm:text-[15px] font-bold text-white tracking-tight">Zee Glow Link</span>
+            <span class="block text-[8px] sm:text-[9px] text-gold-400 uppercase tracking-[0.22em] font-semibold">Foundation</span>
+          </div>
+        </a>
+        <div class="hidden lg:flex items-center gap-6 xl:gap-7" id="desktop-nav">
+          <a href="#/" data-route="/" class="nav-link">Home</a>
+          <a href="#/about" data-route="/about" class="nav-link">About</a>
+          <a href="#/programs" data-route="/programs" class="nav-link">What We Do</a>
+          <a href="#/membership" data-route="/membership" class="nav-link">Membership</a>
+          <a href="#/contact" data-route="/contact" class="nav-link">Contact</a>
+        </div>
+        <div class="hidden lg:flex items-center gap-3">
+          <a href="#/membership" class="text-white/80 hover:text-gold-400 text-sm font-medium transition px-3 py-2">Join</a>
+          <a href="#/donate" class="btn-gold px-5 py-2.5 rounded-full text-sm">Donate</a>
+        </div>
+        <button id="menu-btn" class="lg:hidden text-white text-xl p-2 -mr-2"><i class="fa-solid fa-bars"></i></button>
+      </div>
+    </div>
+  </nav>
+
+  <div id="mobile-menu" class="mobile-menu">
+    <div class="flex flex-col h-full p-6 sm:p-8">
+      <div class="flex justify-between items-center mb-10">
+        <a href="#/" class="flex items-center gap-3 mobile-link shrink-0">
+          <div class="w-11 h-11 rounded-xl bg-white/10 backdrop-blur-sm p-1 shadow-md border border-gold-400/20 shrink-0"><img src="images/zglf-logo.jpg" alt="ZGLF" class="w-full h-full object-contain rounded-lg"></div>
+          <div class="leading-tight">
+            <span class="block text-[15px] font-bold text-white">Zee Glow Link</span>
+            <span class="block text-[9px] text-gold-400 uppercase tracking-[0.22em] font-semibold">Foundation</span>
+          </div>
+        </a>
+        <button id="close-menu" class="text-white text-2xl p-2"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="flex flex-col gap-5 text-white text-xl font-light">
+        <a href="#/" class="mobile-link hover:text-gold-400">Home</a>
+        <a href="#/about" class="mobile-link hover:text-gold-400">About</a>
+        <a href="#/programs" class="mobile-link hover:text-gold-400">What We Do</a>
+        <a href="#/membership" class="mobile-link hover:text-gold-400">Membership</a>
+        <a href="#/contact" class="mobile-link hover:text-gold-400">Contact</a>
+      </div>
+      <div class="mt-auto pt-8">
+        <a href="#/donate" class="mobile-link btn-gold block text-center px-8 py-3.5 rounded-full font-bold">Donate</a>
+      </div>
+    </div>
+  </div>
+
+  <main id="app" class="pt-16"></main>
+
+  <footer class="bg-azure-950 text-white/60 pt-12 pb-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+        <div class="col-span-2 md:col-span-2 lg:col-span-1">
+          <a href="#/" class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm p-1.5 shadow-md border border-gold-400/20 shrink-0"><img src="images/zglf-logo.jpg" alt="ZGLF" class="w-full h-full object-contain rounded-lg"></div>
+            <div class="leading-tight">
+              <span class="block text-[15px] font-bold text-white">Zee Glow Link</span>
+              <span class="block text-[9px] text-gold-400 uppercase tracking-[0.22em] font-semibold">Foundation</span>
+            </div>
+          </a>
+          <p class="text-sm italic text-gold-400/80 mb-2 font-serif">"Hope · Empowerment · Service"</p>
+          <p class="text-sm leading-relaxed mb-4">Spreading hope, empowering communities, delivering selfless service with integrity.</p>
+          <div class="flex gap-2">
+            <a href="#" class="w-9 h-9 rounded-full bg-white/5 hover:bg-gold-400/20 hover:text-gold-400 flex items-center justify-center transition"><i class="fa-brands fa-facebook-f text-sm"></i></a>
+            <a href="#" class="w-9 h-9 rounded-full bg-white/5 hover:bg-gold-400/20 hover:text-gold-400 flex items-center justify-center transition"><i class="fa-brands fa-x-twitter text-sm"></i></a>
+            <a href="#" class="w-9 h-9 rounded-full bg-white/5 hover:bg-gold-400/20 hover:text-gold-400 flex items-center justify-center transition"><i class="fa-brands fa-instagram text-sm"></i></a>
+            <a href="#" class="w-9 h-9 rounded-full bg-white/5 hover:bg-gold-400/20 hover:text-gold-400 flex items-center justify-center transition"><i class="fa-brands fa-whatsapp text-sm"></i></a>
+          </div>
+        </div>
+        <div>
+          <h4 class="text-white font-semibold mb-3 text-sm uppercase tracking-wider">What We Do</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#/program/scholarship" class="hover:text-gold-400">Scholarships</a></li>
+            <li><a href="#/program/skills" class="hover:text-gold-400">Skills Acquisition</a></li>
+            <li><a href="#/program/relief" class="hover:text-gold-400">Food & Relief</a></li>
+            <li><a href="#/program/medical" class="hover:text-gold-400">Medical Outreach</a></li>
+            <li><a href="#/program/literacy" class="hover:text-gold-400">Adult Literacy</a></li>
+            <li><a href="#/program/microgrant" class="hover:text-gold-400">Micro-Grants</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white font-semibold mb-3 text-sm uppercase tracking-wider">Get Involved</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#/membership" class="hover:text-gold-400">Become a Member</a></li>
+            <li><a href="#/donate" class="hover:text-gold-400">Donate</a></li>
+            <li><a href="#/contact" class="hover:text-gold-400">Volunteer</a></li>
+            <li><a href="#/contact" class="hover:text-gold-400">Partnerships</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white font-semibold mb-3 text-sm uppercase tracking-wider">Organization</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#/about" class="hover:text-gold-400">About ZGLF</a></li>
+            <li><a href="#/about" class="hover:text-gold-400">Vision & Mission</a></li>
+            <li><a href="#/about" class="hover:text-gold-400">National Executive Council</a></li>
+            <li><a href="#/contact" class="hover:text-gold-400">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-white/10 pt-5 text-center text-xs text-white/50">
+        © 2026 Zee Glow Link Foundation (ZGLF). All rights reserved. Registered civil welfare organisation, Nigeria.
+      </div>
+    </div>
+  </footer>
+
+  <script>
+  /* ============ DATA ============ */
+  const CONST = {
+    name:"Zee Glow Link Foundation", abbr:"ZGLF",
+    motto:"Hope · Empowerment · Service",
+    vision:"To uphold unity, peace, excellence and sustainable development for a better world.",
+    mission:"To spread hope, empower communities and deliver selfless services with integrity and compassion.",
+    hq:"Sabuwar Hanya, Tsamiyar Masaka Road, Tudun Wada, Gusau, Zamfara State, Nigeria",
+    pillars:[
+      {title:"Youth Empowerment",tag:"Pillar One",tagColor:"text-gold-400",gradient:"from-gold-400 to-gold-600",icon:"fa-user-graduate",img:"images/youth-empowerment.jpg",
+       desc:"Promoting youth development through education, vocational training, entrepreneurship support, and leadership programs — nurturing the next generation of Nigerian leaders.",
+       tags:["Vocational Training","Entrepreneurship","Leadership"]},
+      {title:"Community Development",tag:"Pillar Two",tagColor:"text-azure-300",gradient:"from-azure-500 to-azure-700",icon:"fa-people-roof",img:"images/community-dev.jpg",
+       desc:"Advancing community welfare through social development projects, advocacy, capacity building and humanitarian services that strengthen the fabric of society.",
+       tags:["Infrastructure","Advocacy","Capacity Building"]},
+      {title:"Education",tag:"Pillar Three",tagColor:"text-emerald-300",gradient:"from-emerald-500 to-emerald-700",icon:"fa-book-open-reader",img:"images/education-scholarship.jpg",
+       desc:"Providing educational support, facilitating scholarship awards, literacy programs, and training opportunities for underserved communities.",
+       tags:["Scholarships","Literacy Programs","Learning Support"]},
+      {title:"Humanitarian Services",tag:"Pillar Four",tagColor:"text-rose-300",gradient:"from-rose-500 to-rose-700",icon:"fa-hand-holding-medical",img:"images/humanitarian-food.jpg",
+       desc:"Providing relief, welfare assistance, healthcare awareness, and support to vulnerable individuals and communities, especially in times of crisis.",
+       tags:["Emergency Relief","Healthcare Awareness","Welfare"]}
+    ],
+    programs:[
+      {slug:"scholarship",title:"Scholarship Scheme",tag:"Education",tagColor:"#2148e6",icon:"fa-book-open",img:"images/education-scholarship.jpg",
+       short:"Need-based scholarships covering tuition, books, and materials for indigent students from primary through tertiary levels.",
+       full:`<p>Our Scholarship Scheme is one of ZGLF's flagship education programs. We believe no child should be denied an education because of financial hardship.</p>
+       <p>The scheme provides need-based scholarships that cover <strong>tuition fees, textbooks, school uniforms, writing materials, and examination fees</strong> for indigent students from primary school through tertiary institutions.</p>
+       <p>Scholarship recipients are selected based on demonstrated financial need, academic promise, and community character. Each scholar is paired with a mentor and receives ongoing support throughout their academic journey.</p>
+       <h4>What the scholarship covers</h4>
+       <ul><li>Full or partial tuition fees</li><li>Textbooks and essential learning materials</li><li>School uniforms and supplies</li><li>WAEC/NECO/JAMB registration where needed</li><li>Mentorship and academic guidance</li></ul>
+       <h4>Eligibility</h4>
+       <ul><li>Demonstrated financial need</li><li>Residence in ZGLF operating communities</li><li>Commitment to academic progress</li><li>Letter of recommendation from school or community leader</li></ul>`},
+      {slug:"skills",title:"Skills Acquisition Program",tag:"Youth Empowerment",tagColor:"#c4910f",icon:"fa-screwdriver-wrench",img:"images/youth-empowerment.jpg",
+       short:"Free vocational training in tailoring, welding, ICT, hairdressing, and agribusiness — complete with starter kits for graduates.",
+       full:`<p>Our Skills Acquisition Program equips young people and women with marketable vocational skills that enable them to earn a sustainable livelihood, reducing unemployment and empowering economic independence.</p>
+       <p>Training is delivered free of charge by qualified instructors at our skills centres and partner locations. Courses typically run for 3–12 months depending on the trade.</p>
+       <h4>Trades we teach</h4>
+       <ul><li>Tailoring and fashion design</li><li>Welding and metal fabrication</li><li>ICT / Computer literacy and basic software</li><li>Hairdressing and cosmetology</li><li>Agribusiness and modern farming techniques</li><li>Barbing / Hair-styling</li><li>Catering and event management</li></ul>
+       <h4>Starter Kits</h4>
+       <p>Upon successful completion of training and assessment, each graduate receives a <strong>starter tool kit</strong> relevant to their trade — a sewing machine for tailors, toolbox for welders, computer for ICT trainees, etc. — enabling them to begin earning immediately.</p>`},
+      {slug:"relief",title:"Ramadan & Food Relief",tag:"Humanitarian",tagColor:"#d32f2f",icon:"fa-bowl-rice",img:"images/humanitarian-food.jpg",
+       short:"Annual food distribution during Ramadan and emergency relief for families affected by conflict or natural disaster.",
+       full:`<p>ZGLF provides food relief to vulnerable families, particularly during the holy month of Ramadan, as well as emergency support for communities affected by conflict, flooding, or other natural disasters.</p>
+       <p>Our annual Ramadan food distribution delivers bags of staple foodstuffs — rice, millet, maize, groundnut oil, sugar, and other essentials — to widows, orphans, internally displaced persons, and low-income families across Zamfara State and beyond.</p>
+       <h4>What we distribute</h4>
+       <ul><li>Bags of rice, maize, and millet</li><li>Groundnut oil and cooking ingredients</li><li>Sugar, tea, and basic provisions</li><li>Clothing for children (Eid gifts)</li></ul>
+       <h4>Emergency Response</h4>
+        <p>In times of crisis — flooding, inter-communal conflict, fire disasters — ZGLF mobilizes emergency relief supplies and coordinates with local authorities and other NGOs to deliver rapid aid to affected families.</p>`},
+      {slug:"medical",title:"Free Medical Outreach",tag:"Health",tagColor:"#2e7d32",icon:"fa-kit-medical",img:"images/medical-outreach.jpg",
+       short:"Mobile medical camps providing free consultations, medication, and health awareness screenings in rural communities.",
+       full:`<p>Many rural communities in Nigeria lack access to even basic healthcare. Our Free Medical Outreach brings volunteer doctors, nurses, and pharmacists directly to these underserved communities.</p>
+       <p>Each medical outreach camp provides free consultations, essential medications, and health screenings for common conditions.</p>
+       <h4>Services offered</h4>
+       <ul><li>Free general practitioner consultations</li><li>Basic health screenings (blood pressure, blood sugar)</li><li>Malaria testing and treatment</li><li>Free prescribed medications</li><li>Health education on hygiene, nutrition, and disease prevention</li><li>Referrals to secondary facilities for serious cases</li></ul>
+       <h4>Partnerships</h4>
+       <p>We work with volunteer medical personnel, pharmaceutical partners, and local government health departments to make these outreaches possible.</p>`},
+      {slug:"literacy",title:"Adult Literacy Classes",tag:"Literacy",tagColor:"#6a1b9a",icon:"fa-chalkboard",img:"images/literacy-class.jpg",
+       short:"Free reading, writing, and numeracy classes for adults — empowering women, traders, and out-of-school learners.",
+       full:`<p>Illiteracy remains a significant barrier to empowerment for many adults — particularly women — in northern Nigeria. Our Adult Literacy Classes offer free instruction in reading, writing, and basic numeracy in local languages as well as English.</p>
+       <p>Classes are held at community centres at times that accommodate traders and working adults, with female instructors available to encourage women's participation.</p>
+       <h4>What participants learn</h4>
+       <ul><li>Reading and writing in Hausa and English</li><li>Basic numeracy and simple book-keeping</li><li>How to read signs, labels, and official documents</li><li>Financial literacy and savings practices</li><li>Civic rights and responsibilities</li></ul>
+       <h4>Who can join</h4>
+       <p>Classes are open to adults of any age who wish to learn. There are no educational prerequisites and no fees — just a commitment to attend and learn.</p>`},
+      {slug:"microgrant",title:"Micro-Grant Scheme",tag:"Entrepreneurship",tagColor:"#ef6c00",icon:"fa-lightbulb",img:"images/entrepreneurship.jpg",
+       short:"Small business grants and mentoring for young entrepreneurs and women traders to start or grow their livelihoods.",
+       full:`<p>The Micro-Grant Scheme provides small capital grants to young entrepreneurs and women traders to start or expand small businesses, along with basic business mentoring.</p>
+       <p>Grants are structured to help recipients build sustainable livelihoods without falling into debt.</p>
+       <h4>Who qualifies</h4>
+       <ul><li>Graduates of our Skills Acquisition Program</li><li>Women traders with viable small businesses</li><li>Young entrepreneurs with existing enterprises needing capital to grow</li><li>Cooperatives and youth groups with collective ventures</li></ul>
+       <h4>How it works</h4>
+       <ul><li>Submit a simple business proposal</li><li>Screening committee reviews and interviews applicants</li><li>Successful applicants receive grants scaled to their venture</li><li>Recipients receive mentoring and periodic check-ins</li></ul>
+       <p>Our goal is to seed economic activity at the grassroots level — creating jobs and multiplying impact across communities.</p>`}
+    ],
+    nec:[
+      {role:"President",img:"images/nec-president.jpg",gradient:"from-gold-400 to-gold-600",icon:"fa-crown",
+       duty:"Presides over all meetings. Signs all minutes and payment vouchers. A signatory to the foundation's bank accounts."},
+      {role:"Vice President",img:"images/nec-vice.jpg",gradient:"from-azure-500 to-azure-700",icon:"fa-user-tie",
+       duty:"Acts on behalf of the President when absent. Assists the President. A signatory to vouchers in the President's absence."},
+      {role:"Secretary General",img:"images/nec-secretary.jpg",gradient:"from-azure-500 to-azure-700",icon:"fa-pen-fancy",
+       duty:"Carries out secretarial duties: correspondence, minutes, circulars, and progress reports. A signatory to bank accounts."},
+      {role:"Assistant Secretary",img:"images/nec-assistant.jpg",gradient:"from-azure-500 to-azure-700",icon:"fa-file-signature",
+       duty:"Assists the Secretary General and performs duties assigned by the Secretary or National Executive Council."},
+      {role:"Treasurer",img:"images/nec-treasurer.jpg",gradient:"from-emerald-500 to-emerald-700",icon:"fa-sack-dollar",
+       duty:"In charge of the organisation's money. Deposits donations within 24 working hours. Produces statements at every meeting. A signatory to bank accounts."},
+      {role:"Public Relations Officer",img:"images/nec-pro.jpg",gradient:"from-violet-500 to-violet-700",icon:"fa-bullhorn",
+       duty:"Distributes circulars and publicises matters as directed. Acts as intermediary between the organisation and the public."},
+      {role:"Auditor",img:"images/nec-auditor.jpg",gradient:"from-rose-500 to-rose-700",icon:"fa-magnifying-glass-chart",
+       duty:"Audits the foundation's accounts periodically and provides copies to the National Executive Council and all state branches."},
+      {role:"Patrons / Matrons",img:"images/nec-patron.jpg",gradient:"from-gold-400 to-gold-600",icon:"fa-star",
+       duty:"Respected, de-tribalised Nigerians of impeccable record — one per geopolitical zone (six total) — who assist the foundation when needed."}
+    ],
+    heroImgs:["images/hero-children.jpg","images/hero-community.jpg","images/hero-volunteers.jpg","images/team-community.jpg"],
+    partners:[
+      {name:"Federal Ministry of Education",initials:"FME",color:"#1a37b8",link:null},
+      {name:"Nigerian Red Cross Society",initials:"NRCS",color:"#d32f2f",link:null},
+      {name:"UNICEF Nigeria",initials:"UN",color:"#009edb",link:"https://www.unicef.org/nigeria"},
+      {name:"NYSC",initials:"NYSC",color:"#2e7d32",link:null},
+      {name:"Zamfara State Govt.",initials:"ZSG",color:"#c4910f",link:null},
+      {name:"Gusau Local Govt.",initials:"GLG",color:"#6a1b9a",link:null},
+      {name:"NAPTIP",initials:"NAP",color:"#00695c",link:null},
+      {name:"Nat'l Directorate of Employment",initials:"NDE",color:"#ef6c00",link:null},
+      {name:"Become a Partner →",initials:"+",color:"#c4910f",link:"#/contact"}
+    ]
+  };
+
+  const app = document.getElementById('app');
+  function setActiveNav(route){
+    document.querySelectorAll('.nav-link[data-route]').forEach(l=>{
+      const r=l.dataset.route;
+      const active = r==='/' ? route==='/' : route.startsWith(r);
+      l.classList.toggle('active', active);
+    });
+  }
+  function closeMobileMenu(){document.getElementById('mobile-menu').classList.remove('open');}
+
+  function revealOnView(){
+    const o=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');});},{threshold:.1,rootMargin:'0px 0px -40px 0px'});
+    document.querySelectorAll('.reveal').forEach(el=>o.observe(el));
+  }
+  function startCounters(){
+    const cs=document.querySelectorAll('.counter');
+    const co=new IntersectionObserver(es=>{es.forEach(e=>{
+      if(e.isIntersecting){const el=e.target,t=+el.dataset.target,s=performance.now(),d=1800;
+        const a=n=>{const p=Math.min((n-s)/d,1),x=1-Math.pow(1-p,3);el.textContent=Math.floor(x*t).toLocaleString()+'+';if(p<1)requestAnimationFrame(a);else el.textContent=t.toLocaleString()+'+';};
+        requestAnimationFrame(a);co.unobserve(el);}
+    });},{threshold:.5});
+    cs.forEach(c=>co.observe(c));
+  }
+  function initPartners(){
+    document.querySelectorAll('.partner-tile[data-link]').forEach(t=>{
+      t.addEventListener('click',()=>{const l=t.dataset.link;if(l.startsWith('#/'))location.hash=l;else window.open(l,'_blank','noopener,noreferrer');});
+    });
+  }
+  function startHeroCarousel(){
+    const slides=document.querySelectorAll('.hero-photo'),dots=document.querySelectorAll('.carousel-dot');
+    if(!slides.length)return;let cur=0;
+    const go=i=>{slides[cur].classList.remove('active');if(dots[cur])dots[cur].classList.remove('active');cur=i;slides[cur].classList.add('active');if(dots[cur])dots[cur].classList.add('active');};
+    let t=setInterval(()=>go((cur+1)%slides.length),4500);
+    dots.forEach(d=>d.addEventListener('click',()=>{clearInterval(t);go(+d.dataset.slide);t=setInterval(()=>go((cur+1)%slides.length),4500);}));
+  }
+
+  function shieldSvg(){
+    return `<div class="absolute -top-5 -left-5 sm:-top-6 sm:-left-6 z-20 dove-float">
+      <div class="w-20 h-24 sm:w-24 sm:h-28 relative">
+        <svg viewBox="0 0 100 110" class="w-full h-full drop-shadow-2xl" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="shG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#2148e6"/><stop offset="100%" style="stop-color:#0c1a42"/></linearGradient>
+            <linearGradient id="gdG" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ffdf7e"/><stop offset="50%" style="stop-color:#f5c842"/><stop offset="100%" style="stop-color:#c4910f"/></linearGradient>
+          </defs>
+          <path d="M50 5 L90 20 L90 65 Q90 92 50 105 Q10 92 10 65 L10 20 Z" fill="url(#shG)" stroke="url(#gdG)" stroke-width="2.5"/>
+          <polygon points="50,18 52,25 59,25 53,30 55,37 50,33 45,37 47,30 41,25 48,25" fill="url(#gdG)"/>
+          <ellipse cx="50" cy="58" rx="14" ry="10" fill="#fff"/>
+          <path d="M40 55 Q48 45 63 52 Q53 58 43 60 Z" fill="#e2e8f0"/>
+          <circle cx="62" cy="53" r="6" fill="#fff"/>
+          <path d="M67 53 L74 54 L67 56 Z" fill="url(#gdG)"/>
+          <circle cx="64" cy="52" r="1.2" fill="#0c1a42"/>
+        </svg>
+      </div>
+    </div>`;
+  }
+
+  function partnersBlock(){
+    const tiles = CONST.partners.map(p=>`<div class="partner-tile ${p.link?'linked':''}" ${p.link?`data-link="${p.link}"`:''}><div class="partner-logo" style="background:${p.color}">${p.initials}</div><span>${p.name}</span></div>`).join('');
+    return `<section class="py-12 sm:py-14 bg-cream overflow-hidden border-t border-b border-gold-400/10 dot-pattern-light">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 mb-6 sm:mb-8">
+        <div class="text-center reveal">
+          <div class="text-gold-600 font-semibold text-xs sm:text-sm uppercase tracking-widest mb-2 sm:mb-3">Partners & Affiliations</div>
+          <h2 class="font-serif text-xl sm:text-2xl md:text-3xl font-bold text-azure-950">Working together for impact</h2>
+          <p class="text-azure-600 text-xs sm:text-sm mt-2 max-w-xl mx-auto">ZGLF welcomes affiliations with genuine INGOs, NGOs and government bodies per Article 17 of our constitution.</p>
+        </div>
+      </div>
+      <div class="ticker-wrap">
+        <div class="ticker-fade-l"></div><div class="ticker-fade-r"></div>
+        <div class="ticker-track">${tiles}${tiles}</div>
+      </div>
+    </section>`;
+  }
+
+  function ctaButton(href,cls,txt,ico){return `<a href="${href}" class="${cls} rounded-full font-bold inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm sm:text-base">${ico?`<i class="${ico}"></i>`:''}${txt}</a>`;}
+
+  /* ============ PAGES ============ */
+  const pages = {
+    home:()=>`
+    <section class="hero-bg relative flex items-center overflow-hidden">
+      <div class="hero-bg-img"></div>
+      <div class="radiance w-[400px] sm:w-[500px] h-[400px] sm:h-[500px] bg-gold-400/30 top-20 right-10"></div>
+      <div class="blob w-80 h-80 sm:w-96 sm:h-96 bg-azure-400/40 bottom-0 -left-20" style="animation-delay:-3s;"></div>
+      <div class="blob w-64 h-64 sm:w-72 sm:h-72 bg-gold-500/20 top-1/2 left-1/3" style="animation-delay:-6s;"></div>
+      <svg class="absolute top-20 sm:top-24 right-16 sm:right-24 w-24 sm:w-32 h-24 sm:h-32 opacity-20 star-ray hidden md:block" viewBox="0 0 100 100" fill="none">
+        <g stroke="#f5c842" stroke-width="1.5"><line x1="50" y1="5" x2="50" y2="95"/><line x1="5" y1="50" x2="95" y2="50"/><line x1="18" y1="18" x2="82" y2="82"/><line x1="82" y1="18" x2="18" y2="82"/></g>
+        <circle cx="50" cy="50" r="6" fill="#f5c842"/>
+      </svg>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-24 sm:py-28 lg:py-32 relative z-10 w-full">
+        <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          <div>
+            <h1 class="font-serif font-bold text-white leading-[1.08] mb-4 sm:mb-6 hero-text-shadow" style="font-size:clamp(2rem,7vw,4.5rem)">
+              Spreading <span class="gold-text italic">hope</span>,<br>
+              empowering <span class="gold-text italic">communities</span>,<br>
+              delivering <span class="gold-text italic">service</span>.
+            </h1>
+            <p class="text-base sm:text-lg md:text-xl text-white/90 leading-relaxed mb-3 sm:mb-4 italic font-serif hero-text-shadow-sm">
+              "${CONST.vision}"
+            </p>
+            <p class="text-white/85 leading-relaxed mb-7 sm:mb-10 max-w-xl hero-text-shadow-sm text-sm sm:text-base">
+              ${CONST.name} (${CONST.abbr}) is a civil welfare organisation dedicated to youth empowerment, community development, education, and humanitarian service across Nigeria and beyond.
+            </p>
+            <div class="flex flex-col sm:flex-row flex-wrap gap-3">
+              <a href="#/programs" class="btn-gold rounded-full font-bold text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4 justify-center"><i class="fa-solid fa-arrow-right"></i>Support Our Mission</a>
+              <a href="#/membership" class="btn-outline rounded-full font-semibold text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4 justify-center"><i class="fa-solid fa-hand-holding-heart text-sm"></i>Get Involved</a>
+            </div>
+            <div class="mt-8 sm:mt-12 flex flex-wrap gap-2 sm:gap-3">
+              <div class="glass hero-pill rounded-full px-4 sm:px-5 py-2.5 sm:py-2 text-white text-xs sm:text-sm font-medium flex items-center gap-2 hero-text-shadow-sm"><i class="fa-solid fa-sun text-gold-400"></i>Hope</div>
+              <div class="glass hero-pill rounded-full px-4 sm:px-5 py-2.5 sm:py-2 text-white text-xs sm:text-sm font-medium flex items-center gap-2 hero-text-shadow-sm"><i class="fa-solid fa-hands-holding-circle text-gold-400"></i>Empowerment</div>
+              <div class="glass hero-pill rounded-full px-4 sm:px-5 py-2.5 sm:py-2 text-white text-xs sm:text-sm font-medium flex items-center gap-2 hero-text-shadow-sm"><i class="fa-solid fa-hand-holding-heart text-gold-400"></i>Service</div>
+            </div>
+          </div>
+          <div class="flex justify-center items-center relative mt-4 lg:mt-0">
+            <div class="relative w-full max-w-sm lg:max-w-none lg:w-[440px] xl:w-[460px]">
+              <div class="relative rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl glow h-64 sm:h-80 md:h-96 lg:h-[460px] xl:h-[480px]">
+                ${CONST.heroImgs.map((s,i)=>`<div class="hero-photo ${i===0?'active':''}" style="background-image:url('${s}')"></div>`).join('')}
+                <div class="absolute inset-0 bg-gradient-to-t from-azure-950/80 via-azure-950/10 to-transparent pointer-events-none"></div>
+                <div class="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 right-4 sm:right-6">
+                  <div class="glass rounded-xl p-3 sm:p-4">
+                    <p class="text-white text-xs sm:text-sm font-medium hero-text-shadow-sm">"Education is the most powerful weapon which you can use to change the world."</p>
+                    <p class="text-gold-400 text-xs mt-1">— Every child deserves a chance to learn</p>
+                  </div>
+                </div>
+                <div class="absolute top-4 sm:top-5 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                  ${CONST.heroImgs.map((_,i)=>`<button class="carousel-dot ${i===0?'active':''}" data-slide="${i}" aria-label="Slide ${i+1}"></button>`).join('')}
+                </div>
+              </div>
+              <!-- Real ZGLF logo: small on mobile, large floating on desktop -->
+              <div class="absolute -top-2 left-2 sm:-top-4 sm:-left-4 lg:-top-6 lg:-left-6 z-20 dove-float">
+                <div class="w-12 h-12 sm:w-16 sm:h-16 lg:w-28 lg:h-28 rounded-xl lg:rounded-2xl bg-white/10 backdrop-blur-md p-1 lg:p-2 shadow-2xl border border-gold-400/30">
+                  <img src="images/zglf-logo.jpg" alt="ZGLF Logo" class="w-full h-full object-contain rounded-lg lg:rounded-xl">
+                </div>
+              </div>
+              <!-- Stats cards: two side-by-side on mobile (bottom), split on desktop (120 bottom-left, 2000 top-right) -->
+              <div class="flex gap-2 sm:gap-3 absolute -bottom-3 sm:-bottom-4 left-1/2 -translate-x-1/2 sm:translate-x-0 sm:left-auto sm:-left-8 z-20 w-full max-w-xs sm:max-w-none sm:w-auto px-4 sm:px-0">
+                <div class="glass hero-pill rounded-xl p-2.5 sm:p-4 flex-1 sm:flex-none card-hover">
+                  <div class="flex items-center gap-2 sm:gap-3">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gold-400/20 flex items-center justify-center shrink-0"><i class="fa-solid fa-user-graduate text-gold-400 text-xs sm:text-base"></i></div>
+                    <div><div class="text-white font-bold text-[11px] sm:text-sm">120+ Scholars</div><div class="text-white/70 text-[9px] sm:text-[11px]">Supported this year</div></div>
+                  </div>
+                </div>
+                <div class="glass hero-pill rounded-xl p-2.5 sm:p-4 flex-1 sm:hidden card-hover">
+                  <div class="flex items-center gap-2 sm:gap-3">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-azure-400/20 flex items-center justify-center shrink-0"><i class="fa-solid fa-heart text-azure-300 text-xs sm:text-base"></i></div>
+                    <div><div class="text-white font-bold text-[11px] sm:text-sm">2,000+ Lives</div><div class="text-white/70 text-[9px] sm:text-[11px]">Impacted</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="hidden sm:flex glass hero-pill rounded-xl sm:rounded-2xl p-3 sm:p-4 absolute -top-3 sm:-top-4 -right-2 sm:-right-4 z-20 card-hover">
+                <div class="flex items-center gap-2 sm:gap-3">
+                  <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-azure-400/20 flex items-center justify-center shrink-0"><i class="fa-solid fa-heart text-azure-300 text-sm sm:text-base"></i></div>
+                  <div><div class="text-white font-bold text-xs sm:text-sm">2,000+ Lives</div><div class="text-white/60 text-[10px] sm:text-[11px]">Impacted</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 scroll-indicator">
+        <a href="#home-about" class="text-white/40 hover:text-white/80 transition-colors"><i class="fa-solid fa-chevron-down text-lg sm:text-xl"></i></a>
+      </div>
+    </section>
+
+    <section class="bg-gold-400 py-2.5 overflow-hidden">
+      <div class="flex whitespace-nowrap gap-8 sm:gap-12 md:gap-16 text-azure-950 font-bold text-xs sm:text-sm uppercase tracking-[0.22em] sm:tracking-[0.28em] px-6">
+        <span>★ Hope</span><span>★ Empowerment</span><span>★ Service</span><span>★ Integrity</span><span>★ Compassion</span><span>★ Unity</span><span>★ Peace</span><span>★ Excellence</span><span>★ Sustainable Development</span>
+        <span>★ Hope</span><span>★ Empowerment</span><span>★ Service</span><span>★ Integrity</span><span>★ Compassion</span><span>★ Unity</span><span>★ Peace</span><span>★ Excellence</span><span>★ Sustainable Development</span>
+      </div>
+    </section>
+
+    <section id="home-about" class="py-16 sm:py-24 md:py-32 bg-white section-py">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <div class="reveal order-2 lg:order-1">
+            <div class="grid grid-cols-2 gap-3 sm:gap-4 max-w-md mx-auto lg:mx-0">
+              <div class="space-y-3 sm:space-y-4">
+                <div class="aspect-[3/4] rounded-2xl overflow-hidden card-hover relative group"><img src="images/education-scholarship.jpg" alt="Education" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"><div class="absolute inset-0 bg-gradient-to-t from-azure-950/80 to-transparent"></div>
+                  <div class="absolute bottom-4 sm:bottom-5 left-4 sm:left-5 right-4 sm:right-5"><div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gold-400 flex items-center justify-center mb-2"><i class="fa-solid fa-graduation-cap text-azure-950 text-sm sm:text-base"></i></div><h3 class="text-white font-bold text-base sm:text-lg">Education</h3><p class="text-white/70 text-[10px] sm:text-xs">Scholarships & literacy</p></div></div>
+                <div class="aspect-square rounded-2xl overflow-hidden card-hover relative group"><img src="images/medical-outreach.jpg" alt="Healthcare" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"><div class="absolute inset-0 bg-gradient-to-t from-rose-900/70 to-transparent"></div>
+                  <div class="absolute bottom-3 sm:bottom-4 left-3 sm:left-4"><i class="fa-solid fa-kit-medical text-white text-xl sm:text-2xl mb-1 drop-shadow-lg"></i><h3 class="text-white font-bold text-xs sm:text-sm">Healthcare</h3></div></div>
+              </div>
+              <div class="space-y-3 sm:space-y-4 pt-6 sm:pt-8">
+                <div class="aspect-square rounded-2xl overflow-hidden card-hover relative group"><img src="images/humanitarian-food.jpg" alt="Humanitarian" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"><div class="absolute inset-0 bg-gradient-to-t from-azure-950/70 to-transparent"></div>
+                  <div class="absolute bottom-3 sm:bottom-4 left-3 sm:left-4"><i class="fa-solid fa-bowl-rice text-white text-xl sm:text-2xl mb-1 drop-shadow-lg"></i><h3 class="text-white font-bold text-xs sm:text-sm">Humanitarian</h3></div></div>
+                <div class="aspect-[3/4] rounded-2xl overflow-hidden card-hover relative group border-2 border-gold-400/30"><img src="images/team-community.jpg" alt="Community" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"><div class="absolute inset-0 bg-gradient-to-t from-gold-900/70 to-transparent"></div>
+                  <div class="absolute bottom-4 sm:bottom-5 left-4 sm:left-5 right-4 sm:right-5"><i class="fa-solid fa-people-group text-gold-400 text-xl sm:text-2xl mb-2"></i><h3 class="text-white font-bold text-base sm:text-lg">Community</h3><p class="text-white/80 text-[10px] sm:text-xs">Unity in service</p></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="reveal order-1 lg:order-2">
+            <div class="inline-block text-gold-600 font-semibold text-xs sm:text-sm uppercase tracking-widest mb-3 sm:mb-4">About ZGLF</div>
+            <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-azure-950 leading-tight mb-5 sm:mb-6">A foundation rooted in <span class="relative inline-block">hope <svg class="absolute -bottom-2 left-0 w-full" height="8" viewBox="0 0 200 8" preserveAspectRatio="none"><path d="M0 4 Q50 0 100 4 T200 4" stroke="#f5c842" stroke-width="4" fill="none" stroke-linecap="round"/></svg></span>, service, and community.</h2>
+            <p class="text-azure-700 text-base sm:text-lg leading-relaxed mb-5 sm:mb-6">${CONST.name} (${CONST.abbr}) is a registered civil welfare organisation headquartered in Gusau, Zamfara State, Nigeria. Founded on the principles of integrity and compassion, we are an indivisible and indissoluble union of members committed to uplifting lives across Nigeria and beyond.</p>
+            <p class="text-azure-600 leading-relaxed mb-6 sm:mb-8 text-sm sm:text-base">Membership is open to all Nigerians — at home and in the diaspora — and to people of all nationalities, regardless of religion, gender, political belief, or ethnic origin. We welcome everyone of good character, aged 18 and above, who shares our vision of a better world.</p>
+            <div class="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+              <div class="flex items-start gap-3"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-azure-50 flex items-center justify-center shrink-0 mt-1"><i class="fa-solid fa-eye text-azure-700"></i></div><div><h4 class="font-semibold text-azure-900 mb-1 text-sm sm:text-base">Our Vision</h4><p class="text-azure-600 text-xs sm:text-sm leading-relaxed">${CONST.vision}</p></div></div>
+              <div class="flex items-start gap-3"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400/20 flex items-center justify-center shrink-0 mt-1"><i class="fa-solid fa-bullseye text-gold-600"></i></div><div><h4 class="font-semibold text-azure-900 mb-1 text-sm sm:text-base">Our Mission</h4><p class="text-azure-600 text-xs sm:text-sm leading-relaxed">${CONST.mission}</p></div></div>
+            </div>
+            <div class="flex flex-wrap gap-3">
+              <a href="#/about" class="btn-gold rounded-full font-bold text-xs sm:text-sm px-5 sm:px-6 py-2.5 sm:py-3">Learn More <i class="fa-solid fa-arrow-right text-xs"></i></a>
+              <a href="#/membership" class="px-5 sm:px-6 py-2.5 sm:py-3 rounded-full font-semibold text-xs sm:text-sm text-azure-700 border-2 border-azure-200 hover:border-azure-500 transition">Become a Member</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="py-16 sm:py-24 md:py-32 bg-azure-950 relative overflow-hidden dot-pattern section-py">
+      <div class="radiance w-80 h-80 sm:w-96 sm:h-96 bg-gold-400/20 -top-20 -right-20"></div>
+      <div class="blob w-72 h-72 sm:w-80 sm:h-80 bg-azure-500/30 bottom-0 -left-20" style="animation-delay:-4s;"></div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+        <div class="text-center mb-12 sm:mb-16 reveal">
+          <div class="inline-block text-gold-400 font-semibold text-xs sm:text-sm uppercase tracking-widest mb-3 sm:mb-4">What We Do</div>
+          <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-3 sm:mb-4">Our four pillars of service</h2>
+          <p class="text-white/60 text-sm sm:text-lg max-w-2xl mx-auto">Guided by our motto — Hope, Empowerment, Service — we focus on four areas of community welfare, as defined in our constitution.</p>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4 sm:gap-6">
+          ${CONST.pillars.map((p,i)=>`
+            <div class="glass rounded-2xl sm:rounded-3xl overflow-hidden card-hover reveal group" style="transition-delay:${i*80}ms">
+              <div class="h-32 sm:h-40 overflow-hidden relative">
+                <img src="${p.img}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                <div class="absolute inset-0 bg-gradient-to-t from-azure-950/90 via-azure-950/40 to-transparent"></div>
+                <div class="absolute top-3 sm:top-4 right-3 sm:right-4 w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br ${p.gradient} flex items-center justify-center shadow-lg"><i class="fa-solid ${p.icon} text-white text-base sm:text-xl"></i></div>
+              </div>
+              <div class="p-6 sm:p-8 md:p-10 pt-5 sm:pt-6">
+                <div class="text-[10px] sm:text-xs uppercase tracking-widest font-bold mb-2 ${p.tagColor}">${p.tag}</div>
+                <h3 class="font-serif text-xl sm:text-2xl font-bold text-white mb-3">${p.title}</h3>
+                <p class="text-white/70 leading-relaxed mb-4 sm:mb-5 text-sm sm:text-base">${p.desc}</p>
+                <div class="flex flex-wrap gap-2">${p.tags.map(t=>`<span class="bg-white/10 text-white/80 px-2.5 sm:px-3 py-1 rounded-full text-xs font-medium">${t}</span>`).join('')}</div>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </section>
+
+    <section class="py-16 sm:py-24 md:py-32 bg-cream section-py">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="text-center mb-12 sm:mb-16 reveal">
+          <div class="inline-block text-gold-600 font-semibold text-xs sm:text-sm uppercase tracking-widest mb-3 sm:mb-4">Our Reach</div>
+          <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-azure-950 leading-tight mb-3 sm:mb-4">Growing in service to humanity</h2>
+          <p class="text-azure-600 text-sm sm:text-lg max-w-2xl mx-auto">From our headquarters in Gusau, ZGLF is building a network of members, partners and impact across Nigeria.</p>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 mb-10 sm:mb-12">
+          ${[{n:500,i:'fa-users',g:'from-gold-400 to-gold-500',l:'Active Members'},{n:6,i:'fa-map-location-dot',g:'from-azure-500 to-azure-700',l:'Geopolitical Zones'},{n:120,i:'fa-graduation-cap',g:'from-emerald-500 to-emerald-700',l:'Scholarships Awarded'},{n:2000,i:'fa-hand-holding-heart',g:'from-rose-500 to-rose-700',l:'Lives Impacted'}].map(s=>`
+            <div class="bg-white rounded-2xl p-5 sm:p-8 text-center card-hover shadow-sm reveal border border-gold-400/20">
+              <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br ${s.g} flex items-center justify-center mx-auto mb-3 sm:mb-4"><i class="fa-solid ${s.i} text-white text-base sm:text-xl"></i></div>
+              <div class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-azure-950 mb-1 counter" data-target="${s.n}">0</div>
+              <div class="text-azure-600 font-medium text-xs sm:text-sm">${s.l}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </section>
+
+    <section class="py-16 sm:py-24 md:py-32 bg-white section-py">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between mb-10 sm:mb-12 gap-3 sm:gap-4 reveal">
+          <div>
+            <div class="text-gold-600 font-semibold text-xs sm:text-sm uppercase tracking-widest mb-2 sm:mb-3">Programs & Initiatives</div>
+            <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-azure-950">How we are making a difference</h2>
+          </div>
+          <a href="#/programs" class="px-5 sm:px-6 py-2.5 sm:py-3 rounded-full font-semibold text-xs sm:text-sm text-azure-700 border-2 border-azure-200 hover:border-azure-500 transition inline-flex items-center gap-2 self-start">View all programs <i class="fa-solid fa-arrow-right text-xs"></i></a>
+        </div>
+        <div class="grid md:grid-cols-3 gap-4 sm:gap-6">
+          ${CONST.programs.slice(0,3).map(p=>`
+            <a href="#/program/${p.slug}" class="program-card-link rounded-2xl sm:rounded-3xl overflow-hidden card-hover shadow-sm bg-white reveal">
+              <div class="h-44 sm:h-52 overflow-hidden relative"><img src="${p.img}" alt="${p.title}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-azure-950/80 via-transparent to-transparent"></div>
+                <span class="absolute top-3 sm:top-4 left-3 sm:left-4 bg-gold-400 text-azure-950 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold">${p.tag}</span>
+                <div class="absolute bottom-3 sm:bottom-4 left-3 sm:left-4"><i class="fa-solid ${p.icon} text-white text-2xl sm:text-3xl drop-shadow-lg"></i></div>
+              </div>
+              <div class="p-5 sm:p-6">
+                <h4 class="font-serif text-lg sm:text-xl font-bold text-azure-950 mb-2">${p.title}</h4>
+                <p class="text-azure-600 text-xs sm:text-sm leading-relaxed mb-3">${p.short}</p>
+                <span class="text-azure-700 font-semibold text-xs sm:text-sm inline-flex items-center gap-1">Read more <i class="fa-solid fa-arrow-right text-xs program-arrow"></i></span>
+              </div>
+            </a>`).join('')}
+        </div>
+      </div>
+    </section>
+
+    ${partnersBlock()}
+
+    <section class="py-16 sm:py-24 md:py-32 relative overflow-hidden section-py">
+      <div class="absolute inset-0 bg-gradient-to-br from-azure-900 via-azure-800 to-azure-950"></div>
+      <div class="radiance w-80 h-80 sm:w-96 sm:h-96 bg-gold-400/20 top-0 right-0"></div>
+      <div class="blob w-72 h-72 sm:w-80 sm:h-80 bg-azure-500/20 bottom-0 left-0" style="animation-delay:-2s;"></div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+        <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <div class="reveal">
+            <div class="inline-block text-gold-400 font-semibold text-xs sm:text-sm uppercase tracking-widest mb-3 sm:mb-4">Join ZGLF</div>
+            <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-5 sm:mb-6">Become a member and be part of the change.</h2>
+            <p class="text-white/70 text-base sm:text-lg leading-relaxed mb-6 sm:mb-8">Membership is open to all Nigerians at home and in the diaspora, and to friends of all nationalities — irrespective of religion, gender, political belief, or ethnic origin.</p>
+            <div class="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+              <div class="flex items-start gap-3"><div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gold-400/20 flex items-center justify-center shrink-0 mt-0.5"><i class="fa-solid fa-check text-gold-400 text-xs sm:text-sm"></i></div><div><span class="text-white font-semibold text-sm sm:text-base">Open to all</span><p class="text-white/60 text-xs sm:text-sm mt-1">Every person of good character aged 18+ is welcome.</p></div></div>
+              <div class="flex items-start gap-3"><div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gold-400/20 flex items-center justify-center shrink-0 mt-0.5"><i class="fa-solid fa-check text-gold-400 text-xs sm:text-sm"></i></div><div><span class="text-white font-semibold text-sm sm:text-base">Democratic & transparent</span><p class="text-white/60 text-xs sm:text-sm mt-1">Elections every 4 years.</p></div></div>
+            </div>
+          </div>
+          <div class="reveal">
+            <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl">
+              <h3 class="font-serif text-xl sm:text-2xl font-bold text-azure-950 mb-2">Quick Application</h3>
+              <p class="text-azure-500 text-xs sm:text-sm mb-5 sm:mb-6">Begin the screening process.</p>
+              <form class="space-y-3 sm:space-y-4" onsubmit="event.preventDefault();alert('Thank you! Your application has been submitted. Our secretariat will contact you shortly.');">
+                <div class="grid sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">First Name</label><input type="text" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div>
+                  <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Last Name</label><input type="text" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div>
+                </div>
+                <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Email</label><input type="email" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div>
+                <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Phone</label><input type="tel" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm" placeholder="+234 ..."></div>
+                <button type="submit" class="w-full btn-gold py-3 sm:py-3.5 rounded-xl font-bold text-sm sm:text-base mt-2">Submit <i class="fa-solid fa-paper-plane ml-2"></i></button>
+                <p class="text-center text-azure-400 text-[11px] sm:text-xs">After review, you will be invited for an interview.</p>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="home-donate" class="py-16 sm:py-24 md:py-32 bg-cream section-py">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6">
+        <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-14 shadow-sm border border-gold-400/20 relative overflow-hidden reveal">
+          <div class="radiance w-52 h-52 sm:w-64 sm:h-64 bg-gold-400/20 -top-20 -right-20"></div>
+          <div class="relative z-10">
+            <div class="text-center mb-8 sm:mb-10">
+              <div class="inline-block text-gold-600 font-semibold text-xs sm:text-sm uppercase tracking-widest mb-3 sm:mb-4">Support Our Work</div>
+              <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-azure-950 leading-tight mb-3 sm:mb-4">Your generosity fuels our mission</h2>
+              <p class="text-azure-600 text-sm sm:text-lg max-w-2xl mx-auto">Donations, charity and quarterly dues power every school, every meal, every skill we provide.</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
+              <div class="bg-azure-50 rounded-xl sm:rounded-2xl p-5 sm:p-6 text-center border border-azure-100"><i class="fa-solid fa-university text-azure-700 text-xl sm:text-2xl mb-3"></i><h4 class="font-bold text-azure-950 mb-1 text-sm sm:text-base">Bank Transfer</h4><p class="text-azure-600 text-xs sm:text-sm mb-2 sm:mb-3">Approved banks in Gusau</p><p class="text-[10px] sm:text-xs text-azure-500">Account: Zee Glow Link Foundation</p></div>
+              <div class="bg-gold-400/10 rounded-xl sm:rounded-2xl p-5 sm:p-6 text-center border border-gold-400/30"><i class="fa-solid fa-hand-holding-dollar text-gold-600 text-xl sm:text-2xl mb-3"></i><h4 class="font-bold text-azure-950 mb-1 text-sm sm:text-base">One-Time Donation</h4><p class="text-azure-600 text-xs sm:text-sm mb-2 sm:mb-3">Support a specific project</p><p class="text-[10px] sm:text-xs text-azure-500">₦1,000 can feed a family for a week</p></div>
+              <div class="bg-emerald-50 rounded-xl sm:rounded-2xl p-5 sm:p-6 text-center border border-emerald-200"><i class="fa-solid fa-repeat text-emerald-600 text-xl sm:text-2xl mb-3"></i><h4 class="font-bold text-azure-950 mb-1 text-sm sm:text-base">Monthly Giving</h4><p class="text-azure-600 text-xs sm:text-sm mb-2 sm:mb-3">Become a sustaining partner</p><p class="text-[10px] sm:text-xs text-azure-500">Plan long-term projects</p></div>
+            </div>
+            <div class="bg-azure-950 rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 text-center">
+              <p class="text-gold-400 font-serif text-lg sm:text-xl md:text-2xl italic mb-3 sm:mb-4">"Whoever saves one life, it is as if they saved the whole of humanity."</p>
+              <a href="#/contact" class="btn-gold px-7 sm:px-8 py-3 sm:py-3.5 rounded-full font-bold mt-4 sm:mt-6 inline-flex items-center gap-2"><i class="fa-solid fa-heart"></i>Donate Today</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="py-16 sm:py-24 md:py-32 bg-white section-py">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="text-center mb-12 sm:mb-16 reveal">
+          <div class="inline-block text-gold-600 font-semibold text-xs sm:text-sm uppercase tracking-widest mb-3 sm:mb-4">Our Leadership</div>
+          <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-azure-950 leading-tight mb-3 sm:mb-4">National Executive Council</h2>
+          <p class="text-azure-600 text-sm sm:text-lg max-w-2xl mx-auto">Democratically elected NEC with State Executive Councils. The National Delegate Conference is the supreme authority. Office tenure is four (4) years, maximum two consecutive terms.</p>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+          ${CONST.nec.map(n=>`
+            <div class="bg-cream rounded-2xl overflow-hidden card-hover border border-azure-100 reveal">
+              <div class="aspect-square overflow-hidden relative">
+                <img src="${n.img}" alt="${n.role}" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-azure-950/60 to-transparent"></div>
+                <div class="absolute top-3 right-3 w-10 h-10 rounded-full bg-gradient-to-br ${n.gradient} flex items-center justify-center shadow-lg"><i class="fa-solid ${n.icon} text-white text-sm"></i></div>
+              </div>
+              <div class="p-4 sm:p-5 text-center">
+                <h5 class="font-bold text-azure-950 text-sm sm:text-base">${n.role}</h5>
+              </div>
+            </div>`).join('')}
+        </div>
+        <div class="text-center mt-6 sm:mt-8"><a href="#/about" class="text-azure-700 font-semibold text-sm inline-flex items-center gap-1 hover:text-gold-600 transition">See full NEC details <i class="fa-solid fa-arrow-right text-xs"></i></a></div>
+      </div>
+    </section>
+
+    <section class="py-16 sm:py-24 md:py-32 bg-white section-py">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="bg-gradient-to-br from-azure-900 to-azure-950 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 lg:p-16 relative overflow-hidden dot-pattern">
+          <div class="radiance w-80 h-80 sm:w-96 sm:h-96 bg-gold-400/15 -top-20 -right-20"></div>
+          <div class="blob w-72 h-72 sm:w-80 sm:h-80 bg-azure-500/20 bottom-0 -left-20" style="animation-delay:-6s;"></div>
+          <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start relative z-10">
+            <div class="reveal">
+              <div class="inline-block text-gold-400 font-semibold text-xs sm:text-sm uppercase tracking-widest mb-3 sm:mb-4">Get in Touch</div>
+              <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-5 sm:mb-6">We'd love to hear from you</h2>
+              <p class="text-white/70 text-sm sm:text-lg leading-relaxed mb-6 sm:mb-8">Reach out to the ZGLF National Secretariat.</p>
+              <div class="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+                <div class="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 flex items-start gap-3 sm:gap-4"><div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gold-400/20 flex items-center justify-center shrink-0"><i class="fa-solid fa-location-dot text-gold-400 text-sm sm:text-base"></i></div><div><h4 class="text-white font-semibold mb-1 text-sm sm:text-base">HQ</h4><p class="text-white/60 text-xs sm:text-sm">Sabuwar Hanya, Tsamiyar Masaka Road, Tudun Wada, Gusau, Zamfara State</p></div></div>
+                <div class="glass rounded-xl sm:rounded-2xl p-4 sm:p-5 flex items-start gap-3 sm:gap-4"><div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-azure-400/20 flex items-center justify-center shrink-0"><i class="fa-solid fa-clock text-azure-300 text-sm sm:text-base"></i></div><div><h4 class="text-white font-semibold mb-1 text-sm sm:text-base">Hours</h4><p class="text-white/60 text-xs sm:text-sm">Mon – Fri · 9:00 AM – 5:00 PM</p></div></div>
+              </div>
+              <div class="flex gap-2 sm:gap-3">
+                <a href="#" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full glass flex items-center justify-center text-white/70 hover:text-gold-400"><i class="fa-brands fa-facebook-f text-sm"></i></a>
+                <a href="#" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full glass flex items-center justify-center text-white/70 hover:text-gold-400"><i class="fa-brands fa-x-twitter text-sm"></i></a>
+                <a href="#" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full glass flex items-center justify-center text-white/70 hover:text-gold-400"><i class="fa-brands fa-instagram text-sm"></i></a>
+                <a href="#" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full glass flex items-center justify-center text-white/70 hover:text-gold-400"><i class="fa-brands fa-whatsapp text-sm"></i></a>
+              </div>
+            </div>
+            <div class="reveal">
+              <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl">
+                <h3 class="font-serif text-xl sm:text-2xl font-bold text-azure-950 mb-2">Send a message</h3><p class="text-azure-500 text-xs sm:text-sm mb-5 sm:mb-6">We respond within 48 hours.</p>
+                <form class="space-y-3 sm:space-y-4" onsubmit="event.preventDefault();alert('Thank you! Your message has been received.');">
+                  <div class="grid sm:grid-cols-2 gap-3 sm:gap-4"><div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Name</label><input type="text" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div><div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Email</label><input type="email" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div></div>
+                  <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Subject</label><select class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm bg-white"><option>General inquiry</option><option>Membership</option><option>Donation / Partnership</option><option>Volunteer</option></select></div>
+                  <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Message</label><textarea rows="4" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm resize-none"></textarea></div>
+                  <button type="submit" class="w-full btn-gold py-3 sm:py-4 rounded-xl font-bold text-sm sm:text-lg">Send <i class="fa-solid fa-paper-plane ml-2"></i></button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>`,
+
+    program:(slug)=>{
+      const p = CONST.programs.find(x=>x.slug===slug);
+      if(!p) return pages['404']();
+      return `
+      <section class="pt-28 sm:pt-32 pb-16 sm:pb-20 relative overflow-hidden" style="background:linear-gradient(135deg,#0c1a42,#122660);">
+        <div class="radiance w-80 h-80 bg-gold-400/20 top-0 right-0"></div>
+        <div class="blob w-72 h-72 bg-azure-500/30 bottom-0 -left-20"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+          <a href="#/programs" class="inline-flex items-center gap-2 text-white/70 hover:text-gold-400 text-sm mb-6 sm:mb-8 transition"><i class="fa-solid fa-arrow-left"></i>Back to all programs</a>
+          <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            <div class="reveal">
+              <span class="inline-block bg-gold-400 text-azure-950 px-3 py-1 rounded-full text-xs font-bold mb-4">${p.tag}</span>
+              <h1 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-4 sm:mb-6 hero-text-shadow">${p.title}</h1>
+              <p class="text-white/80 text-base sm:text-lg leading-relaxed mb-6 hero-text-shadow-sm">${p.short}</p>
+              <div class="flex flex-wrap gap-3">
+                <a href="#/contact" class="btn-gold rounded-full font-bold text-sm px-6 py-3"><i class="fa-solid fa-heart"></i>Support this program</a>
+                <a href="#/membership" class="btn-outline rounded-full font-semibold text-sm px-6 py-3">Volunteer</a>
+              </div>
+            </div>
+            <div class="reveal">
+              <div class="rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl glow">
+                <img src="${p.img}" alt="${p.title}" class="w-full h-64 sm:h-80 lg:h-96 object-cover">
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="py-12 sm:py-16 md:py-20 bg-white section-py">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6">
+          <div class="reveal prose prose-sm sm:prose max-w-none">
+            <div class="text-azure-700 leading-relaxed space-y-5 text-sm sm:text-base">${p.full}</div>
+          </div>
+          <div class="mt-10 sm:mt-12 bg-cream rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 border border-gold-400/20 reveal">
+            <h3 class="font-serif text-xl sm:text-2xl font-bold text-azure-950 mb-4">Support this program</h3>
+            <p class="text-azure-600 text-sm sm:text-base mb-6">Your donation to ${p.title} directly helps us expand this program and reach more beneficiaries.</p>
+            <div class="flex flex-wrap gap-3">
+              <a href="#/contact" class="btn-gold rounded-full font-bold text-sm px-6 py-3"><i class="fa-solid fa-hand-holding-dollar"></i>Donate Now</a>
+              <a href="#/programs" class="px-6 py-3 rounded-full font-semibold text-sm text-azure-700 border-2 border-azure-200 hover:border-azure-500 transition">See other programs</a>
+            </div>
+          </div>
+        </div>
+      </section>
+      ${partnersBlock()}`;
+    },
+
+    programs:()=>`
+      <section class="pt-28 pb-12 sm:pt-32 sm:pb-16 bg-cream dot-pattern-light">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+          <a href="#/" class="back-link mb-6 inline-flex"><i class="fa-solid fa-arrow-left"></i>Back to home</a>
+          <div class="max-w-3xl reveal">
+            <div class="text-gold-600 font-semibold text-xs sm:text-sm uppercase tracking-widest mb-3 sm:mb-4">What We Do</div>
+            <h1 class="font-serif text-3xl sm:text-4xl md:text-6xl font-bold text-azure-950 leading-tight mb-5 sm:mb-6">Programs & Initiatives</h1>
+            <p class="text-azure-700 text-base sm:text-lg leading-relaxed">Every program flows from our four constitutional pillars. Click any program to learn more.</p>
+          </div>
+        </div>
+      </section>
+      <section class="pb-16 sm:pb-24 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            ${CONST.programs.map((p,i)=>`
+              <a href="#/program/${p.slug}" class="program-card-link rounded-2xl sm:rounded-3xl overflow-hidden card-hover shadow-sm bg-white reveal" style="transition-delay:${i*60}ms">
+                <div class="h-48 sm:h-56 overflow-hidden relative"><img src="${p.img}" alt="${p.title}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-azure-950/80 via-transparent to-transparent"></div>
+                  <span class="absolute top-3 sm:top-4 left-3 sm:left-4 bg-gold-400 text-azure-950 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold">${p.tag}</span>
+                </div>
+                <div class="p-5 sm:p-6">
+                  <h4 class="font-serif text-lg sm:text-xl font-bold text-azure-950 mb-2">${p.title}</h4>
+                  <p class="text-azure-600 text-xs sm:text-sm leading-relaxed mb-3">${p.short}</p>
+                  <span class="text-azure-700 font-semibold text-xs sm:text-sm inline-flex items-center gap-1">Read details <i class="fa-solid fa-arrow-right text-xs program-arrow"></i></span>
+                </div>
+              </a>`).join('')}
+          </div>
+        </div>
+      </section>`,
+
+    about:()=>`
+      <section class="pt-28 pb-12 sm:pt-32 sm:pb-16 bg-cream dot-pattern-light">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+          <a href="#/" class="back-link mb-6 inline-flex"><i class="fa-solid fa-arrow-left"></i>Back to home</a>
+          <div class="max-w-3xl reveal">
+            <div class="text-gold-600 font-semibold text-xs sm:text-sm uppercase tracking-widest mb-3 sm:mb-4">About ZGLF</div>
+            <h1 class="font-serif text-3xl sm:text-4xl md:text-6xl font-bold text-azure-950 leading-tight mb-5 sm:mb-6">A foundation rooted in hope, service, and community.</h1>
+            <p class="text-azure-700 text-base sm:text-lg leading-relaxed">${CONST.name} (${CONST.abbr}) is headquartered at ${CONST.hq}. Founded on integrity and compassion, we are an indivisible and indissoluble union of members committed to uplifting lives across Nigeria.</p>
+          </div>
+        </div>
+      </section>
+      <section class="py-12 sm:py-16 md:py-20 bg-white section-py">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+          <div class="grid md:grid-cols-2 gap-8 lg:gap-12 items-start">
+            <div class="reveal">
+              <div class="rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg mb-4 sm:mb-6"><img src="images/team-community.jpg" alt="ZGLF" class="w-full h-72 sm:h-96 object-cover"></div>
+              <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                <div class="rounded-2xl overflow-hidden"><img src="images/community-dev.jpg" alt="" class="w-full h-32 sm:h-44 object-cover"></div>
+                <div class="rounded-2xl overflow-hidden"><img src="images/hero-volunteers.jpg" alt="" class="w-full h-32 sm:h-44 object-cover"></div>
+              </div>
+            </div>
+            <div class="reveal">
+              <div class="grid sm:grid-cols-2 gap-4 sm:gap-5 mb-6 sm:mb-8">
+                <div class="bg-cream rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gold-400/20"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400/20 flex items-center justify-center mb-3"><i class="fa-solid fa-eye text-gold-600"></i></div><h4 class="font-bold text-azure-950 mb-2 text-sm sm:text-base">Our Vision</h4><p class="text-azure-600 text-xs sm:text-sm leading-relaxed">${CONST.vision}</p></div>
+                <div class="bg-cream rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-azure-200"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-azure-100 flex items-center justify-center mb-3"><i class="fa-solid fa-bullseye text-azure-700"></i></div><h4 class="font-bold text-azure-950 mb-2 text-sm sm:text-base">Our Mission</h4><p class="text-azure-600 text-xs sm:text-sm leading-relaxed">${CONST.mission}</p></div>
+              </div>
+              <h3 class="font-serif text-xl sm:text-2xl font-bold text-azure-950 mb-4">Our Motto</h3>
+              <div class="flex gap-2 sm:gap-3 mb-6 sm:mb-8">
+                <div class="flex-1 bg-gold-400 rounded-xl py-3 sm:py-4 text-center font-bold text-azure-950 text-sm sm:text-base">Hope</div>
+                <div class="flex-1 bg-gold-400 rounded-xl py-3 sm:py-4 text-center font-bold text-azure-950 text-sm sm:text-base">Empowerment</div>
+                <div class="flex-1 bg-gold-400 rounded-xl py-3 sm:py-4 text-center font-bold text-azure-950 text-sm sm:text-base">Service</div>
+              </div>
+              <h3 class="font-serif text-xl sm:text-2xl font-bold text-azure-950 mb-4">Our Values</h3>
+              <div class="grid grid-cols-2 gap-2 sm:gap-3 mb-6 sm:mb-8">${['Integrity','Compassion','Unity','Peace','Excellence','Sustainable Development'].map(v=>`<div class="flex items-center gap-2 text-azure-700 text-xs sm:text-sm"><i class="fa-solid fa-circle-check text-gold-500"></i>${v}</div>`).join('')}</div>
+              <h3 class="font-serif text-xl sm:text-2xl font-bold text-azure-950 mb-4">Headquarters</h3>
+              <p class="text-azure-700 leading-relaxed flex items-start gap-3 text-sm sm:text-base"><i class="fa-solid fa-location-dot text-gold-500 mt-1"></i>${CONST.hq}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="py-12 sm:py-16 md:py-20 bg-cream section-py">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+          <div class="text-center mb-10 sm:mb-14 reveal">
+            <div class="text-gold-600 font-semibold text-xs sm:text-sm uppercase tracking-widest mb-3">Aims & Objectives</div>
+            <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-azure-950 mb-3 sm:mb-4">Four pillars of our constitution</h2>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4 sm:gap-6">
+            ${CONST.pillars.map((p,i)=>`<div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 card-hover shadow-sm reveal"><div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br ${p.gradient} flex items-center justify-center mb-4 sm:mb-5"><i class="fa-solid ${p.icon} text-white text-lg sm:text-xl"></i></div><div class="text-[10px] sm:text-xs uppercase tracking-widest font-bold mb-2 text-azure-500">Objective ${i+1}</div><h3 class="font-serif text-xl sm:text-2xl font-bold text-azure-950 mb-3">${p.title}</h3><p class="text-azure-600 leading-relaxed text-sm sm:text-base">${p.desc}</p></div>`).join('')}
+          </div>
+        </div>
+      </section>
+      <section class="py-12 sm:py-16 md:py-20 bg-white section-py">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+          <div class="text-center mb-10 sm:mb-14 reveal">
+            <div class="text-gold-600 font-semibold text-xs sm:text-sm uppercase tracking-widest mb-3">Governance</div>
+            <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-azure-950 mb-3 sm:mb-4">National Executive Council</h2>
+            <p class="text-azure-600 text-sm sm:text-lg max-w-2xl mx-auto">Democratically elected · Four year tenure · Maximum two consecutive terms · National Delegate Conference is the supreme authority.</p>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+            ${CONST.nec.map(n=>`<div class="bg-cream rounded-2xl overflow-hidden card-hover border border-azure-100 reveal"><div class="aspect-square overflow-hidden relative"><img src="${n.img}" alt="${n.role}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-azure-950/50 to-transparent"></div><div class="absolute top-3 right-3 w-10 h-10 rounded-full bg-gradient-to-br ${n.gradient} flex items-center justify-center shadow-lg"><i class="fa-solid ${n.icon} text-white text-sm"></i></div></div><div class="p-4 sm:p-5 text-center"><h5 class="font-bold text-azure-950 text-sm sm:text-base">${n.role}</h5><p class="text-azure-500 text-[10px] sm:text-xs mt-1 leading-relaxed">${n.duty}</p></div></div>`).join('')}
+          </div>
+          <div class="mt-8 sm:mt-10 bg-azure-50 border border-azure-200 rounded-2xl p-5 sm:p-8 reveal">
+            <h4 class="font-bold text-azure-950 text-base sm:text-lg mb-3 flex items-center gap-2"><i class="fa-solid fa-scale-balanced text-gold-500"></i>Financial Integrity</h4>
+            <p class="text-azure-700 text-xs sm:text-sm leading-relaxed">All bank accounts require three signatures (President, Secretary General, Treasurer). The Auditor independently audits accounts. Funds: 60% national, 30% state branches, 10% compulsory reserves. Quarterly dues: ₦1,000. All donations deposited within 24 hours of receipt.</p>
+          </div>
+        </div>
+      </section>`,
+
+    membership:()=>`
+      <section class="pt-28 pb-12 sm:pt-32 sm:pb-16 bg-cream dot-pattern-light">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+          <a href="#/" class="back-link mb-6 inline-flex"><i class="fa-solid fa-arrow-left"></i>Back to home</a>
+          <div class="max-w-3xl reveal"><div class="text-gold-600 font-semibold text-xs sm:text-sm uppercase tracking-widest mb-3 sm:mb-4">Membership</div>
+          <h1 class="font-serif text-3xl sm:text-4xl md:text-6xl font-bold text-azure-950 leading-tight mb-5 sm:mb-6">Join the ZGLF movement</h1>
+          <p class="text-azure-700 text-base sm:text-lg leading-relaxed">Open to all Nigerians (home & diaspora) and friends of all nationalities aged 18+, of good character — regardless of religion, gender, political belief, or ethnic origin.</p></div>
+        </div>
+      </section>
+      <section class="pb-16 sm:pb-24 bg-white section-py">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+          <div class="grid lg:grid-cols-2 gap-8 lg:gap-12">
+            <div class="reveal">
+              <h2 class="font-serif text-2xl sm:text-3xl font-bold text-azure-950 mb-5 sm:mb-6">How to become a member</h2>
+              <div class="space-y-4 sm:space-y-5 mb-6 sm:mb-8">
+                ${[{n:1,t:'Apply',d:'Collect and fill a membership form from the ZGLF National Secretariat in Gusau.'},{n:2,t:'Screening',d:'The screening committee reviews your application.'},{n:3,t:'Interview',d:'You will be invited for an interview.'},{n:4,t:'Welcome',d:'Upon approval, you become a registered member with full rights.'}].map(s=>`<div class="flex gap-3 sm:gap-4"><div class="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gold-400 text-azure-950 flex items-center justify-center font-bold text-sm">${s.n}</div><div><h4 class="font-bold text-azure-950 mb-1 text-sm sm:text-base">${s.t}</h4><p class="text-azure-600 text-xs sm:text-sm leading-relaxed">${s.d}</p></div></div>`).join('')}
+              </div>
+              <div class="bg-azure-50 border border-azure-200 rounded-xl sm:rounded-2xl p-5 sm:p-6 mb-4 sm:mb-6"><h4 class="font-bold text-azure-950 mb-2 text-sm sm:text-base"><i class="fa-solid fa-info-circle text-gold-500 mr-2"></i>Membership Dues</h4><p class="text-azure-700 text-xs sm:text-sm leading-relaxed">₦1,000 per quarter · Allocation: National 60% / State 30% / Reserves 10%</p></div>
+              <div class="bg-gold-400/10 border border-gold-400/30 rounded-xl sm:rounded-2xl p-5 sm:p-6"><h4 class="font-bold text-azure-950 mb-2 text-sm sm:text-base"><i class="fa-solid fa-vote-yea text-gold-600 mr-2"></i>Your Voice, Your Vote</h4><p class="text-azure-700 text-xs sm:text-sm leading-relaxed">All financial, active members can vote and stand for office. Elections every four years by open secret ballot.</p></div>
+            </div>
+            <div class="reveal">
+              <div class="bg-white border-2 border-azure-100 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 shadow-lg">
+                <h3 class="font-serif text-xl sm:text-2xl font-bold text-azure-950 mb-2">Membership Application</h3><p class="text-azure-500 text-xs sm:text-sm mb-5 sm:mb-6">Submit your details.</p>
+                <form class="space-y-3 sm:space-y-4" onsubmit="event.preventDefault();alert('Thank you! The secretariat will contact you shortly.');">
+                  <div class="grid grid-cols-2 gap-3 sm:gap-4"><div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">First Name</label><input type="text" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div><div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Last Name</label><input type="text" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div></div>
+                  <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Email</label><input type="email" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div>
+                  <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Phone</label><input type="tel" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm" placeholder="+234 ..."></div>
+                  <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Location</label><select class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm bg-white"><option>Zamfara State</option><option>Other state in Nigeria</option><option>In the diaspora</option></select></div>
+                  <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Why do you want to join?</label><textarea rows="3" class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm resize-none"></textarea></div>
+                  <button type="submit" class="w-full btn-gold py-3 sm:py-3.5 rounded-xl font-bold text-sm sm:text-base">Submit <i class="fa-solid fa-paper-plane ml-2"></i></button>
+                  <p class="text-center text-azure-400 text-[11px] sm:text-xs">You will be invited for an interview after review.</p>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>`,
+
+    contact:()=>`
+      <section class="pt-28 pb-12 sm:pt-32 sm:pb-16 bg-cream dot-pattern-light">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+          <a href="#/" class="back-link mb-6 inline-flex"><i class="fa-solid fa-arrow-left"></i>Back to home</a>
+          <div class="max-w-3xl reveal"><div class="text-gold-600 font-semibold text-xs sm:text-sm uppercase tracking-widest mb-3 sm:mb-4">Contact</div>
+          <h1 class="font-serif text-3xl sm:text-4xl md:text-6xl font-bold text-azure-950 leading-tight mb-5 sm:mb-6">Get in touch</h1>
+          <p class="text-azure-700 text-base sm:text-lg leading-relaxed">Reach out to the ZGLF National Secretariat for inquiries, partnerships, membership, or donations.</p></div>
+        </div>
+      </section>
+      <section class="pb-16 sm:pb-24 bg-white section-py">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+          <div class="grid lg:grid-cols-5 gap-6 lg:gap-8">
+            <div class="lg:col-span-2 space-y-3 sm:space-y-4 reveal">
+              <div class="bg-azure-50 border border-azure-200 rounded-xl sm:rounded-2xl p-5 sm:p-6"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400 flex items-center justify-center mb-3"><i class="fa-solid fa-location-dot text-azure-950"></i></div><h4 class="font-bold text-azure-950 mb-1 text-sm sm:text-base">National Headquarters</h4><p class="text-azure-700 text-xs sm:text-sm leading-relaxed">Sabuwar Hanya, Tsamiyar Masaka Road<br>Tudun Wada, Gusau<br>Zamfara State, Nigeria</p></div>
+              <div class="bg-azure-50 border border-azure-200 rounded-xl sm:rounded-2xl p-5 sm:p-6"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400 flex items-center justify-center mb-3"><i class="fa-solid fa-clock text-azure-950"></i></div><h4 class="font-bold text-azure-950 mb-1 text-sm sm:text-base">Office Hours</h4><p class="text-azure-700 text-xs sm:text-sm leading-relaxed">Monday – Friday · 9:00 AM – 5:00 PM<br>NEC meetings quarterly</p></div>
+              <div class="bg-azure-50 border border-azure-200 rounded-xl sm:rounded-2xl p-5 sm:p-6"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400 flex items-center justify-center mb-3"><i class="fa-solid fa-handshake text-azure-950"></i></div><h4 class="font-bold text-azure-950 mb-1 text-sm sm:text-base">Partnerships</h4><p class="text-azure-700 text-xs sm:text-sm leading-relaxed">ZGLF welcomes affiliations with genuine INGOs, NGOs and government bodies (Article 17).</p></div>
+              <div class="flex gap-2 sm:gap-3 pt-2">
+                <a href="#" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-azure-100 hover:bg-gold-400 text-azure-700 hover:text-azure-950 flex items-center justify-center transition"><i class="fa-brands fa-facebook-f text-sm"></i></a>
+                <a href="#" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-azure-100 hover:bg-gold-400 text-azure-700 hover:text-azure-950 flex items-center justify-center transition"><i class="fa-brands fa-x-twitter text-sm"></i></a>
+                <a href="#" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-azure-100 hover:bg-gold-400 text-azure-700 hover:text-azure-950 flex items-center justify-center transition"><i class="fa-brands fa-instagram text-sm"></i></a>
+                <a href="#" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-azure-100 hover:bg-gold-400 text-azure-700 hover:text-azure-950 flex items-center justify-center transition"><i class="fa-brands fa-whatsapp text-sm"></i></a>
+              </div>
+            </div>
+            <div class="lg:col-span-3 reveal">
+              <div class="bg-white border-2 border-azure-100 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 shadow-sm">
+                <h3 class="font-serif text-xl sm:text-2xl font-bold text-azure-950 mb-2">Send a message</h3><p class="text-azure-500 text-xs sm:text-sm mb-5 sm:mb-6">We respond within 48 hours.</p>
+                <form class="space-y-3 sm:space-y-4" onsubmit="event.preventDefault();alert('Thank you for reaching out!');">
+                  <div class="grid sm:grid-cols-2 gap-3 sm:gap-4"><div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Name</label><input type="text" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div><div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Email</label><input type="email" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div></div>
+                  <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Subject</label><select class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm bg-white"><option>General inquiry</option><option>Membership</option><option>Donation / Partnership</option><option>Volunteer</option></select></div>
+                  <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Message</label><textarea rows="6" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm resize-none"></textarea></div>
+                  <button type="submit" class="w-full btn-gold py-3 sm:py-3.5 rounded-xl font-bold text-sm sm:text-base">Send Message <i class="fa-solid fa-paper-plane ml-2"></i></button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>`
+  };
+
+  const skeleton = `<div class="pt-24 sm:pt-28"><div class="skeleton h-80 sm:h-96 w-full rounded-none"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20 space-y-6">
+      <div class="skeleton h-7 sm:h-8 w-48 sm:w-64"></div>
+      <div class="skeleton h-4 sm:h-5 w-full max-w-3xl"></div>
+      <div class="skeleton h-4 sm:h-5 w-full max-w-2xl"></div>
+      <div class="grid md:grid-cols-3 gap-4 sm:gap-6 pt-4 sm:pt-6"><div class="skeleton h-48 sm:h-64 w-full rounded-2xl"></div><div class="skeleton h-48 sm:h-64 w-full rounded-2xl"></div><div class="skeleton h-48 sm:h-64 w-full rounded-2xl"></div></div>
+    </div></div>`;
+
+  function render(){
+    let hash = location.hash || '#/';
+    let route = hash.replace('#','');
+    let content, routeKey, scrollTarget=null;
+    if(route==='/'||route===''){content=pages.home();routeKey='/';}
+    else if(route==='/about'){content=pages.about();routeKey='/about';}
+    else if(route==='/programs'){content=pages.programs();routeKey='/programs';}
+    else if(route==='/donate'){content=pages.home();routeKey='/';scrollTarget='home-donate';}
+    else if(route.startsWith('/program/')){const slug=route.replace('/program/','');content=pages.program(slug);routeKey='/programs';}
+    else if(route==='/membership'){content=pages.membership();routeKey='/membership';}
+    else if(route==='/contact'){content=pages.contact();routeKey='/contact';}
+    else{content=pages.home();routeKey='/';}
+    setActiveNav(routeKey);
+    closeMobileMenu();
+    app.innerHTML=`<div id="app-page">${skeleton}</div>`;
+    window.scrollTo({top:0,behavior:'instant'});
+    setTimeout(()=>{
+      app.innerHTML=`<div id="app-page">${content}</div>`;
+      requestAnimationFrame(()=>{
+        document.getElementById('app-page').classList.add('mounted');
+        revealOnView();startCounters();startHeroCarousel();initPartners();
+        if(scrollTarget){
+          const el=document.getElementById(scrollTarget);
+          if(el){setTimeout(()=>{el.scrollIntoView({behavior:'smooth',block:'start'});},150);}
+        }
+      });
+    },250);
+  }
+
+  window.addEventListener('hashchange',render);
+  window.addEventListener('load',()=>{
+    render();
+    window.addEventListener('scroll',()=>document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>20));
+    document.getElementById('menu-btn').addEventListener('click',()=>document.getElementById('mobile-menu').classList.add('open'));
+    document.getElementById('close-menu').addEventListener('click',closeMobileMenu);
+    document.querySelectorAll('.mobile-link').forEach(l=>l.addEventListener('click',closeMobileMenu));
+  });
+  </script>
+</body>
+</html>
