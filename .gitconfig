@@ -3,3 +3,5 @@
 	name = ZGLF Deploy
 [init]
 	defaultBranch = main
+[credential]
+	helper = store
