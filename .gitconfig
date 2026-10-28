@@ -1,0 +1,5 @@
+[user]
+	email = deploy@zeeglowlink.org
+	name = ZGLF Deploy
+[init]
+	defaultBranch = main
