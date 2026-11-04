@@ -4,4 +4,17 @@
 .venv/
 node_modules/
 __pycache__/
-uploads/
+.sudo_as_admin_successful
+index.bak.html
+*.bak.html
+uploads/images/*
+uploads/videos/*
+uploads/events/*
+!uploads/.gitkeep
+!uploads/images/.gitkeep
+!uploads/videos/.gitkeep
+!uploads/events/.gitkeep
+uploads/zee glow link (1).pdf
+uploads/*.pdf
+uploads/99b544d1*
+uploads/index.html

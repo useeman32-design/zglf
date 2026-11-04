@@ -155,6 +155,7 @@
           <a href="#/contact" data-route="/contact" class="nav-link">Contact</a>
         </div>
         <div class="hidden lg:flex items-center gap-3">
+          <a href="admin/" class="text-white/80 hover:text-gold-400 text-sm font-medium transition px-3 py-2 flex items-center gap-1.5"><i class="fa-solid fa-lock text-[10px]"></i>Login</a>
           <a href="#/membership" class="text-white/80 hover:text-gold-400 text-sm font-medium transition px-3 py-2">Join</a>
           <a href="#/donate" class="btn-gold px-5 py-2.5 rounded-full text-sm">Donate</a>
         </div>
@@ -183,6 +184,7 @@
         <a href="#/contact" class="mobile-link hover:text-gold-400">Contact</a>
       </div>
       <div class="mt-auto pt-8">
+        <a href="admin/" class="mobile-link text-center py-3 text-white/70 hover:text-gold-400 text-sm flex items-center justify-center gap-2"><i class="fa-solid fa-lock text-[10px]"></i>Admin Login</a>
         <a href="#/donate" class="mobile-link btn-gold block text-center px-8 py-3.5 rounded-full font-bold">Donate</a>
       </div>
     </div>
@@ -595,10 +597,10 @@
           <p class="text-azure-600 text-sm sm:text-lg max-w-2xl mx-auto">From our headquarters in Gusau, ZGLF is building a network of members, partners and impact across Nigeria.</p>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 mb-10 sm:mb-12">
-          ${[{n:500,i:'fa-users',g:'from-gold-400 to-gold-500',l:'Active Members'},{n:6,i:'fa-map-location-dot',g:'from-azure-500 to-azure-700',l:'Geopolitical Zones'},{n:120,i:'fa-graduation-cap',g:'from-emerald-500 to-emerald-700',l:'Scholarships Awarded'},{n:2000,i:'fa-hand-holding-heart',g:'from-rose-500 to-rose-700',l:'Lives Impacted'}].map(s=>`
+          ${[{id:'members',n:3,i:'fa-users',g:'from-gold-400 to-gold-500',l:'Active Members'},{id:'zones',n:6,i:'fa-map-location-dot',g:'from-azure-500 to-azure-700',l:'Geopolitical Zones'},{id:'scholars',n:120,i:'fa-graduation-cap',g:'from-emerald-500 to-emerald-700',l:'Scholarships Awarded'},{id:'lives',n:2000,i:'fa-hand-holding-heart',g:'from-rose-500 to-rose-700',l:'Lives Impacted'}].map(s=>`
             <div class="bg-white rounded-2xl p-5 sm:p-8 text-center card-hover shadow-sm reveal border border-gold-400/20">
               <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br ${s.g} flex items-center justify-center mx-auto mb-3 sm:mb-4"><i class="fa-solid ${s.i} text-white text-base sm:text-xl"></i></div>
-              <div class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-azure-950 mb-1 counter" data-target="${s.n}">0</div>
+              <div class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-azure-950 mb-1 counter" data-id="${s.id}" data-target="${s.n}">0</div>
               <div class="text-azure-600 font-medium text-xs sm:text-sm">${s.l}</div>
             </div>`).join('')}
         </div>
@@ -631,6 +633,22 @@
       </div>
     </section>
 
+    <section id="events-section" class="py-16 sm:py-24 md:py-28 bg-azure-50/50 section-py">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between mb-10 sm:mb-12 gap-3 sm:gap-4 reveal">
+          <div>
+            <div class="text-gold-600 font-semibold text-xs sm:text-sm uppercase tracking-widest mb-2 sm:mb-3">Recent & Upcoming</div>
+            <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-azure-950">Programmes & activities</h2>
+            <p class="text-azure-600 text-sm sm:text-base mt-3 max-w-2xl">A snapshot of ZGLF's humanitarian, educational and empowerment activities. <em class="text-gold-700">All event data is pulled live from the admin panel.</em></p>
+          </div>
+        </div>
+        <div id="events-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          <!-- populated from /api/content at runtime -->
+          <div class="col-span-full text-azure-400 text-sm text-center py-8">Loading activities…</div>
+        </div>
+      </div>
+    </section>
+
     ${partnersBlock()}
 
     <section class="py-16 sm:py-24 md:py-32 relative overflow-hidden section-py">
@@ -652,7 +670,7 @@
             <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl">
               <h3 class="font-serif text-xl sm:text-2xl font-bold text-azure-950 mb-2">Quick Application</h3>
               <p class="text-azure-500 text-xs sm:text-sm mb-5 sm:mb-6">Begin the screening process.</p>
-              <form class="space-y-3 sm:space-y-4" onsubmit="event.preventDefault();alert('Thank you! Your application has been submitted. Our secretariat will contact you shortly.');">
+              <form class="space-y-3 sm:space-y-4" onsubmit="return submitForm(this,'membership',event)">
                 <div class="grid sm:grid-cols-2 gap-3 sm:gap-4">
                   <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">First Name</label><input type="text" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div>
                   <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Last Name</label><input type="text" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div>
@@ -740,7 +758,7 @@
             <div class="reveal">
               <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl">
                 <h3 class="font-serif text-xl sm:text-2xl font-bold text-azure-950 mb-2">Send a message</h3><p class="text-azure-500 text-xs sm:text-sm mb-5 sm:mb-6">We respond within 48 hours.</p>
-                <form class="space-y-3 sm:space-y-4" onsubmit="event.preventDefault();alert('Thank you! Your message has been received.');">
+                <form class="space-y-3 sm:space-y-4" onsubmit="return submitForm(this,'donate',event)">
                   <div class="grid sm:grid-cols-2 gap-3 sm:gap-4"><div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Name</label><input type="text" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div><div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Email</label><input type="email" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div></div>
                   <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Subject</label><select class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm bg-white"><option>General inquiry</option><option>Membership</option><option>Donation / Partnership</option><option>Volunteer</option></select></div>
                   <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Message</label><textarea rows="4" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm resize-none"></textarea></div>
@@ -918,7 +936,7 @@
             <div class="reveal">
               <div class="bg-white border-2 border-azure-100 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 shadow-lg">
                 <h3 class="font-serif text-xl sm:text-2xl font-bold text-azure-950 mb-2">Membership Application</h3><p class="text-azure-500 text-xs sm:text-sm mb-5 sm:mb-6">Submit your details.</p>
-                <form class="space-y-3 sm:space-y-4" onsubmit="event.preventDefault();alert('Thank you! The secretariat will contact you shortly.');">
+                <form class="space-y-3 sm:space-y-4" onsubmit="return submitForm(this,'membership',event)">
                   <div class="grid grid-cols-2 gap-3 sm:gap-4"><div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">First Name</label><input type="text" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div><div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Last Name</label><input type="text" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div></div>
                   <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Email</label><input type="email" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div>
                   <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Phone</label><input type="tel" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm" placeholder="+234 ..."></div>
@@ -959,7 +977,7 @@
             <div class="lg:col-span-3 reveal">
               <div class="bg-white border-2 border-azure-100 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 shadow-sm">
                 <h3 class="font-serif text-xl sm:text-2xl font-bold text-azure-950 mb-2">Send a message</h3><p class="text-azure-500 text-xs sm:text-sm mb-5 sm:mb-6">We respond within 48 hours.</p>
-                <form class="space-y-3 sm:space-y-4" onsubmit="event.preventDefault();alert('Thank you for reaching out!');">
+                <form class="space-y-3 sm:space-y-4" onsubmit="return submitForm(this,'contact',event)">
                   <div class="grid sm:grid-cols-2 gap-3 sm:gap-4"><div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Name</label><input type="text" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div><div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Email</label><input type="email" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm"></div></div>
                   <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Subject</label><select class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm bg-white"><option>General inquiry</option><option>Membership</option><option>Donation / Partnership</option><option>Volunteer</option></select></div>
                   <div><label class="block text-azure-900 text-xs sm:text-sm font-semibold mb-1.5">Message</label><textarea rows="6" required class="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-azure-100 focus:border-gold-400 focus:outline-none text-azure-900 text-sm resize-none"></textarea></div>
@@ -1017,6 +1035,141 @@
     document.getElementById('close-menu').addEventListener('click',closeMobileMenu);
     document.querySelectorAll('.mobile-link').forEach(l=>l.addEventListener('click',closeMobileMenu));
   });
+
+  /* === Public form submissions to PHP backend === */
+  async function submitForm(form,type,e){
+    e.preventDefault();
+    const fd=new FormData(form);const data={};
+    fd.forEach((v,k)=>data[k]=v);
+    const endpoints={contact:'public/contact',donate:'public/donate',membership:'public/membership'};
+    const messages={contact:'Thank you for reaching out! We will reply soon.',donate:'Thank you for your donation! It has been recorded and is pending verification.',membership:'Thank you for applying! We will contact you for screening.'};
+    try{
+      const _apiBase=window.location.pathname.replace(/\/$/,'').replace(/\/[^/]*$/,'')+'/api/';
+      const r=await fetch(_apiBase+endpoints[type],{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      if(!r.ok)throw new Error('Submit failed');
+      alert(messages[type]);form.reset();
+    }catch(err){alert('There was an issue submitting. Please try again or contact us directly.');}
+    return false;
+  }
+
+  /* === Live data sync: pull content from PHP backend after render === */
+  (function(){
+    function apiBase(){
+      // /zglf/index.html → /zglf/api/ ;  /index.html → /api/
+      const p=window.location.pathname.replace(/\/$/,'').replace(/\/[^/]*$/,'');
+      return p+'/api/';
+    }
+    function img(u){
+      if(!u)return 'images/zglf-logo.jpg';
+      if(u.startsWith('http')||u.startsWith('/'))return u;
+      return u;
+    }
+    function fmtDate(d){
+      if(!d)return '';
+      try{const dt=new Date(d);return dt.toLocaleDateString('en-NG',{year:'numeric',month:'long',day:'numeric'});}catch(e){return d;}
+    }
+    function statusBadge(s){
+      if(s==='upcoming')return '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200"><i class="fa-solid fa-clock mr-1"></i>Upcoming</span>';
+      if(s==='completed')return '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-azure-100 text-azure-800 border border-azure-200"><i class="fa-solid fa-check mr-1"></i>Completed</span>';
+      return '<span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200">'+s+'</span>';
+    }
+    function renderEvents(events){
+      const grid=document.getElementById('events-grid');
+      if(!grid||!events||!events.length)return;
+      // Show upcoming first, then latest completed (up to 3)
+      const upcoming=events.filter(e=>e.status==='upcoming').sort((a,b)=>new Date(a.event_date)-new Date(b.event_date));
+      const past=events.filter(e=>e.status==='completed').sort((a,b)=>new Date(b.event_date)-new Date(a.event_date));
+      const list=[...upcoming,...past].slice(0,3);
+      if(!list.length){grid.innerHTML='<div class="col-span-full text-azure-400 text-sm text-center py-8">Check back soon for upcoming events.</div>';return;}
+      grid.innerHTML=list.map(e=>{
+        const cover=e.featured_image?img(e.featured_image.startsWith('/')?e.featured_image:'/'+e.featured_image):(e.media&&e.media[0]?img(e.media[0].url):'images/zglf-logo.jpg');
+        const loc=e.location?'<span class="text-azure-500 text-[11px] sm:text-xs"><i class="fa-solid fa-location-dot mr-1"></i>'+e.location+'</span>':'';
+        const dt=e.event_date?'<span class="text-gold-700 text-[11px] sm:text-xs font-semibold"><i class="fa-solid fa-calendar mr-1"></i>'+fmtDate(e.event_date)+'</span>':'';
+        const desc=e.excerpt||(e.description?e.description.substring(0,120)+'…':'');
+        return `<div class="bg-white rounded-2xl sm:rounded-3xl overflow-hidden card-hover shadow-sm border border-gold-400/15 reveal">
+          <div class="relative h-44 sm:h-52 overflow-hidden">
+            <img src="${cover}" alt="${e.title||''}" class="w-full h-full object-cover" onerror="this.src='images/zglf-logo.jpg';this.classList.add('object-contain','p-8','bg-azure-50')">
+            <div class="absolute inset-0 bg-gradient-to-t from-azure-950/80 via-azure-950/10 to-transparent"></div>
+            <div class="absolute top-3 sm:top-4 left-3 sm:left-4">${statusBadge(e.status)}</div>
+            <div class="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 right-3 sm:right-4 flex items-center justify-between gap-2 text-white">
+              ${dt}${loc}
+            </div>
+          </div>
+          <div class="p-5 sm:p-6">
+            <h4 class="font-serif text-lg sm:text-xl font-bold text-azure-950 mb-2 leading-snug">${e.title||''}</h4>
+            <p class="text-azure-600 text-xs sm:text-sm leading-relaxed mb-3">${desc}</p>
+          </div>
+        </div>`;
+      }).join('');
+      // Reveal newly added cards
+      document.querySelectorAll('#events-grid .reveal').forEach(el=>{el.classList.add('in');});
+    }
+    function updateCounters(stats){
+      if(!stats)return;
+      const map={members:stats.members_active||3,zones:6,scholars:Math.max(120,Math.floor((stats.donations_count||0)*20+120)),lives:Math.max(2000,Math.floor((stats.donations_total||0)/150)+2000)};
+      // Animate counters to live values
+      document.querySelectorAll('.counter[data-id]').forEach(el=>{
+        const id=el.dataset.id;const target=map[id]||parseInt(el.dataset.target||0,10);
+        el.dataset.target=target;
+        const s=performance.now(),d=1800;
+        const a=n=>{const p=Math.min((n-s)/d,1),x=1-Math.pow(1-p,3);el.textContent=Math.floor(x*target).toLocaleString()+'+';if(p<1)requestAnimationFrame(a);else el.textContent=target.toLocaleString()+'+';};
+        requestAnimationFrame(a);
+      });
+    }
+    function patchPrograms(programs){
+      if(!programs||!programs.length)return;
+      // Merge DB programs into CONST.programs (DB overrides title/short_desc/full_desc/cover)
+      programs.forEach(p=>{
+        const c=CONST.programs.find(x=>x.slug===p.slug);
+        if(c){
+          if(p.title)c.title=p.title;
+          if(p.short_desc)c.short=p.short_desc;
+          if(p.full_desc)c.full=p.full_desc;
+          if(p.cover)c.img=p.cover;
+          if(p.tag)c.tag=p.tag;
+        }
+      });
+    }
+    function patchNec(nec){
+      if(!nec||!nec.length)return;
+      // DB NEC overrides images/names, but we keep constitution role mapping
+      nec.forEach(n=>{
+        // Match by position or by role name substring
+        let c=CONST.nec.find(x=>x.role===n.position);
+        if(!c)c=CONST.nec.find(x=>(n.position||'').toLowerCase().indexOf(x.role.toLowerCase().replace(/\s*\/.*$/,''))>=0);
+        if(c){
+          if(n.photo)c.img=n.photo;
+          if(n.name)c.name=n.name;
+        }
+      });
+    }
+    function patchHeroSlides(slides){
+      if(!slides||!slides.length)return;
+      CONST.heroImgs=slides.map(s=>s.url).filter(Boolean);
+    }
+    async function sync(){
+      try{
+        const r=await fetch(apiBase()+'content',{cache:'no-store'});
+        if(!r.ok)return;
+        const d=await r.json();
+        if(d.programs)patchPrograms(d.programs);
+        if(d.nec)patchNec(d.nec);
+        if(d.hero&&d.hero.slides)patchHeroSlides(d.hero.slides);
+        // Render events immediately (they live in DOM after page render)
+        if(d.events)renderEvents(d.events);
+        // Animate counters with live stats
+        if(d.stats)updateCounters(d.stats);
+        // Re-render current route so program detail pages use fresh CONST
+        // (safe to skip for home; only re-render if on a program subpage)
+        const rt=(location.hash||'#/').replace('#','');
+        if(rt.startsWith('/program/')||rt==='/programs'||rt==='/about'){
+          setTimeout(render,100);
+        }
+      }catch(err){/* offline / first load — static content still displays */}
+    }
+    // Sync after initial render
+    window.addEventListener('load',()=>{setTimeout(sync,400);});
+  })();
   </script>
 </body>
 </html>

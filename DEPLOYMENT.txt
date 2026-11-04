@@ -1,0 +1,91 @@
+============================================================================
+  ZEE GLOW LINK FOUNDATION — FULL STACK WEBSITE
+============================================================================
+
+WHAT'S IN THIS PACKAGE
+----------------------
+  index.html              Public-facing SPA landing page (Nigerian UI, azure & gold palette)
+  admin/                  Admin dashboard SPA (login + sidebar + 13 modules)
+  api/                    PHP REST API + MySQL schema/seed (PDO)
+  images/                 All site assets (logo, heroes, NEC, programs, events)
+  uploads/                Writable folder for admin-uploaded images/videos/events
+  .htaccess               Apache routing (API, public SPA, admin SPA fallback)
+  router.php              PHP built-in-server router (for local testing without XAMPP/Apache)
+  zglf_database.sql       Full MySQL export: schema + demo data (admin, NEC, programs, events, donations, members, messages, media)
+  INSTALL_XAMPP.txt       Step-by-step XAMPP installation guide
+  dump.php                Utility to regenerate the SQL dump (php dump.php)
+
+SERVER REQUIREMENTS
+-------------------
+  • PHP 8.0+ with PDO MySQL extension (XAMPP/WAMP/MAMP/cPanel all include this)
+  • MySQL 5.7+ or MariaDB 10.3+
+  • Apache with mod_rewrite enabled (XAMPP enables this by default)
+  • Writable uploads/ folder (777 on Linux/Mac; automatic on Windows)
+
+DEFAULT ADMIN LOGIN
+-------------------
+  URL:      /admin/
+  Username: admin
+  Password: admin123
+  (Change immediately after first login via Settings → Change Password.)
+
+XAMPP QUICK START (Windows)
+---------------------------
+  1. Copy this whole folder to C:\xampp\htdocs\zglf\
+  2. Start Apache + MySQL in XAMPP Control Panel
+  3. Open http://localhost/phpmyadmin → create DB "zglf" → Import zglf_database.sql
+  4. Open http://localhost/zglf/  (public site)
+     Open http://localhost/zglf/admin/  (admin dashboard — login with admin/admin123)
+  Full instructions: see INSTALL_XAMPP.txt.
+
+LOCAL TEST WITHOUT XAMPP
+------------------------
+  php -S 0.0.0.0:8080 router.php
+  Then visit http://localhost:8080/ and http://localhost:8080/admin/
+
+WHAT THE ADMIN CAN EDIT
+-----------------------
+  • Dashboard stats (live from DB)
+  • Site settings (org name, hero copy, contact info, bank details, dues, etc.)
+  • Hero slides (add/reorder/remove)
+  • Programs (6 pillars content, cover images, descriptions)
+  • Events (upcoming/completed, date, time, location, gallery photos)
+  • NEC members (8 elected positions + photos + ranks)
+  • Donations (log, verify, reject)
+  • Members (approve/export)
+  • Contact messages (read/reply/archive)
+  • Media library (upload images/videos, organise by category)
+  • Users (create staff accounts with per-module role permissions)
+  • Activity log (audit trail of all admin actions)
+
+PUBLIC-SITE INTEGRATIONS
+------------------------
+  • Contact form → /api/public/contact (saves to messages table, appears in admin)
+  • Donation form → /api/public/donate (saves to donations table as pending)
+  • Membership form → /api/public/membership (saves to members table as pending applicant)
+  • Login button (padlock icon, top-right of nav and mobile menu) links to /admin/
+
+DATABASE CONNECTIONS
+--------------------
+  Defaults in api/config.php are set for XAMPP:
+      DB_HOST = localhost
+      DB_USER = root
+      DB_PASS = (empty)
+      DB_NAME = zglf
+  Override for production hosting by editing the top of api/config.php.
+
+SUBFOLDER DEPLOYMENT
+--------------------
+  Works out of the box in any subfolder (e.g., /zglf/, /zglf.org/, /~user/zglf/).
+  The JS auto-detects the API base and the upload URL builder uses relative paths.
+  No hardcoded URLs anywhere.
+
+SECURITY NOTES
+--------------
+  • Passwords are stored with password_hash() (bcrypt).
+  • Auth uses per-user tokens (stored in user_tokens) — replace with JWT later if needed.
+  • Role-based permissions checked before every write.
+  • Uploads validate extension & MIME type; images are re-encoded to strip metadata.
+  • SQL is all parameterised via PDO prepared statements (no SQL injection).
+
+============================================================================

@@ -1,0 +1,68 @@
+================================================================
+ZGLF WEBSITE — XAMPP INSTALLATION GUIDE
+================================================================
+
+QUICK INSTALL (3 minutes):
+
+1. COPY FILES
+   Copy the entire "zglf" folder to:
+       C:\xampp\htdocs\zglf\     (Windows)
+       /Applications/XAMPP/htdocs/zglf/   (Mac)
+       /opt/lampp/htdocs/zglf/   (Linux)
+
+2. START XAMPP
+   Open XAMPP Control Panel and start:
+       - Apache
+       - MySQL
+
+3. IMPORT DATABASE
+   - Open http://localhost/phpmyadmin in your browser
+   - Click "New" → Create database named "zglf" (utf8mb4_unicode_ci)
+   - Click the "zglf" database on the left
+   - Click "Import" tab → Choose file "zglf_database.sql" from this folder
+   - Click "Go" at the bottom
+
+4. VERIFY CONFIG
+   Open api/config.php — default settings should work for XAMPP out of the box:
+       DB_HOST = localhost
+       DB_USER = root
+       DB_PASS = (empty — that is correct for XAMPP default)
+       DB_NAME = zglf
+   If you set a MySQL password in XAMPP, update DB_PASS above.
+
+5. UPLOAD FOLDER PERMISSIONS
+   The uploads/ folder needs to be writable. On Windows this is automatic.
+   On Mac/Linux run: chmod -R 777 uploads/
+
+6. VISIT THE SITE
+   Public site: http://localhost/zglf/
+   Admin panel: http://localhost/zglf/admin/
+
+   Default admin login:
+       Username: admin
+       Password: admin123
+   Change this password after first login via Settings → Change Password.
+
+================================================================
+DEFAULT DATA INCLUDED
+================================================================
+- Admin account: admin/admin123
+- 6 programs (Scholarship, Skills, Relief, Medical, Literacy, Micro-Grant)
+- 8 NEC positions (President, VP, Secretary, Asst Secretary, Treasurer, PRO, Auditor, Patrons/Matrons)
+- 4 hero slides (images pre-linked to /images/)
+- 3 sample events
+- 10 media library photos
+- 5 sample donations
+- 3 sample members
+- 3 sample contact messages
+- All site info pre-populated from the ZGLF constitution
+
+================================================================
+TO GO LIVE (ONLINE HOSTING)
+================================================================
+1. Buy hosting with PHP 8+ and MySQL (any cPanel host works)
+2. Upload all files to public_html/
+3. Create MySQL database + user in cPanel
+4. Import zglf_database.sql via phpMyAdmin on the host
+5. Edit api/config.php with your hosting DB credentials
+6. The .htaccess file handles routing for Apache automatically

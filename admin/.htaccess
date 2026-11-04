@@ -1,0 +1,2 @@
+# htaccess for admin folder (if admin/index.html is requested directly, no rewrite needed since it's a static app)
+# No special rules needed - admin/index.html is a SPA that calls /api/ via its base path
