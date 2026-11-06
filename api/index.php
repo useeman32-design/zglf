@@ -127,12 +127,13 @@ if($resource==='users'){
     json($users);
   }
   if($method==='POST'){
-    $name=$body['name']??'';$un=strtolower(preg_replace('/\s+/','_',$body['username']??''));
+    $un=strtolower(preg_replace('/\s+/','_',$body['username']??''));
+    $name=$body['name']??($body['username']??'');
     $email=$body['email']??null;$role=$body['role']??'staff';$status=$body['status']??'active';
     $pass=$body['password']??'';
-    if(!$name||!$un)json(['error'=>'Name and username required'],400);
+    if(!$un)json(['error'=>'Username required'],400);
     if(!$id&&!$pass)json(['error'=>'Password required'],400);
-    $perms=$role==='admin'?json_encode(['dashboard'=>1,'hero'=>1,'site'=>1,'programs'=>1,'events'=>1,'donations'=>1,'photos'=>1,'nec'=>1,'members'=>1,'messages'=>1,'users'=>1,'reports'=>1,'settings'=>1]):json_encode($body['perms']??new stdClass);
+    $perms_in=$body['perms']??null; if(is_string($perms_in)){$perms_in=json_decode($perms_in,true);} $perms=$role==='admin'?json_encode(['dashboard'=>1,'hero'=>1,'site'=>1,'programs'=>1,'events'=>1,'donations'=>1,'photos'=>1,'nec'=>1,'members'=>1,'messages'=>1,'users'=>1,'reports'=>1,'settings'=>1]):json_encode($perms_in?:new stdClass);
     if($id){
       $q="UPDATE users SET name=?,email=?,username=?,role=?,perms=?,status=? WHERE id=?";
       $args=[$name,$email,$un,$role,$perms,$status,$id];
@@ -140,7 +141,8 @@ if($resource==='users'){
       $db->prepare($q)->execute($args);
       log_action('user_edit','Updated user id='.$id);
     }else{
-      if($db->prepare("SELECT id FROM users WHERE username=?")->execute([$un])&&$db->prepare("SELECT id FROM users WHERE username=?")->fetch())json(['error'=>'Username exists'],400);
+      $chk=$db->prepare("SELECT id FROM users WHERE username=?");$chk->execute([$un]);
+      if($chk->fetch())json(['error'=>'Username exists'],400);
       $db->prepare("INSERT INTO users(name,email,username,password_hash,role,perms,status) VALUES(?,?,?,?,?,?,?)")->execute([$name,$email,$un,password_hash($pass,PASSWORD_BCRYPT),$role,$perms,$status]);
       log_action('user_create','Created user '.$un);
     }
@@ -253,7 +255,7 @@ if($resource==='events'){
     $loc=$body['location']??'';
     $status=$body['status']??'upcoming';
     $desc=$body['description']??'';
-    $excerpt=$body['excerpt']??($desc?mb_substr($desc,0,160):'');
+    $excerpt=$body['excerpt']??($desc?(function_exists('mb_substr')?mb_substr($desc,0,160):substr($desc,0,160)):'');
     $feat=$body['featured_image']??null;
     $slug=$body['slug']??null;
     if(!$title)json(['error'=>'Title required'],400);
@@ -331,8 +333,13 @@ if($resource==='nec'){
 if($resource==='donations'){
   if(!can('donations')){require_perm('donations');}
   if($method==='GET'){json($db->query("SELECT * FROM donations ORDER BY created_at DESC")->fetchAll());}
-  if(is_numeric($id)&&$sub==='verify'&&$method==='POST'){
-    $db->prepare("UPDATE donations SET status='verified' WHERE id=?")->execute([$id]);log_action('donation_verify','Verified donation '.$id);json(['ok'=>1]);}
+  // POST /donations/:id        -> update status (accepts {status:'verified'|...})
+  // POST /donations/:id/verify -> legacy alias
+  if(is_numeric($id)&&($sub==='verify'||$sub==='')&&$method==='POST'){
+    $status=$body['status']??'verified';
+    if(!in_array($status,['pending','verified','rejected']))json(['error'=>'Invalid status'],400);
+    $db->prepare("UPDATE donations SET status=? WHERE id=?")->execute([$status,$id]);
+    log_action('donation_verify',"Set donation $id to $status");json(['ok'=>1]);}
   if(is_numeric($id)&&$method==='DELETE'){$db->prepare("DELETE FROM donations WHERE id=?")->execute([$id]);json(['ok'=>1]);}
 }
 
@@ -340,9 +347,19 @@ if($resource==='donations'){
 if($resource==='members'){
   if($method==='GET'){json($db->query("SELECT * FROM members ORDER BY created_at DESC")->fetchAll());}
   if($method==='POST'){require_perm('members');
-    $name=$body['name']??'';if(!$name)json(['error'=>'Name required'],400);
-    if($id){$db->prepare("UPDATE members SET name=?,email=?,phone=?,state=?,tier=?,status=? WHERE id=?")->execute([$name,$body['email']??'',$body['phone']??'',$body['state']??'',$body['tier']??'Full Member',$body['status']??'active',$id]);}
-    else{$db->prepare("INSERT INTO members(name,email,phone,state,tier,status,joined) VALUES(?,?,?,?,?,?,CURDATE())")->execute([$name,$body['email']??'',$body['phone']??'',$body['state']??'',$body['tier']??'Applicant',$body['status']??'pending']);}
+    $name=$body['name']??'';
+    if($id){
+      // Fetch existing record so partial updates work
+      $ex=$db->prepare("SELECT * FROM members WHERE id=?");$ex->execute([$id]);$m=$ex->fetch();
+      if(!$m)json(['error'=>'Not found'],404);
+      if(!$name)$name=$m['name'];
+      $db->prepare("UPDATE members SET name=?,email=?,phone=?,state=?,tier=?,status=? WHERE id=?")->execute([
+        $name,$body['email']??$m['email'],$body['phone']??$m['phone'],$body['state']??$m['state'],
+        $body['tier']??$m['tier'],$body['status']??$m['status'],$id]);
+    }else{
+      if(!$name)json(['error'=>'Name required'],400);
+      $db->prepare("INSERT INTO members(name,email,phone,state,tier,status,joined) VALUES(?,?,?,?,?,?,CURDATE())")->execute([$name,$body['email']??'',$body['phone']??'',$body['state']??'',$body['tier']??'Applicant',$body['status']??'pending']);
+    }
     json(['ok'=>1]);
   }
   if(is_numeric($id)&&$method==='DELETE'){require_perm('members');$db->prepare("DELETE FROM members WHERE id=?")->execute([$id]);json(['ok'=>1]);}
@@ -351,7 +368,11 @@ if($resource==='members'){
 // ==================== MESSAGES ====================
 if($resource==='messages'){
   if($method==='GET'){json($db->query("SELECT * FROM messages ORDER BY created_at DESC")->fetchAll());}
-  if(is_numeric($id)&&$sub==='read'&&$method==='POST'){$db->prepare("UPDATE messages SET is_read=1 WHERE id=?")->execute([$id]);json(['ok'=>1]);}
+  // POST /messages/:id/read  OR  POST /messages/:id  {is_read:1}  OR  POST /messages/:id/read
+  if(is_numeric($id)&&$method==='POST'){
+    $read=$body['is_read']??1;
+    $db->prepare("UPDATE messages SET is_read=? WHERE id=?")->execute([$read?1:0,$id]);
+    log_action('message_read','Toggled message '.$id.' read='.$read);json(['ok'=>1]);}
   if(is_numeric($id)&&$method==='DELETE'){require_perm('messages');$db->prepare("DELETE FROM messages WHERE id=?")->execute([$id]);json(['ok'=>1]);}
 }
 

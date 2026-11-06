@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users(
   email VARCHAR(190) UNIQUE,
   username VARCHAR(80) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
-  role ENUM('admin','staff') NOT NULL DEFAULT 'staff',
+  role ENUM('admin','staff','editor','viewer') NOT NULL DEFAULT 'staff',
   perms JSON NULL,
   status ENUM('active','disabled') NOT NULL DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

@@ -1,5 +1,5 @@
 -- ZGLF Database Export
--- Generated: 2026-11-02 23:33:26
+-- Generated: 2026-11-06 23:23:31
 -- PHP Version: 8.4.27
 
 SET NAMES utf8mb4;
@@ -18,25 +18,27 @@ CREATE TABLE `activity_log` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `activity_log_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 INSERT INTO `activity_log` (`id`,`user_id`,`action`,`detail`,`created_at`) VALUES
-('1','1','login','User logged in','2026-10-29 16:17:48'),
-('2','1','login','User logged in','2026-10-29 16:18:12'),
-('3','1','login','User logged in','2026-10-29 16:18:30'),
-('4','1','login','User logged in','2026-10-29 16:18:31'),
-('5','1','login','User logged in','2026-10-29 16:21:22'),
-('6','1','login','User logged in','2026-10-29 16:21:22'),
-('7','1','login','User logged in','2026-10-29 16:21:35'),
-('8','1','login','User logged in','2026-10-29 16:21:42'),
-('9','1','login','User logged in','2026-10-29 16:21:53'),
-('10','1','login','User logged in','2026-10-29 16:21:54'),
-('11','1','login','User logged in','2026-11-01 22:49:08'),
-('12','1','login','User logged in','2026-11-01 22:49:53'),
-('13','1','login','User logged in','2026-11-02 23:31:46'),
-('14','1','login','User logged in','2026-11-02 23:32:11'),
-('15','1','login','User logged in','2026-11-02 23:32:57'),
-('16','1','login','User logged in','2026-11-02 23:33:15');
+('1','1','login','User logged in','2026-11-06 23:22:29'),
+('2','1','login','User logged in','2026-11-06 23:22:29'),
+('3','1','login','User logged in','2026-11-06 23:22:45'),
+('4','1','login','User logged in','2026-11-06 23:22:45'),
+('5',NULL,'login','User logged in','2026-11-06 23:22:46'),
+('6',NULL,'login','User logged in','2026-11-06 23:22:46'),
+('7','1','login','User logged in','2026-11-06 23:22:47'),
+('8','1','login','User logged in','2026-11-06 23:22:47'),
+('9','1','login','User logged in','2026-11-06 23:22:48'),
+('10','1','login','User logged in','2026-11-06 23:22:48'),
+('11','1','login','User logged in','2026-11-06 23:23:15'),
+('12','1','login','User logged in','2026-11-06 23:23:15'),
+('13',NULL,'login','User logged in','2026-11-06 23:23:16'),
+('14',NULL,'login','User logged in','2026-11-06 23:23:16'),
+('15','1','login','User logged in','2026-11-06 23:23:17'),
+('16','1','login','User logged in','2026-11-06 23:23:17'),
+('17','1','login','User logged in','2026-11-06 23:23:18'),
+('18','1','login','User logged in','2026-11-06 23:23:18');
 
 DROP TABLE IF EXISTS `donations`;
 CREATE TABLE `donations` (
@@ -58,7 +60,9 @@ INSERT INTO `donations` (`id`,`donor`,`email`,`amount`,`campaign`,`method`,`stat
 ('2','Anonymous Donor','','200000.00','General','Bank Transfer','verified','1','May Allah accept it','2026-09-10 00:00:00'),
 ('3','Ibrahim Lawal','ib@example.com','25000.00','Education','Cash','verified','0','Sponsoring one student','2026-09-20 00:00:00'),
 ('4','Fatima Bello','fatima@example.com','10000.00','Healthcare','Mobile Transfer','verified','0','','2026-10-01 00:00:00'),
-('5','Demo Visitor','','25000.00','General','Bank Transfer','pending','1','Donation from public site','2026-10-28 00:00:00');
+('5','Test Donor','td@example.com','1000.00','General','Bank Transfer','pending','0','','2026-11-06 23:22:28'),
+('6','Test Donor','td@example.com','1000.00','General','Bank Transfer','pending','0','','2026-11-06 23:22:45'),
+('7','Test Donor','td@example.com','1000.00','General','Bank Transfer','pending','0','','2026-11-06 23:23:15');
 
 DROP TABLE IF EXISTS `event_media`;
 CREATE TABLE `event_media` (
@@ -70,13 +74,11 @@ CREATE TABLE `event_media` (
   PRIMARY KEY (`id`),
   KEY `event_id` (`event_id`),
   CONSTRAINT `event_media_ibfk_1` FOREIGN KEY (`event_id`) REFERENCES `events` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 INSERT INTO `event_media` (`id`,`event_id`,`type`,`url`,`position`) VALUES
-('8','1','image','/events/food.jpg','0'),
-('9','1','image','/images/humanitarian-food.jpg','1'),
-('10','2','image','/events/medical.jpg','0'),
-('11','2','image','/images/medical-outreach.jpg','1');
+('1','1','image','/events/food.jpg','0'),
+('2','2','image','/events/medical.jpg','0');
 
 DROP TABLE IF EXISTS `events`;
 CREATE TABLE `events` (
@@ -85,20 +87,22 @@ CREATE TABLE `events` (
   `event_date` date DEFAULT NULL,
   `event_time` time DEFAULT NULL,
   `location` varchar(255) DEFAULT NULL,
-  `featured_image` varchar(500) DEFAULT NULL,
-  `slug` varchar(200) DEFAULT NULL,
   `status` enum('upcoming','completed','draft') DEFAULT 'upcoming',
   `description` text DEFAULT NULL,
   `excerpt` varchar(500) DEFAULT NULL,
+  `featured_image` varchar(500) DEFAULT NULL,
+  `slug` varchar(200) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
-INSERT INTO `events` (`id`,`title`,`event_date`,`event_time`,`location`,`featured_image`,`slug`,`status`,`description`,`excerpt`,`created_at`,`updated_at`) VALUES
-('1','Ramadan Food Distribution 2025','2025-03-15',NULL,'Gusau, Zamfara','events/food.jpg','ramadan-food-distribution','completed','Distributed food to 1,200 households across Gusau and environs during Ramadan, easing hardship for widows, orphans and low-income families.','1,200 households reached across Gusau during Ramadan.','2026-10-29 16:17:47','2026-10-29 16:17:47'),
-('2','Free Medical Outreach – Anka LGA','2025-08-10','09:00:00','Anka General Hospital','events/medical.jpg','medical-outreach-anka','completed','Partnered with volunteer doctors to provide free medical consultations, tests and medicines to 800 patients in Anka LGA.','Free medical consultations & medicines for 800 patients in Anka LGA.','2026-10-29 16:17:47','2026-10-29 16:17:47'),
-('3','ZGLF Skills Acquisition Graduation — Gusau, Sept 2026','2026-09-20','10:00:00','ZGLF Skills Centre, Gusau','events/graduation.jpg','skills-graduation-2026','upcoming','Graduating 150 women trained in tailoring, catering and bead-making at the ZGLF Gusau centre.','150 women graduate from six months of free vocational training at the ZGLF Gusau Skills Centre.','2026-10-29 16:17:47','2026-11-02 23:32:57');
+INSERT INTO `events` (`id`,`title`,`event_date`,`event_time`,`location`,`status`,`description`,`excerpt`,`featured_image`,`slug`,`created_at`,`updated_at`) VALUES
+('1','Ramadan Food Distribution 2025','2025-03-15',NULL,'Gusau, Zamfara','completed','Distributed food to 1,200 households across Gusau during Ramadan.','1,200 households reached across Gusau.','events/food.jpg','ramadan-food-distribution','2026-11-06 23:22:15','2026-11-06 23:22:15'),
+('2','Free Medical Outreach – Anka LGA','2025-08-10','09:00:00','Anka General Hospital','completed','Provided free medical consultations and medicines to 800 patients.','Free consultations & medicines for 800 patients in Anka LGA.','events/medical.jpg','medical-outreach-anka','2026-11-06 23:22:15','2026-11-06 23:22:15'),
+('3','Skills Acquisition Graduation 2026 (edited)','2026-09-20',NULL,'ZGLF Centre, Gusau','upcoming','Updated by test','Updated by test',NULL,NULL,'2026-11-06 23:22:15','2026-11-06 23:22:46'),
+('4','Test Event Auto (edited)','2026-12-01',NULL,'Gusau','upcoming','Updated by test','Updated by test',NULL,NULL,'2026-11-06 23:22:46','2026-11-06 23:23:16'),
+('5','Test Event Auto','2026-12-01','10:00:00','Gusau','upcoming','Automated test event','Test excerpt','events/food.jpg',NULL,'2026-11-06 23:23:16','2026-11-06 23:23:16');
 
 DROP TABLE IF EXISTS `hero_slides`;
 CREATE TABLE `hero_slides` (
@@ -113,10 +117,10 @@ CREATE TABLE `hero_slides` (
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 INSERT INTO `hero_slides` (`id`,`position`,`type`,`url`,`alt_text`,`caption`,`created_at`) VALUES
-('1','0','image','/images/hero-children.jpg','Children learning','Education is the most powerful weapon which you can use to change the world.','2026-10-29 16:17:47'),
-('2','1','image','/images/hero-community.jpg','Community gathering','Every child deserves a chance to learn.','2026-10-29 16:17:47'),
-('3','2','image','/images/hero-volunteers.jpg','Volunteers','Together we build stronger communities.','2026-10-29 16:17:47'),
-('4','3','image','/images/team-community.jpg','Team in community','Hope · Empowerment · Service.','2026-10-29 16:17:47');
+('1','0','image','/images/hero-children.jpg','Children learning','Education is the most powerful weapon which you can use to change the world.','2026-11-06 23:22:15'),
+('2','1','image','/images/hero-community.jpg','Community gathering','Every child deserves a chance to learn.','2026-11-06 23:22:15'),
+('3','2','image','/images/hero-volunteers.jpg','Volunteers','Together we build stronger communities.','2026-11-06 23:22:15'),
+('4','3','image','/images/team-community.jpg','Team in community','Hope · Empowerment · Service.','2026-11-06 23:22:15');
 
 DROP TABLE IF EXISTS `media_library`;
 CREATE TABLE `media_library` (
@@ -130,26 +134,22 @@ CREATE TABLE `media_library` (
   PRIMARY KEY (`id`),
   KEY `uploaded_by` (`uploaded_by`),
   CONSTRAINT `media_library_ibfk_1` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 INSERT INTO `media_library` (`id`,`title`,`category`,`type`,`url`,`uploaded_by`,`created_at`) VALUES
-('1','Hero children','Hero','image','/images/hero-children.jpg',NULL,'2026-10-29 16:17:47'),
-('2','Community gathering','Hero','image','/images/hero-community.jpg',NULL,'2026-10-29 16:17:47'),
-('3','Volunteers','Hero','image','/images/hero-volunteers.jpg',NULL,'2026-10-29 16:17:47'),
-('4','Scholarship awards','Education','image','/images/education-scholarship.jpg',NULL,'2026-10-29 16:17:47'),
-('5','Youth training','Youth','image','/images/youth-empowerment.jpg',NULL,'2026-10-29 16:17:47'),
-('6','Food distribution','Humanitarian','image','/images/humanitarian-food.jpg',NULL,'2026-10-29 16:17:47'),
-('7','Medical outreach','Health','image','/images/medical-outreach.jpg',NULL,'2026-10-29 16:17:47'),
-('8','Adult literacy class','Education','image','/images/literacy-class.jpg',NULL,'2026-10-29 16:17:47'),
-('9','Entrepreneurship','Programs','image','/images/entrepreneurship.jpg',NULL,'2026-10-29 16:17:47'),
-('10','Team & community','Programs','image','/images/team-community.jpg',NULL,'2026-10-29 16:17:47'),
-('14','Ramadan Food Distribution 2025 – Gusau, Zamfara','Events','image','/events/food.jpg','1','2026-11-01 22:49:43'),
-('15','Free Medical Outreach – Anka LGA, Zamfara','Events','image','/events/medical.jpg','1','2026-11-01 22:49:43'),
-('16','ZGLF Skills Acquisition Graduation – Gusau Centre','Events','image','/events/graduation.jpg','1','2026-11-01 22:49:43'),
-('17','Ramadan Food Distribution 2025 – Gusau, Zamfara','Events','image','/events/food.jpg','1','2026-11-02 23:28:07'),
-('18','Free Medical Outreach – Anka LGA, Zamfara','Events','image','/events/medical.jpg','1','2026-11-02 23:28:07'),
-('19','ZGLF Skills Acquisition Graduation – Gusau Centre','Events','image','/events/graduation.jpg','1','2026-11-02 23:28:07'),
-('20','Uploaded','Test','image','/uploads/images/20261102_233315_91c0aa55.jpg','1','2026-11-02 23:33:15');
+('1','Hero children','Hero','image','/images/hero-children.jpg',NULL,'2026-11-06 23:22:15'),
+('2','Community gathering','Hero','image','/images/hero-community.jpg',NULL,'2026-11-06 23:22:15'),
+('3','Volunteers','Hero','image','/images/hero-volunteers.jpg',NULL,'2026-11-06 23:22:15'),
+('4','Scholarship awards','Education','image','/images/education-scholarship.jpg',NULL,'2026-11-06 23:22:15'),
+('5','Youth training','Youth','image','/images/youth-empowerment.jpg',NULL,'2026-11-06 23:22:15'),
+('6','Food distribution','Humanitarian','image','/images/humanitarian-food.jpg',NULL,'2026-11-06 23:22:15'),
+('7','Medical outreach','Health','image','/images/medical-outreach.jpg',NULL,'2026-11-06 23:22:15'),
+('8','Adult literacy class','Education','image','/images/literacy-class.jpg',NULL,'2026-11-06 23:22:15'),
+('9','Entrepreneurship','Programs','image','/images/entrepreneurship.jpg',NULL,'2026-11-06 23:22:15'),
+('10','Team & community','Programs','image','/images/team-community.jpg',NULL,'2026-11-06 23:22:15'),
+('11','Ramadan Food Distribution 2025','Events','image','/events/food.jpg','1','2026-11-06 23:22:15'),
+('12','Free Medical Outreach','Events','image','/events/medical.jpg','1','2026-11-06 23:22:15'),
+('13','Skills Acquisition Graduation','Events','image','/events/graduation.jpg','1','2026-11-06 23:22:15');
 
 DROP TABLE IF EXISTS `members`;
 CREATE TABLE `members` (
@@ -163,14 +163,15 @@ CREATE TABLE `members` (
   `joined` date DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 INSERT INTO `members` (`id`,`name`,`email`,`phone`,`state`,`tier`,`status`,`joined`,`created_at`) VALUES
-('1','Aisha Bello','aisha@example.com','08030000001','Lagos','Gold','active','2026-03-01','2026-10-29 16:17:47'),
-('2','Fatima Aliyu','fatima@example.com','08030000002','Zamfara','General','active','2026-05-12','2026-10-29 16:17:47'),
-('3','Maryam Usman','maryam@example.com','08030000003','Kaduna','General','active','2026-07-22','2026-10-29 16:17:47'),
-('4','Zainab Musa','zainab@example.com','08030000004','Zamfara','Applicant','pending','2026-10-15','2026-10-29 16:17:47'),
-('5','Hadiza Usman','hadiza@example.com','08030000005','Sokoto','Applicant','pending','2026-10-29','2026-10-29 16:17:47');
+('1','Aisha Bello','aisha@example.com','08030000001','Lagos','Gold','active','2026-03-01','2026-11-06 23:22:15'),
+('2','Fatima Aliyu','fatima@example.com','08030000002','Zamfara','General','active','2026-05-12','2026-11-06 23:22:15'),
+('3','Test Applicant','maryam@example.com','08030000003','Kaduna','General','active','2026-07-22','2026-11-06 23:22:15'),
+('4','Test Applicant','ta@example.com','08099999999','Zamfara','Applicant','pending','2026-11-06','2026-11-06 23:22:28'),
+('5','Test Applicant','ta@example.com','08099999999','Zamfara','Applicant','pending','2026-11-06','2026-11-06 23:22:45'),
+('6','Test Applicant','ta@example.com','08099999999','Zamfara','Applicant','pending','2026-11-06','2026-11-06 23:23:15');
 
 DROP TABLE IF EXISTS `messages`;
 CREATE TABLE `messages` (
@@ -186,9 +187,11 @@ CREATE TABLE `messages` (
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 INSERT INTO `messages` (`id`,`name`,`email`,`subject`,`message`,`is_read`,`source`,`created_at`) VALUES
-('1','Amina Sani','amina@example.com','Volunteer Enquiry','Assalamu alaykum. I would like to volunteer with the foundation.','0','contact','2026-10-28 10:00:00'),
-('2','Garba Muhammad','garba@example.com','Zakat Question','I have a question about zakat distribution to widows.','0','contact','2026-10-28 14:30:00'),
-('3','Yusuf Ali','yusuf@example.com','School Sponsorship','I want to nominate a child for school sponsorship.','0','contact','2026-10-29 09:15:00');
+('1','Amina Sani','amina@example.com','Volunteer Enquiry','I would like to volunteer.','0','contact','2026-11-06 23:22:15'),
+('2','Garba Muhammad','garba@example.com','Zakat Question','Question about zakat distribution.','1','contact','2026-11-06 23:22:15'),
+('3','Test','t@example.com','Hi','test contact','0','contact','2026-11-06 23:22:28'),
+('4','Test','t@example.com','Hi','test contact','0','contact','2026-11-06 23:22:45'),
+('5','Test','t@example.com','Hi','test contact','0','contact','2026-11-06 23:23:15');
 
 DROP TABLE IF EXISTS `nec_members`;
 CREATE TABLE `nec_members` (
@@ -205,7 +208,7 @@ CREATE TABLE `nec_members` (
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 INSERT INTO `nec_members` (`id`,`role_title`,`name`,`photo`,`gradient`,`icon`,`duty`,`position`,`published`) VALUES
-('1','President','','/images/nec-president.jpg','from-gold-400 to-gold-600','fa-crown','Presides over all meetings. Signs minutes and vouchers. A bank signatory.','0','1'),
+('1','','Test NEC Name','/images/nec-president.jpg','from-azure-500 to-azure-700','fa-star','','0','0'),
 ('2','Vice President','','/images/nec-vice.jpg','from-azure-500 to-azure-700','fa-user-tie','Acts on behalf of the President. Bank signatory in the President\'s absence.','1','1'),
 ('3','Secretary General','','/images/nec-secretary.jpg','from-azure-500 to-azure-700','fa-pen-fancy','Handles correspondence, minutes, circulars, reports. A bank signatory.','2','1'),
 ('4','Assistant Secretary','','/images/nec-assistant.jpg','from-azure-500 to-azure-700','fa-file-signature','Assists the Secretary General.','3','1'),
@@ -233,12 +236,12 @@ CREATE TABLE `programs` (
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 INSERT INTO `programs` (`id`,`title`,`slug`,`tag`,`tag_color`,`icon`,`cover`,`short_desc`,`full_desc`,`published`,`created_at`,`updated_at`) VALUES
-('1','Education Scholarships','scholarship','Education','#1a37b8','fa-user-graduate','/images/education-scholarship.jpg','Scholarships, school supplies and bursaries for indigent children.','<p>Our scholarship program supports indigent children with school fees, books, uniforms and supplies.</p>','1','2026-10-29 16:17:47','2026-10-29 16:17:47'),
-('2','Skills Acquisition','skills','Youth','#8b5cf6','fa-hands-holding-child','/images/youth-empowerment.jpg','Vocational and ICT skills training for youths and women.','<p>Vocational training in tailoring, carpentry, welding, ICT, beauty therapy and more.</p>','1','2026-10-29 16:17:47','2026-10-29 16:17:47'),
-('3','Ramadan & Food Relief','relief','Humanitarian','#c9900d','fa-bowl-food','/images/humanitarian-food.jpg','Ramadan feeding and food distribution during crises.','<p>Annual Ramadan feeding and emergency food relief.</p>','1','2026-10-29 16:17:47','2026-10-29 16:17:47'),
-('4','Free Medical Outreach','medical','Health','#2e7d32','fa-kit-medical','/images/medical-outreach.jpg','Mobile medical camps for rural communities.','<p>Free medical consultations and medications.</p>','1','2026-10-29 16:17:47','2026-10-29 16:17:47'),
-('5','Adult Literacy Classes','literacy','Education','#1a37b8','fa-book-open-reader','/images/literacy-class.jpg','Reading, writing and numeracy classes for adults.','<p>Adult literacy classes across rural communities.</p>','1','2026-10-29 16:17:47','2026-10-29 16:17:47'),
-('6','Micro-Grant Scheme','microgrant','Entrepreneurship','#ef6c00','fa-lightbulb','/images/entrepreneurship.jpg','Small business grants for young entrepreneurs and women.','<p>Small capital grants with mentoring.</p>','1','2026-10-29 16:17:47','2026-10-29 16:17:47');
+('1','Education Scholarships','education-scholarships','Test','#1a37b8','fa-book-open','/images/education-scholarship.jpg','','','1','2026-11-06 23:22:15','2026-11-06 23:22:46'),
+('2','Skills Acquisition','skills','Youth','#8b5cf6','fa-hands-holding-child','/images/youth-empowerment.jpg','Vocational and ICT skills training for youths and women.','<p>Vocational training in tailoring, carpentry, welding, ICT, beauty therapy and more.</p>','1','2026-11-06 23:22:15','2026-11-06 23:22:15'),
+('3','Ramadan & Food Relief','relief','Humanitarian','#c9900d','fa-bowl-food','/images/humanitarian-food.jpg','Ramadan feeding and food distribution during crises.','<p>Annual Ramadan feeding and emergency food relief.</p>','1','2026-11-06 23:22:15','2026-11-06 23:22:15'),
+('4','Free Medical Outreach','medical','Health','#2e7d32','fa-kit-medical','/images/medical-outreach.jpg','Mobile medical camps for rural communities.','<p>Free medical consultations and medications.</p>','1','2026-11-06 23:22:15','2026-11-06 23:22:15'),
+('5','Adult Literacy Classes','literacy','Education','#1a37b8','fa-book-open-reader','/images/literacy-class.jpg','Reading, writing and numeracy classes for adults.','<p>Adult literacy classes across rural communities.</p>','1','2026-11-06 23:22:15','2026-11-06 23:22:15'),
+('6','Micro-Grant Scheme','microgrant','Entrepreneurship','#ef6c00','fa-lightbulb','/images/entrepreneurship.jpg','Small business grants for young entrepreneurs and women.','<p>Small capital grants with mentoring.</p>','1','2026-11-06 23:22:15','2026-11-06 23:22:15');
 
 DROP TABLE IF EXISTS `site_settings`;
 CREATE TABLE `site_settings` (
@@ -286,25 +289,23 @@ CREATE TABLE `user_tokens` (
   UNIQUE KEY `token` (`token`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `user_tokens_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 INSERT INTO `user_tokens` (`id`,`user_id`,`token`,`expires_at`,`created_at`) VALUES
-('1','1','45d57fc2a1ff13550f3641961c978d42658bd9818972c514d4b28a73f86ba4cc','2026-11-05 16:17:48','2026-10-29 16:17:48'),
-('2','1','109d42ad3cc0acf638d067d788048200c58d48eb763ce3339d56bdcd6595be8d','2026-11-05 16:18:12','2026-10-29 16:18:12'),
-('3','1','77e4482ebb70abfc0005f2250cfdfa4d1f3cda265cbc4a484176e39e99089fa2','2026-11-05 16:18:30','2026-10-29 16:18:30'),
-('4','1','774f3bec9afe6404e60138aab85bce357d487525780d8277f8c70f02475c265a','2026-11-05 16:18:31','2026-10-29 16:18:31'),
-('5','1','f07dbfda0a3a16d187502148b5ffab8fe92d8ca0fd2d70810e77931784fad82d','2026-11-05 16:21:22','2026-10-29 16:21:22'),
-('6','1','278cf14fa88b5ca7c68310b3e197beed6477600401b05b8822efb11e3acaebb7','2026-11-05 16:21:22','2026-10-29 16:21:22'),
-('7','1','8909865d93709f65b6e0c5ec211ac46cb4490367d1d66512e5c363404dad7d23','2026-11-05 16:21:35','2026-10-29 16:21:35'),
-('8','1','95e1bb2d580313fd22adbdc92227705dc7e715154d9e0927e035f2588b45a2f7','2026-11-05 16:21:42','2026-10-29 16:21:42'),
-('9','1','503c0da62f0bc8291bb6abcb7fd599bd22f5e096e2b9ffb2ff28e4bd6a48298d','2026-11-05 16:21:53','2026-10-29 16:21:53'),
-('10','1','ab608d280f5636831e8a4677bea369bac4d9b05f4d7d29191ecb1f5b9f8ae4fe','2026-11-05 16:21:54','2026-10-29 16:21:54'),
-('11','1','f1dcf1d734d21e4a4e338d03390e325eaee561e775305bf08c0c57fcf5edc6cd','2026-11-08 22:49:08','2026-11-01 22:49:08'),
-('12','1','1b2833c683c943263cd105fe2454081f90ac20932a41d2c64c0faaaf226a2102','2026-11-08 22:49:53','2026-11-01 22:49:53'),
-('13','1','bcbd94408c1f02cf4420d3362e56c91d7b1c3cd939d24e155f298e8a59cad877','2026-11-09 23:31:46','2026-11-02 23:31:46'),
-('14','1','cb4413fe4099a220e2c9b599de4cb0a539e20abb14fb2275e158c10ba59374d2','2026-11-09 23:32:11','2026-11-02 23:32:11'),
-('15','1','baa3850c46e8dfa5c43c0bc7f856a5d71392a08cf374947551255a58fd117529','2026-11-09 23:32:57','2026-11-02 23:32:57'),
-('16','1','bec720e8c74950d439b140172ad84238c4b2a8778bb088538032d2bd0f686f2a','2026-11-09 23:33:15','2026-11-02 23:33:15');
+('1','1','d49d04388f1f02f77dd92e21c1776bf1597fc2f8daa56c083e9fe65a51e56354','2026-11-13 23:22:29','2026-11-06 23:22:29'),
+('2','1','2c38a7528f51f0ae74e1b837307cb7572000b572bf2279d6d0620cfe28ab6863','2026-11-13 23:22:29','2026-11-06 23:22:29'),
+('3','1','01378a403a4bcc5914d6a13674b70743e74670dc57187028d5a11d668833aad6','2026-11-13 23:22:45','2026-11-06 23:22:45'),
+('4','1','59bd74d3bd2b4b24e34b74a7d187a04d6f04c82f1353613d8af3c65d8c215a84','2026-11-13 23:22:45','2026-11-06 23:22:45'),
+('7','1','b09e1639aeb46a949fbc756659c0c28eaaac82618dc794335be9bdbd827d0f54','2026-11-13 23:22:47','2026-11-06 23:22:47'),
+('8','1','04970ac9cb28641273852c6a5bc6b2e7e9562d9867748ea7c7007cbf441243b6','2026-11-13 23:22:47','2026-11-06 23:22:47'),
+('9','1','881c689905ee6a66673dc5d37ecaa3f68d697bbc3f75be2596053d7d2e3183f2','2026-11-13 23:22:48','2026-11-06 23:22:48'),
+('10','1','cb29dcde41f3fd94be0b35b22003a559da931d9dcb397de6ca8ae14c64727bd3','2026-11-13 23:22:48','2026-11-06 23:22:48'),
+('11','1','dd83c705aef5df1e1b4e7dc9abbf6319933eebc13083fd80fd72da3fc0590d0e','2026-11-13 23:23:15','2026-11-06 23:23:15'),
+('12','1','f785fe77f31962a12cf135205f84b9013796802622119b3483358ad0f6fe54a2','2026-11-13 23:23:15','2026-11-06 23:23:15'),
+('15','1','f6556e5a30d3f20c0c2f345bb6e674ebc6f8c44988748d9b59e9374d432a0e2b','2026-11-13 23:23:17','2026-11-06 23:23:17'),
+('16','1','3eef3828260d669193aac1146ee514b108661e9faa3e29292070d32f2959458a','2026-11-13 23:23:17','2026-11-06 23:23:17'),
+('17','1','aee00bc6f0fb580b384e6bf3b71199857af31ff8f6fa17b921e608e006cb7bac','2026-11-13 23:23:18','2026-11-06 23:23:18'),
+('18','1','b7d38e5d7e0648b3ed5002ed3a08145cc40e0f4d302aadb130b7099ca59f5d1f','2026-11-13 23:23:18','2026-11-06 23:23:18');
 
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
@@ -313,16 +314,16 @@ CREATE TABLE `users` (
   `email` varchar(190) DEFAULT NULL,
   `username` varchar(80) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
-  `role` enum('admin','staff') NOT NULL DEFAULT 'staff',
+  `role` enum('admin','staff','editor','viewer') NOT NULL DEFAULT 'staff',
   `perms` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`perms`)),
   `status` enum('active','disabled') NOT NULL DEFAULT 'active',
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 INSERT INTO `users` (`id`,`name`,`email`,`username`,`password_hash`,`role`,`perms`,`status`,`created_at`) VALUES
-('1','Administrator','admin@zeeglowlink.org','admin','$2y$12$N9Amb5VhlABtA6EdNXPKzueNM8Aw0mCryYtANhL/aZEEkn9g264ny','admin','{\"dashboard\":1,\"hero\":1,\"site\":1,\"programs\":1,\"events\":1,\"donations\":1,\"photos\":1,\"nec\":1,\"members\":1,\"messages\":1,\"users\":1,\"reports\":1,\"settings\":1}','active','2026-10-29 16:17:47');
+('1','Administrator','admin@zeeglowlink.org','admin','$2y$12$zZdPcgKET1dR4I3/DwH2TedHX/WSR63Mx5ha40OtiQbgOEG6V3ACa','admin','{\"dashboard\":1,\"hero\":1,\"site\":1,\"programs\":1,\"events\":1,\"donations\":1,\"photos\":1,\"nec\":1,\"members\":1,\"messages\":1,\"users\":1,\"reports\":1,\"settings\":1}','active','2026-11-06 23:22:15');
 
 SET FOREIGN_KEY_CHECKS=1;
