@@ -1,329 +1,535 @@
--- ZGLF Database Export
--- Generated: 2026-11-06 23:23:31
--- PHP Version: 8.4.27
+/*M!999999\- enable the sandbox mode */ 
+-- MariaDB dump 10.19-11.8.6-MariaDB, for debian-linux-gnu (x86_64)
+--
+-- Host: localhost    Database: zglf
+-- ------------------------------------------------------
+-- Server version	11.8.6-MariaDB-0+deb13u1 from Debian
 
-SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS=0;
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*M!100616 SET @OLD_NOTE_VERBOSITY=@@NOTE_VERBOSITY, NOTE_VERBOSITY=0 */;
 
-CREATE DATABASE IF NOT EXISTS `zglf` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `zglf`;
+--
+-- Table structure for table `activity_log`
+--
 
 DROP TABLE IF EXISTS `activity_log`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `activity_log` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) DEFAULT NULL,
-  `action` varchar(120) NOT NULL,
+  `action` varchar(64) DEFAULT NULL,
   `detail` text DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `activity_log_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+  `created_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `activity_log` (`id`,`user_id`,`action`,`detail`,`created_at`) VALUES
-('1','1','login','User logged in','2026-11-06 23:22:29'),
-('2','1','login','User logged in','2026-11-06 23:22:29'),
-('3','1','login','User logged in','2026-11-06 23:22:45'),
-('4','1','login','User logged in','2026-11-06 23:22:45'),
-('5',NULL,'login','User logged in','2026-11-06 23:22:46'),
-('6',NULL,'login','User logged in','2026-11-06 23:22:46'),
-('7','1','login','User logged in','2026-11-06 23:22:47'),
-('8','1','login','User logged in','2026-11-06 23:22:47'),
-('9','1','login','User logged in','2026-11-06 23:22:48'),
-('10','1','login','User logged in','2026-11-06 23:22:48'),
-('11','1','login','User logged in','2026-11-06 23:23:15'),
-('12','1','login','User logged in','2026-11-06 23:23:15'),
-('13',NULL,'login','User logged in','2026-11-06 23:23:16'),
-('14',NULL,'login','User logged in','2026-11-06 23:23:16'),
-('15','1','login','User logged in','2026-11-06 23:23:17'),
-('16','1','login','User logged in','2026-11-06 23:23:17'),
-('17','1','login','User logged in','2026-11-06 23:23:18'),
-('18','1','login','User logged in','2026-11-06 23:23:18');
+--
+-- Dumping data for table `activity_log`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `activity_log` WRITE;
+/*!40000 ALTER TABLE `activity_log` DISABLE KEYS */;
+INSERT INTO `activity_log` VALUES
+(1,1,'user_create','Created user editor1','2026-11-07 19:31:44'),
+(2,1,'settings_edit','Updated settings','2026-11-07 19:31:44'),
+(3,1,'program_edit','Program: Education & Literacy','2026-11-07 19:31:44'),
+(4,1,'event_edit','Event: Test Event Auto','2026-11-07 19:31:44'),
+(5,1,'event_edit','Event: ZGLF Official Launch (edited)','2026-11-07 19:31:44'),
+(6,1,'nec_edit','NEC: National President','2026-11-07 19:31:44'),
+(7,1,'media_upload','Uploaded image /uploads/images/20261107_193144_849fbcee.jpg','2026-11-07 19:31:44'),
+(8,1,'media_upload','Uploaded image /uploads/images/20261107_193144_3cd7d706.jpg','2026-11-07 19:31:44'),
+(9,1,'donation_verify','Donation 1 set to verified','2026-11-07 19:31:44'),
+(10,1,'message_read','Toggled message 1','2026-11-07 19:31:44'),
+(11,1,'password_change','Changed own password','2026-11-07 19:31:45'),
+(12,1,'password_change','Changed own password','2026-11-07 19:31:45');
+/*!40000 ALTER TABLE `activity_log` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
+-- Table structure for table `donations`
+--
 
 DROP TABLE IF EXISTS `donations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `donations` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `donor` varchar(200) NOT NULL,
-  `email` varchar(190) DEFAULT NULL,
-  `amount` decimal(12,2) NOT NULL,
-  `campaign` varchar(120) DEFAULT NULL,
-  `method` varchar(60) DEFAULT 'Bank Transfer',
-  `status` enum('pending','verified','rejected') DEFAULT 'pending',
-  `anonymous` tinyint(1) DEFAULT 0,
+  `donor` varchar(128) DEFAULT NULL,
+  `email` varchar(128) DEFAULT NULL,
+  `amount` decimal(12,2) DEFAULT NULL,
+  `campaign` varchar(64) DEFAULT 'General',
+  `method` varchar(64) DEFAULT NULL,
+  `anonymous` tinyint(4) DEFAULT 0,
   `note` text DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `status` enum('pending','verified','rejected') DEFAULT 'pending',
+  `created_at` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `donations` (`id`,`donor`,`email`,`amount`,`campaign`,`method`,`status`,`anonymous`,`note`,`created_at`) VALUES
-('1','Hauwa Yusuf','hauwa@example.com','50000.00','Women Empowerment','Bank Transfer','verified','0','For the skills program','2026-08-01 00:00:00'),
-('2','Anonymous Donor','','200000.00','General','Bank Transfer','verified','1','May Allah accept it','2026-09-10 00:00:00'),
-('3','Ibrahim Lawal','ib@example.com','25000.00','Education','Cash','verified','0','Sponsoring one student','2026-09-20 00:00:00'),
-('4','Fatima Bello','fatima@example.com','10000.00','Healthcare','Mobile Transfer','verified','0','','2026-10-01 00:00:00'),
-('5','Test Donor','td@example.com','1000.00','General','Bank Transfer','pending','0','','2026-11-06 23:22:28'),
-('6','Test Donor','td@example.com','1000.00','General','Bank Transfer','pending','0','','2026-11-06 23:22:45'),
-('7','Test Donor','td@example.com','1000.00','General','Bank Transfer','pending','0','','2026-11-06 23:23:15');
+--
+-- Dumping data for table `donations`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `donations` WRITE;
+/*!40000 ALTER TABLE `donations` DISABLE KEYS */;
+INSERT INTO `donations` VALUES
+(1,'Test Donor','td@example.com',1000.00,'General','Bank Transfer',0,'','verified','2026-11-07 19:31:43');
+/*!40000 ALTER TABLE `donations` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
+-- Table structure for table `event_media`
+--
 
 DROP TABLE IF EXISTS `event_media`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `event_media` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `event_id` int(11) NOT NULL,
-  `type` enum('image','video') NOT NULL DEFAULT 'image',
-  `url` varchar(500) NOT NULL,
+  `event_id` int(11) DEFAULT NULL,
+  `type` enum('image','video') DEFAULT 'image',
+  `url` varchar(512) DEFAULT NULL,
   `position` int(11) DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `event_id` (`event_id`),
   CONSTRAINT `event_media_ibfk_1` FOREIGN KEY (`event_id`) REFERENCES `events` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `event_media` (`id`,`event_id`,`type`,`url`,`position`) VALUES
-('1','1','image','/events/food.jpg','0'),
-('2','2','image','/events/medical.jpg','0');
+--
+-- Dumping data for table `event_media`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `event_media` WRITE;
+/*!40000 ALTER TABLE `event_media` DISABLE KEYS */;
+/*!40000 ALTER TABLE `event_media` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
+-- Table structure for table `events`
+--
 
 DROP TABLE IF EXISTS `events`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `events` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `title` varchar(200) NOT NULL,
+  `slug` varchar(128) DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
   `event_date` date DEFAULT NULL,
-  `event_time` time DEFAULT NULL,
+  `event_time` varchar(32) DEFAULT NULL,
   `location` varchar(255) DEFAULT NULL,
-  `status` enum('upcoming','completed','draft') DEFAULT 'upcoming',
+  `status` enum('upcoming','ongoing','completed') DEFAULT 'upcoming',
   `description` text DEFAULT NULL,
-  `excerpt` varchar(500) DEFAULT NULL,
-  `featured_image` varchar(500) DEFAULT NULL,
-  `slug` varchar(200) DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `excerpt` text DEFAULT NULL,
+  `featured_image` varchar(512) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `events` (`id`,`title`,`event_date`,`event_time`,`location`,`status`,`description`,`excerpt`,`featured_image`,`slug`,`created_at`,`updated_at`) VALUES
-('1','Ramadan Food Distribution 2025','2025-03-15',NULL,'Gusau, Zamfara','completed','Distributed food to 1,200 households across Gusau during Ramadan.','1,200 households reached across Gusau.','events/food.jpg','ramadan-food-distribution','2026-11-06 23:22:15','2026-11-06 23:22:15'),
-('2','Free Medical Outreach – Anka LGA','2025-08-10','09:00:00','Anka General Hospital','completed','Provided free medical consultations and medicines to 800 patients.','Free consultations & medicines for 800 patients in Anka LGA.','events/medical.jpg','medical-outreach-anka','2026-11-06 23:22:15','2026-11-06 23:22:15'),
-('3','Skills Acquisition Graduation 2026 (edited)','2026-09-20',NULL,'ZGLF Centre, Gusau','upcoming','Updated by test','Updated by test',NULL,NULL,'2026-11-06 23:22:15','2026-11-06 23:22:46'),
-('4','Test Event Auto (edited)','2026-12-01',NULL,'Gusau','upcoming','Updated by test','Updated by test',NULL,NULL,'2026-11-06 23:22:46','2026-11-06 23:23:16'),
-('5','Test Event Auto','2026-12-01','10:00:00','Gusau','upcoming','Automated test event','Test excerpt','events/food.jpg',NULL,'2026-11-06 23:23:16','2026-11-06 23:23:16');
+--
+-- Dumping data for table `events`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `events` WRITE;
+/*!40000 ALTER TABLE `events` DISABLE KEYS */;
+INSERT INTO `events` VALUES
+(1,'launch','ZGLF Official Launch (edited)','2026-01-15','10:00','Gusau, Zamfara','upcoming','Updated by test','Updated by test',NULL,'2026-11-07 19:31:43'),
+(2,NULL,'Test Event Auto','2026-12-01','10:00','Gusau','upcoming','Automated test event','Test excerpt','events/food.jpg','2026-11-07 19:31:44');
+/*!40000 ALTER TABLE `events` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
+-- Table structure for table `hero_slides`
+--
 
 DROP TABLE IF EXISTS `hero_slides`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `hero_slides` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `position` int(11) NOT NULL DEFAULT 0,
-  `type` enum('image','video') NOT NULL DEFAULT 'image',
-  `url` varchar(500) NOT NULL,
+  `position` int(11) DEFAULT 0,
+  `type` enum('image','video') DEFAULT 'image',
+  `url` varchar(512) DEFAULT NULL,
   `alt_text` varchar(255) DEFAULT NULL,
-  `caption` varchar(500) DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `caption` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `hero_slides` (`id`,`position`,`type`,`url`,`alt_text`,`caption`,`created_at`) VALUES
-('1','0','image','/images/hero-children.jpg','Children learning','Education is the most powerful weapon which you can use to change the world.','2026-11-06 23:22:15'),
-('2','1','image','/images/hero-community.jpg','Community gathering','Every child deserves a chance to learn.','2026-11-06 23:22:15'),
-('3','2','image','/images/hero-volunteers.jpg','Volunteers','Together we build stronger communities.','2026-11-06 23:22:15'),
-('4','3','image','/images/team-community.jpg','Team in community','Hope · Empowerment · Service.','2026-11-06 23:22:15');
+--
+-- Dumping data for table `hero_slides`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `hero_slides` WRITE;
+/*!40000 ALTER TABLE `hero_slides` DISABLE KEYS */;
+/*!40000 ALTER TABLE `hero_slides` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
+-- Table structure for table `media_library`
+--
 
 DROP TABLE IF EXISTS `media_library`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `media_library` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `title` varchar(200) DEFAULT NULL,
-  `category` varchar(80) DEFAULT 'General',
-  `type` enum('image','video') NOT NULL DEFAULT 'image',
-  `url` varchar(500) NOT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  `category` varchar(64) DEFAULT NULL,
+  `type` enum('image','video') DEFAULT 'image',
+  `url` varchar(512) DEFAULT NULL,
   `uploaded_by` int(11) DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `uploaded_by` (`uploaded_by`),
-  CONSTRAINT `media_library_ibfk_1` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `media_library` (`id`,`title`,`category`,`type`,`url`,`uploaded_by`,`created_at`) VALUES
-('1','Hero children','Hero','image','/images/hero-children.jpg',NULL,'2026-11-06 23:22:15'),
-('2','Community gathering','Hero','image','/images/hero-community.jpg',NULL,'2026-11-06 23:22:15'),
-('3','Volunteers','Hero','image','/images/hero-volunteers.jpg',NULL,'2026-11-06 23:22:15'),
-('4','Scholarship awards','Education','image','/images/education-scholarship.jpg',NULL,'2026-11-06 23:22:15'),
-('5','Youth training','Youth','image','/images/youth-empowerment.jpg',NULL,'2026-11-06 23:22:15'),
-('6','Food distribution','Humanitarian','image','/images/humanitarian-food.jpg',NULL,'2026-11-06 23:22:15'),
-('7','Medical outreach','Health','image','/images/medical-outreach.jpg',NULL,'2026-11-06 23:22:15'),
-('8','Adult literacy class','Education','image','/images/literacy-class.jpg',NULL,'2026-11-06 23:22:15'),
-('9','Entrepreneurship','Programs','image','/images/entrepreneurship.jpg',NULL,'2026-11-06 23:22:15'),
-('10','Team & community','Programs','image','/images/team-community.jpg',NULL,'2026-11-06 23:22:15'),
-('11','Ramadan Food Distribution 2025','Events','image','/events/food.jpg','1','2026-11-06 23:22:15'),
-('12','Free Medical Outreach','Events','image','/events/medical.jpg','1','2026-11-06 23:22:15'),
-('13','Skills Acquisition Graduation','Events','image','/events/graduation.jpg','1','2026-11-06 23:22:15');
+--
+-- Dumping data for table `media_library`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `media_library` WRITE;
+/*!40000 ALTER TABLE `media_library` DISABLE KEYS */;
+INSERT INTO `media_library` VALUES
+(1,'Auto-test upload','General','image','/uploads/images/20261107_193144_849fbcee.jpg',1,'2026-11-07 19:31:44'),
+(2,'Auto-test upload','General','image','/uploads/images/20261107_193144_3cd7d706.jpg',1,'2026-11-07 19:31:44');
+/*!40000 ALTER TABLE `media_library` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
+-- Table structure for table `members`
+--
 
 DROP TABLE IF EXISTS `members`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `members` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(150) NOT NULL,
-  `email` varchar(190) DEFAULT NULL,
-  `phone` varchar(40) DEFAULT NULL,
-  `state` varchar(80) DEFAULT NULL,
-  `tier` varchar(60) DEFAULT 'Applicant',
-  `status` enum('active','pending','inactive') DEFAULT 'pending',
+  `name` varchar(128) DEFAULT NULL,
+  `email` varchar(128) DEFAULT NULL,
+  `phone` varchar(32) DEFAULT NULL,
+  `state` varchar(64) DEFAULT NULL,
+  `tier` varchar(64) DEFAULT 'Applicant',
+  `status` enum('pending','active','suspended') DEFAULT 'pending',
   `joined` date DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `created_at` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `members` (`id`,`name`,`email`,`phone`,`state`,`tier`,`status`,`joined`,`created_at`) VALUES
-('1','Aisha Bello','aisha@example.com','08030000001','Lagos','Gold','active','2026-03-01','2026-11-06 23:22:15'),
-('2','Fatima Aliyu','fatima@example.com','08030000002','Zamfara','General','active','2026-05-12','2026-11-06 23:22:15'),
-('3','Test Applicant','maryam@example.com','08030000003','Kaduna','General','active','2026-07-22','2026-11-06 23:22:15'),
-('4','Test Applicant','ta@example.com','08099999999','Zamfara','Applicant','pending','2026-11-06','2026-11-06 23:22:28'),
-('5','Test Applicant','ta@example.com','08099999999','Zamfara','Applicant','pending','2026-11-06','2026-11-06 23:22:45'),
-('6','Test Applicant','ta@example.com','08099999999','Zamfara','Applicant','pending','2026-11-06','2026-11-06 23:23:15');
+--
+-- Dumping data for table `members`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `members` WRITE;
+/*!40000 ALTER TABLE `members` DISABLE KEYS */;
+INSERT INTO `members` VALUES
+(1,'Test Applicant','ta@example.com','08099999999','Zamfara','Applicant','active','2026-11-07','2026-11-07 19:31:43');
+/*!40000 ALTER TABLE `members` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
+-- Table structure for table `messages`
+--
 
 DROP TABLE IF EXISTS `messages`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `messages` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(150) NOT NULL,
-  `email` varchar(190) DEFAULT NULL,
+  `name` varchar(128) DEFAULT NULL,
+  `email` varchar(128) DEFAULT NULL,
   `subject` varchar(255) DEFAULT NULL,
   `message` text DEFAULT NULL,
-  `is_read` tinyint(1) DEFAULT 0,
-  `source` varchar(40) DEFAULT 'contact',
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `source` varchar(32) DEFAULT 'contact',
+  `is_read` tinyint(4) DEFAULT 0,
+  `created_at` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `messages` (`id`,`name`,`email`,`subject`,`message`,`is_read`,`source`,`created_at`) VALUES
-('1','Amina Sani','amina@example.com','Volunteer Enquiry','I would like to volunteer.','0','contact','2026-11-06 23:22:15'),
-('2','Garba Muhammad','garba@example.com','Zakat Question','Question about zakat distribution.','1','contact','2026-11-06 23:22:15'),
-('3','Test','t@example.com','Hi','test contact','0','contact','2026-11-06 23:22:28'),
-('4','Test','t@example.com','Hi','test contact','0','contact','2026-11-06 23:22:45'),
-('5','Test','t@example.com','Hi','test contact','0','contact','2026-11-06 23:23:15');
+--
+-- Dumping data for table `messages`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `messages` WRITE;
+/*!40000 ALTER TABLE `messages` DISABLE KEYS */;
+INSERT INTO `messages` VALUES
+(1,'Test','t@example.com','Hi','test contact','contact',1,'2026-11-07 19:31:43');
+/*!40000 ALTER TABLE `messages` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
+-- Table structure for table `nec_members`
+--
 
 DROP TABLE IF EXISTS `nec_members`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `nec_members` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `role_title` varchar(120) NOT NULL,
-  `name` varchar(150) DEFAULT '',
-  `photo` varchar(500) DEFAULT NULL,
-  `gradient` varchar(80) DEFAULT 'from-azure-500 to-azure-700',
-  `icon` varchar(80) DEFAULT 'fa-star',
-  `duty` text DEFAULT NULL,
   `position` int(11) DEFAULT 0,
-  `published` tinyint(1) DEFAULT 1,
+  `role_title` varchar(128) DEFAULT NULL,
+  `name` varchar(128) DEFAULT NULL,
+  `photo` varchar(512) DEFAULT NULL,
+  `gradient` varchar(64) DEFAULT 'from-azure-500 to-azure-700',
+  `icon` varchar(64) DEFAULT 'fa-star',
+  `duty` text DEFAULT NULL,
+  `published` tinyint(4) DEFAULT 1,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `nec_members` (`id`,`role_title`,`name`,`photo`,`gradient`,`icon`,`duty`,`position`,`published`) VALUES
-('1','','Test NEC Name','/images/nec-president.jpg','from-azure-500 to-azure-700','fa-star','','0','0'),
-('2','Vice President','','/images/nec-vice.jpg','from-azure-500 to-azure-700','fa-user-tie','Acts on behalf of the President. Bank signatory in the President\'s absence.','1','1'),
-('3','Secretary General','','/images/nec-secretary.jpg','from-azure-500 to-azure-700','fa-pen-fancy','Handles correspondence, minutes, circulars, reports. A bank signatory.','2','1'),
-('4','Assistant Secretary','','/images/nec-assistant.jpg','from-azure-500 to-azure-700','fa-file-signature','Assists the Secretary General.','3','1'),
-('5','Treasurer','','/images/nec-treasurer.jpg','from-emerald-500 to-emerald-700','fa-sack-dollar','Custodian of finances. Deposits donations within 24 working hours. A bank signatory.','4','1'),
-('6','Public Relations Officer','','/images/nec-pro.jpg','from-violet-500 to-violet-700','fa-bullhorn','Publicises matters and acts as intermediary with the public.','5','1'),
-('7','Auditor','','/images/nec-auditor.jpg','from-rose-500 to-rose-700','fa-magnifying-glass-chart','Independently audits the foundation\'s accounts.','6','1'),
-('8','Patrons / Matrons','','/images/nec-patron.jpg','from-gold-400 to-gold-600','fa-star','Respected elders — one per geopolitical zone (six total).','7','1');
+--
+-- Dumping data for table `nec_members`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `nec_members` WRITE;
+/*!40000 ALTER TABLE `nec_members` DISABLE KEYS */;
+INSERT INTO `nec_members` VALUES
+(1,0,'National President','Test NEC Name',NULL,'from-azure-600 to-blue-800','fa-crown','Presides over all NEC meetings and provides strategic leadership.',1),
+(2,1,'Vice President','',NULL,'from-sky-500 to-azure-600','fa-hands-helping','Assists the President and acts in their absence.',1),
+(3,2,'National Secretary','',NULL,'from-gold-500 to-yellow-600','fa-pen-fancy','Keeps records, correspondence, and minutes of all meetings.',1),
+(4,3,'Deputy National Secretary','',NULL,'from-amber-500 to-orange-600','fa-file-alt','Assists the Secretary and handles specific delegated duties.',1),
+(5,4,'National Treasurer','',NULL,'from-green-500 to-emerald-600','fa-coins','Manages all funds, accounts, and financial records of the Foundation.',1),
+(6,5,'Financial Secretary','',NULL,'from-teal-500 to-cyan-600','fa-calculator','Prepares budgets, financial reports, and fundraising plans.',1),
+(7,6,'National Publicity Secretary','',NULL,'from-rose-500 to-red-600','fa-bullhorn','Handles media, communications, and public image.',1),
+(8,7,'National Welfare Officer','',NULL,'from-pink-500 to-rose-600','fa-heart','Oversees member welfare and humanitarian outreach.',1);
+/*!40000 ALTER TABLE `nec_members` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
+-- Table structure for table `programs`
+--
 
 DROP TABLE IF EXISTS `programs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `programs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `title` varchar(200) NOT NULL,
-  `slug` varchar(120) NOT NULL,
-  `tag` varchar(80) DEFAULT NULL,
-  `tag_color` varchar(20) DEFAULT '#1a37b8',
-  `icon` varchar(80) DEFAULT 'fa-star',
-  `cover` varchar(500) DEFAULT NULL,
+  `slug` varchar(128) DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
+  `tag` varchar(64) DEFAULT NULL,
+  `tag_color` varchar(16) DEFAULT '#1a37b8',
+  `icon` varchar(64) DEFAULT 'fa-star',
+  `cover` varchar(512) DEFAULT NULL,
   `short_desc` text DEFAULT NULL,
-  `full_desc` longtext DEFAULT NULL,
-  `published` tinyint(1) DEFAULT 0,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `full_desc` text DEFAULT NULL,
+  `published` tinyint(4) DEFAULT 1,
   PRIMARY KEY (`id`),
   UNIQUE KEY `slug` (`slug`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `programs` (`id`,`title`,`slug`,`tag`,`tag_color`,`icon`,`cover`,`short_desc`,`full_desc`,`published`,`created_at`,`updated_at`) VALUES
-('1','Education Scholarships','education-scholarships','Test','#1a37b8','fa-book-open','/images/education-scholarship.jpg','','','1','2026-11-06 23:22:15','2026-11-06 23:22:46'),
-('2','Skills Acquisition','skills','Youth','#8b5cf6','fa-hands-holding-child','/images/youth-empowerment.jpg','Vocational and ICT skills training for youths and women.','<p>Vocational training in tailoring, carpentry, welding, ICT, beauty therapy and more.</p>','1','2026-11-06 23:22:15','2026-11-06 23:22:15'),
-('3','Ramadan & Food Relief','relief','Humanitarian','#c9900d','fa-bowl-food','/images/humanitarian-food.jpg','Ramadan feeding and food distribution during crises.','<p>Annual Ramadan feeding and emergency food relief.</p>','1','2026-11-06 23:22:15','2026-11-06 23:22:15'),
-('4','Free Medical Outreach','medical','Health','#2e7d32','fa-kit-medical','/images/medical-outreach.jpg','Mobile medical camps for rural communities.','<p>Free medical consultations and medications.</p>','1','2026-11-06 23:22:15','2026-11-06 23:22:15'),
-('5','Adult Literacy Classes','literacy','Education','#1a37b8','fa-book-open-reader','/images/literacy-class.jpg','Reading, writing and numeracy classes for adults.','<p>Adult literacy classes across rural communities.</p>','1','2026-11-06 23:22:15','2026-11-06 23:22:15'),
-('6','Micro-Grant Scheme','microgrant','Entrepreneurship','#ef6c00','fa-lightbulb','/images/entrepreneurship.jpg','Small business grants for young entrepreneurs and women.','<p>Small capital grants with mentoring.</p>','1','2026-11-06 23:22:15','2026-11-06 23:22:15');
+--
+-- Dumping data for table `programs`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `programs` WRITE;
+/*!40000 ALTER TABLE `programs` DISABLE KEYS */;
+INSERT INTO `programs` VALUES
+(1,'-ducation-iteracy','Education & Literacy','Test','#1a37b8','fa-book-open',NULL,'Updated by automated test','<p>Test content</p>',1),
+(2,'healthcare','Healthcare Access','Health','#22c55e','fa-heartbeat',NULL,'Providing free medical outreach, maternal health, and disease prevention in rural communities.',NULL,1),
+(3,'empowerment','Economic Empowerment','Empowerment','#d4a84b','fa-hands-usd',NULL,'Skills acquisition, micro-grants, and women/youth cooperative programs.',NULL,1),
+(4,'humanitarian','Humanitarian Aid','Humanitarian','#ef4444','fa-hands-helping',NULL,'Emergency relief for displaced persons, flood victims, and vulnerable families.',NULL,1);
+/*!40000 ALTER TABLE `programs` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
+-- Table structure for table `site_settings`
+--
 
 DROP TABLE IF EXISTS `site_settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `site_settings` (
-  `k` varchar(80) NOT NULL,
+  `k` varchar(64) NOT NULL,
   `v` text DEFAULT NULL,
   PRIMARY KEY (`k`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `site_settings` (`k`,`v`) VALUES
-('address','Sabuwar Hanya, Tsamiyar Masaka Road, Tudun Wada, Gusau, Zamfara State'),
-('contactEmail','info@zeeglowlink.org'),
+--
+-- Dumping data for table `site_settings`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `site_settings` WRITE;
+/*!40000 ALTER TABLE `site_settings` DISABLE KEYS */;
+INSERT INTO `site_settings` VALUES
+('about_body','<p>Zee Glow Link Foundation (ZGLF) is a registered non-governmental organization dedicated to empowering marginalized communities across Nigeria.</p>'),
+('about_cta','Learn Our Story'),
+('about_title','About Zee Glow Link Foundation'),
+('accent_color','#d4a84b'),
+('bankAccounts','[]'),
 ('currency','NGN'),
 ('currencySymbol','₦'),
+('donationNote','Every donation makes a difference. Thank you for supporting Zee Glow Link Foundation.'),
+('donationTitle','Support Our Mission'),
 ('email','info@zeeglowlink.org'),
-('facebook',''),
-('hero_body','Zee Glow Link Foundation (ZGLF) is a civil welfare organisation dedicated to youth empowerment, community development, education, and humanitarian service across Nigeria and beyond.'),
-('hero_cta1','Support Our Mission'),
-('hero_cta2','Get Involved'),
-('hero_headline','Spreading <em>hope</em>, empowering <em>communities</em>, delivering <em>service</em>.'),
-('hero_subhead','Registered civil welfare organisation · Gusau, Zamfara State'),
-('hero_visionquote','To uphold unity, peace, excellence and sustainable development for a better world.'),
-('hours','Mon–Fri: 9am–5pm'),
-('instagram',''),
-('key','currency'),
+('facebook','#'),
+('favicon_url','images/favicon.png'),
+('footerAbout','<p><strong>Zee Glow Link Foundation</strong> — a registered Nigerian NGO dedicated to empowering communities across Nigeria through education, healthcare, economic empowerment, and humanitarian aid.</p>'),
+('footerCopyright','© 2026 Zee Glow Link Foundation. All rights reserved.'),
+('hero_cta1','Donate Now'),
+('hero_cta2','Join Us'),
+('hq_address','Gusau, Zamfara State, Nigeria'),
+('instagram','#'),
+('linkedin','#'),
+('logo_url','images/zglf-logo.png'),
 ('maintenanceMode','0'),
-('mission','To spread hope, empower communities, and deliver selfless service with integrity and compassion.'),
-('motto','Hope · Empowerment · Service'),
-('orgName','Zee Glow Link Foundation'),
-('phone','+234'),
-('shortName','ZGLF'),
-('tagline','Spreading hope, empowering communities, delivering service.'),
-('twitter',''),
-('value','NGN'),
-('vision','To uphold unity, peace, excellence and sustainable development for a better world.'),
-('whatsapp','');
+('mission_body','<p>To empower and uplift...</p>'),
+('mission_title','Our Mission'),
+('nav_donate','1'),
+('nav_login','1'),
+('org_type','NGO • Registered in Nigeria'),
+('paystackEnabled','0'),
+('paystackKey',''),
+('paystackSecret',''),
+('phone','+234 803 000 0000'),
+('pillars_body','Our work is anchored on four pillars that reflect our constitution and mission.'),
+('pillars_title','Our Four Pillars'),
+('primary_color','#1a37b8'),
+('site_name','Zee Glow Link Foundation'),
+('site_tagline','Empowering communities across Nigeria'),
+('twitter','#'),
+('values_body','<p>Integrity, Service...</p>'),
+('values_title','Our Values'),
+('vision_body','<p>A Nigeria...</p>'),
+('vision_title','Our Vision'),
+('youtube','#');
+/*!40000 ALTER TABLE `site_settings` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
+-- Table structure for table `user_tokens`
+--
 
 DROP TABLE IF EXISTS `user_tokens`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `user_tokens` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL,
-  `token` varchar(128) NOT NULL,
-  `expires_at` datetime NOT NULL,
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `user_id` int(11) DEFAULT NULL,
+  `token` varchar(128) DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `token` (`token`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `user_tokens_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `user_tokens` (`id`,`user_id`,`token`,`expires_at`,`created_at`) VALUES
-('1','1','d49d04388f1f02f77dd92e21c1776bf1597fc2f8daa56c083e9fe65a51e56354','2026-11-13 23:22:29','2026-11-06 23:22:29'),
-('2','1','2c38a7528f51f0ae74e1b837307cb7572000b572bf2279d6d0620cfe28ab6863','2026-11-13 23:22:29','2026-11-06 23:22:29'),
-('3','1','01378a403a4bcc5914d6a13674b70743e74670dc57187028d5a11d668833aad6','2026-11-13 23:22:45','2026-11-06 23:22:45'),
-('4','1','59bd74d3bd2b4b24e34b74a7d187a04d6f04c82f1353613d8af3c65d8c215a84','2026-11-13 23:22:45','2026-11-06 23:22:45'),
-('7','1','b09e1639aeb46a949fbc756659c0c28eaaac82618dc794335be9bdbd827d0f54','2026-11-13 23:22:47','2026-11-06 23:22:47'),
-('8','1','04970ac9cb28641273852c6a5bc6b2e7e9562d9867748ea7c7007cbf441243b6','2026-11-13 23:22:47','2026-11-06 23:22:47'),
-('9','1','881c689905ee6a66673dc5d37ecaa3f68d697bbc3f75be2596053d7d2e3183f2','2026-11-13 23:22:48','2026-11-06 23:22:48'),
-('10','1','cb29dcde41f3fd94be0b35b22003a559da931d9dcb397de6ca8ae14c64727bd3','2026-11-13 23:22:48','2026-11-06 23:22:48'),
-('11','1','dd83c705aef5df1e1b4e7dc9abbf6319933eebc13083fd80fd72da3fc0590d0e','2026-11-13 23:23:15','2026-11-06 23:23:15'),
-('12','1','f785fe77f31962a12cf135205f84b9013796802622119b3483358ad0f6fe54a2','2026-11-13 23:23:15','2026-11-06 23:23:15'),
-('15','1','f6556e5a30d3f20c0c2f345bb6e674ebc6f8c44988748d9b59e9374d432a0e2b','2026-11-13 23:23:17','2026-11-06 23:23:17'),
-('16','1','3eef3828260d669193aac1146ee514b108661e9faa3e29292070d32f2959458a','2026-11-13 23:23:17','2026-11-06 23:23:17'),
-('17','1','aee00bc6f0fb580b384e6bf3b71199857af31ff8f6fa17b921e608e006cb7bac','2026-11-13 23:23:18','2026-11-06 23:23:18'),
-('18','1','b7d38e5d7e0648b3ed5002ed3a08145cc40e0f4d302aadb130b7099ca59f5d1f','2026-11-13 23:23:18','2026-11-06 23:23:18');
+--
+-- Dumping data for table `user_tokens`
+--
+
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `user_tokens` WRITE;
+/*!40000 ALTER TABLE `user_tokens` DISABLE KEYS */;
+INSERT INTO `user_tokens` VALUES
+(1,1,'3f24965b4e9d66156ebc56482efdf41af1ab14cb5cfd7476','2026-11-07 19:31:43'),
+(2,1,'7c1c8358c347fd0ca44c2db8023e7c14b45e8391139981c1','2026-11-07 19:31:43'),
+(3,2,'172cb91e556e16564d4751be20bdd78c1a460d4887ca89d3','2026-11-07 19:31:44'),
+(4,2,'c89f4aac516feab306074bfcb4d96692d873086f36c2cfe9','2026-11-07 19:31:44'),
+(5,1,'c145faffd978528d598a1eaa647d4c81f3e1cffbee2d1867','2026-11-07 19:31:45'),
+(6,1,'6fb2f9b838554627012b4974b3eeb734ad0ba2d5ed1a16ba','2026-11-07 19:31:45'),
+(7,1,'772ebe653d4938f0f66ca30cd5422f955e5ea03dd2e128b0','2026-11-07 19:31:46'),
+(8,1,'b95f1a49fd236848efe8eff5c4b3f19d46c1922c21824236','2026-11-07 19:31:46');
+/*!40000 ALTER TABLE `user_tokens` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+
+--
+-- Table structure for table `users`
+--
 
 DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(150) NOT NULL,
-  `email` varchar(190) DEFAULT NULL,
-  `username` varchar(80) NOT NULL,
+  `username` varchar(64) NOT NULL,
+  `name` varchar(128) DEFAULT NULL,
+  `email` varchar(128) DEFAULT NULL,
   `password_hash` varchar(255) NOT NULL,
-  `role` enum('admin','staff','editor','viewer') NOT NULL DEFAULT 'staff',
+  `role` enum('admin','editor','staff') DEFAULT 'staff',
   `perms` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`perms`)),
-  `status` enum('active','disabled') NOT NULL DEFAULT 'active',
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `status` enum('active','disabled') DEFAULT 'active',
+  `created_at` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
-  UNIQUE KEY `username` (`username`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+  UNIQUE KEY `username` (`username`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-INSERT INTO `users` (`id`,`name`,`email`,`username`,`password_hash`,`role`,`perms`,`status`,`created_at`) VALUES
-('1','Administrator','admin@zeeglowlink.org','admin','$2y$12$zZdPcgKET1dR4I3/DwH2TedHX/WSR63Mx5ha40OtiQbgOEG6V3ACa','admin','{\"dashboard\":1,\"hero\":1,\"site\":1,\"programs\":1,\"events\":1,\"donations\":1,\"photos\":1,\"nec\":1,\"members\":1,\"messages\":1,\"users\":1,\"reports\":1,\"settings\":1}','active','2026-11-06 23:22:15');
+--
+-- Dumping data for table `users`
+--
 
-SET FOREIGN_KEY_CHECKS=1;
+SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES
+(1,'admin','Administrator','admin@zglf.org','$2y$12$fcI74QGFhWiaogqkeYHM9OKfmwQguB7HnwZ4KFGPxE9BHl09aYTBW','admin','{\"dashboard\":1,\"hero\":1,\"site\":1,\"footer\":1,\"donations\":1,\"programs\":1,\"events\":1,\"photos\":1,\"nec\":1,\"members\":1,\"messages\":1,\"users\":1,\"reports\":1,\"settings\":1}','active','2026-11-07 19:31:43'),
+(2,'editor1','editor1','ed@zglf.ng','$2y$12$/c8XLXztwSNfl/WS4uTO3O5.7kf3q3CvnDUHvwwuhNI1Nrd3sMnX.','editor','{\"dashboard\":1,\"programs\":1,\"events\":1,\"hero\":0,\"nec\":0,\"photos\":0,\"donations\":0,\"members\":0,\"messages\":1,\"users\":0,\"site\":0,\"settings\":0,\"reports\":0}','active','2026-11-07 19:31:44');
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
+COMMIT;
+SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
+
+-- Dump completed on 2026-11-07 19:31:52

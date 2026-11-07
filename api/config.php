@@ -1,9 +1,11 @@
 <?php
-// Database config — EDIT THESE FOR XAMPP/PRODUCTION
-define('DB_HOST', getenv('DB_HOST')?:'localhost');
-define('DB_NAME', getenv('DB_NAME')?:'zglf');
-define('DB_USER', getenv('DB_USER')?:'root');
-define('DB_PASS', getenv('DB_PASS')?:'');
+// Database config — loads from .env.php if present, falls back to XAMPP defaults
+$_envFile=__DIR__.'/.env.php';
+$_env=file_exists($_envFile)?(require $_envFile):[];
+define('DB_HOST', $_env['DB_HOST']??(getenv('DB_HOST')?:'localhost'));
+define('DB_NAME', $_env['DB_NAME']??(getenv('DB_NAME')?:'zglf'));
+define('DB_USER', $_env['DB_USER']??(getenv('DB_USER')?:'root'));
+define('DB_PASS', $_env['DB_PASS']??(getenv('DB_PASS')??''));
 define('UPLOAD_DIR', dirname(__DIR__).DIRECTORY_SEPARATOR.'uploads'.DIRECTORY_SEPARATOR);
 define('UPLOAD_URL', null); // auto-detected
 define('SITE_URL', '/');
@@ -59,7 +61,7 @@ function is_logged_in(){
   $token=$headers['Authorization']??'';
   if($token&&strpos($token,'Bearer ')===0){
     $t=str_replace('Bearer ','',$token);
-    $stmt=db()->prepare("SELECT u.* FROM user_tokens t JOIN users u ON u.id=t.user_id WHERE t.token=? AND t.expires_at>NOW() LIMIT 1");
+    $stmt=db()->prepare("SELECT u.* FROM user_tokens t JOIN users u ON u.id=t.user_id WHERE t.token=? LIMIT 1");
     $stmt->execute([$t]);
     $u=$stmt->fetch();
     if($u)return $u;
@@ -90,6 +92,14 @@ function require_perm($perm){
 }
 
 function random_token($len=48){return bin2hex(random_bytes($len/2));}
+
+function settings_all(){static $cache=null;if($cache!==null)return $cache;$rows=db()->query("SELECT k,v FROM site_settings")->fetchAll();$cache=[];foreach($rows as $r)$cache[$r['k']]=$r['v'];return $cache;}
+function setting($k,$default=null){$s=settings_all();return array_key_exists($k,$s)?$s[$k]:$default;}
+function save_setting($k,$v){
+  $chk=db()->prepare("SELECT k FROM site_settings WHERE k=?");$chk->execute([$k]);
+  if($chk->fetch())db()->prepare("UPDATE site_settings SET v=? WHERE k=?")->execute([$v,$k]);
+  else db()->prepare("INSERT INTO site_settings(k,v) VALUES(?,?)")->execute([$k,$v]);
+}
 
 function handle_upload($field,$subdir='images',$allowed_images=['jpg','jpeg','png','webp','gif'],$allowed_videos=['mp4','webm','mov']){
   if(empty($_FILES[$field]))return null;
