@@ -30,7 +30,7 @@ CREATE TABLE `activity_log` (
   `detail` text DEFAULT NULL,
   `created_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -41,18 +41,19 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `activity_log` WRITE;
 /*!40000 ALTER TABLE `activity_log` DISABLE KEYS */;
 INSERT INTO `activity_log` VALUES
-(1,1,'user_create','Created user editor1','2026-11-07 19:31:44'),
-(2,1,'settings_edit','Updated settings','2026-11-07 19:31:44'),
-(3,1,'program_edit','Program: Education & Literacy','2026-11-07 19:31:44'),
-(4,1,'event_edit','Event: Test Event Auto','2026-11-07 19:31:44'),
-(5,1,'event_edit','Event: ZGLF Official Launch (edited)','2026-11-07 19:31:44'),
-(6,1,'nec_edit','NEC: National President','2026-11-07 19:31:44'),
-(7,1,'media_upload','Uploaded image /uploads/images/20261107_193144_849fbcee.jpg','2026-11-07 19:31:44'),
-(8,1,'media_upload','Uploaded image /uploads/images/20261107_193144_3cd7d706.jpg','2026-11-07 19:31:44'),
-(9,1,'donation_verify','Donation 1 set to verified','2026-11-07 19:31:44'),
-(10,1,'message_read','Toggled message 1','2026-11-07 19:31:44'),
-(11,1,'password_change','Changed own password','2026-11-07 19:31:45'),
-(12,1,'password_change','Changed own password','2026-11-07 19:31:45');
+(1,1,'user_create','Created user editor1','2026-11-07 21:16:30'),
+(2,1,'settings_edit','Updated settings','2026-11-07 21:16:31'),
+(3,1,'program_edit','Program: Education & Literacy','2026-11-07 21:16:31'),
+(4,1,'event_edit','Event: Test Event Auto','2026-11-07 21:16:31'),
+(5,1,'event_edit','Event: ZGLF Official Launch (edited)','2026-11-07 21:16:31'),
+(6,1,'nec_edit','NEC: National President','2026-11-07 21:16:31'),
+(7,1,'media_upload','Uploaded image /uploads/images/20261107_211631_0c2965a1.jpg','2026-11-07 21:16:31'),
+(8,1,'media_upload','Uploaded image /uploads/images/20261107_211631_60fde7c7.jpg','2026-11-07 21:16:31'),
+(9,1,'donation_verify','Donation 1 set to verified','2026-11-07 21:16:31'),
+(10,1,'message_read','Toggled message 1','2026-11-07 21:16:31'),
+(11,1,'password_change','Changed own password','2026-11-07 21:16:31'),
+(12,1,'password_change','Changed own password','2026-11-07 21:16:32'),
+(13,1,'settings_edit','Updated settings','2026-11-07 21:16:44');
 /*!40000 ALTER TABLE `activity_log` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -88,7 +89,7 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `donations` WRITE;
 /*!40000 ALTER TABLE `donations` DISABLE KEYS */;
 INSERT INTO `donations` VALUES
-(1,'Test Donor','td@example.com',1000.00,'General','Bank Transfer',0,'','verified','2026-11-07 19:31:43');
+(1,'Test Donor','td@example.com',1000.00,'General','Bank Transfer',0,'','verified','2026-11-07 21:16:29');
 /*!40000 ALTER TABLE `donations` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -156,8 +157,8 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `events` WRITE;
 /*!40000 ALTER TABLE `events` DISABLE KEYS */;
 INSERT INTO `events` VALUES
-(1,'launch','ZGLF Official Launch (edited)','2026-01-15','10:00','Gusau, Zamfara','upcoming','Updated by test','Updated by test',NULL,'2026-11-07 19:31:43'),
-(2,NULL,'Test Event Auto','2026-12-01','10:00','Gusau','upcoming','Automated test event','Test excerpt','events/food.jpg','2026-11-07 19:31:44');
+(1,'launch','ZGLF Official Launch (edited)','2026-01-15','10:00','Gusau, Zamfara','upcoming','Updated by test','Updated by test',NULL,'2026-11-07 21:16:18'),
+(2,NULL,'Test Event Auto','2026-12-01','10:00','Gusau','upcoming','Automated test event','Test excerpt','events/food.jpg','2026-11-07 21:16:31');
 /*!40000 ALTER TABLE `events` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -220,8 +221,8 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `media_library` WRITE;
 /*!40000 ALTER TABLE `media_library` DISABLE KEYS */;
 INSERT INTO `media_library` VALUES
-(1,'Auto-test upload','General','image','/uploads/images/20261107_193144_849fbcee.jpg',1,'2026-11-07 19:31:44'),
-(2,'Auto-test upload','General','image','/uploads/images/20261107_193144_3cd7d706.jpg',1,'2026-11-07 19:31:44');
+(1,'Auto-test upload','General','image','/uploads/images/20261107_211631_0c2965a1.jpg',1,'2026-11-07 21:16:31'),
+(2,'Auto-test upload','General','image','/uploads/images/20261107_211631_60fde7c7.jpg',1,'2026-11-07 21:16:31');
 /*!40000 ALTER TABLE `media_library` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -256,7 +257,7 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `members` WRITE;
 /*!40000 ALTER TABLE `members` DISABLE KEYS */;
 INSERT INTO `members` VALUES
-(1,'Test Applicant','ta@example.com','08099999999','Zamfara','Applicant','active','2026-11-07','2026-11-07 19:31:43');
+(1,'Test Applicant','ta@example.com','08099999999','Zamfara','Applicant','active','2026-11-07','2026-11-07 21:16:29');
 /*!40000 ALTER TABLE `members` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -290,7 +291,7 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `messages` WRITE;
 /*!40000 ALTER TABLE `messages` DISABLE KEYS */;
 INSERT INTO `messages` VALUES
-(1,'Test','t@example.com','Hi','test contact','contact',1,'2026-11-07 19:31:43');
+(1,'Test','t@example.com','Hi','test contact','contact',1,'2026-11-07 21:16:29');
 /*!40000 ALTER TABLE `messages` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -404,10 +405,10 @@ INSERT INTO `site_settings` VALUES
 ('about_cta','Learn Our Story'),
 ('about_title','About Zee Glow Link Foundation'),
 ('accent_color','#d4a84b'),
-('bankAccounts','[]'),
+('bankAccounts','[{\"bankName\":\"Access Bank\",\"accountName\":\"Zee Glow Link Foundation\",\"accountNumber\":\"0123456789\"}]'),
 ('currency','NGN'),
 ('currencySymbol','₦'),
-('donationNote','Every donation makes a difference. Thank you for supporting Zee Glow Link Foundation.'),
+('donationNote','<p>Thank you for donating.</p>'),
 ('donationTitle','Support Our Mission'),
 ('email','info@zeeglowlink.org'),
 ('facebook','#'),
@@ -462,7 +463,7 @@ CREATE TABLE `user_tokens` (
   UNIQUE KEY `token` (`token`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `user_tokens_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -473,14 +474,15 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `user_tokens` WRITE;
 /*!40000 ALTER TABLE `user_tokens` DISABLE KEYS */;
 INSERT INTO `user_tokens` VALUES
-(1,1,'3f24965b4e9d66156ebc56482efdf41af1ab14cb5cfd7476','2026-11-07 19:31:43'),
-(2,1,'7c1c8358c347fd0ca44c2db8023e7c14b45e8391139981c1','2026-11-07 19:31:43'),
-(3,2,'172cb91e556e16564d4751be20bdd78c1a460d4887ca89d3','2026-11-07 19:31:44'),
-(4,2,'c89f4aac516feab306074bfcb4d96692d873086f36c2cfe9','2026-11-07 19:31:44'),
-(5,1,'c145faffd978528d598a1eaa647d4c81f3e1cffbee2d1867','2026-11-07 19:31:45'),
-(6,1,'6fb2f9b838554627012b4974b3eeb734ad0ba2d5ed1a16ba','2026-11-07 19:31:45'),
-(7,1,'772ebe653d4938f0f66ca30cd5422f955e5ea03dd2e128b0','2026-11-07 19:31:46'),
-(8,1,'b95f1a49fd236848efe8eff5c4b3f19d46c1922c21824236','2026-11-07 19:31:46');
+(1,1,'7c276a354805f484c8f83386ead34d4d859ff7c039dda506','2026-11-07 21:16:30'),
+(2,1,'da464e513f88691ff14528e8c1ec8dab7aced924395049fa','2026-11-07 21:16:30'),
+(3,2,'bbf72c4c4e66ad025db444c84be3316b62cddd7bdad5e36e','2026-11-07 21:16:31'),
+(4,2,'f701a98febe8cb665fa5b57c9f39d2cf9686d83452b6a439','2026-11-07 21:16:31'),
+(5,1,'37b4b42bbf5256bd6e35b3c5ebcf6c9d4e8b58cad9b51ae5','2026-11-07 21:16:32'),
+(6,1,'97ffb9cd77f5b33a4920a52ab82404637363333993df8422','2026-11-07 21:16:32'),
+(7,1,'4efb6634267f9c3aa6b7ed2e921d419037e5a5805881fbf7','2026-11-07 21:16:33'),
+(8,1,'e30675db4cdbf4c3d0962e3c9b2fbbe0be17aeee828e8af1','2026-11-07 21:16:33'),
+(9,1,'39ceae9478b6b49531fe8e39edc246ed6600fdecc0562e4d','2026-11-07 21:16:44');
 /*!40000 ALTER TABLE `user_tokens` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -516,8 +518,8 @@ SET @OLD_AUTOCOMMIT=@@AUTOCOMMIT, @@AUTOCOMMIT=0;
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 INSERT INTO `users` VALUES
-(1,'admin','Administrator','admin@zglf.org','$2y$12$fcI74QGFhWiaogqkeYHM9OKfmwQguB7HnwZ4KFGPxE9BHl09aYTBW','admin','{\"dashboard\":1,\"hero\":1,\"site\":1,\"footer\":1,\"donations\":1,\"programs\":1,\"events\":1,\"photos\":1,\"nec\":1,\"members\":1,\"messages\":1,\"users\":1,\"reports\":1,\"settings\":1}','active','2026-11-07 19:31:43'),
-(2,'editor1','editor1','ed@zglf.ng','$2y$12$/c8XLXztwSNfl/WS4uTO3O5.7kf3q3CvnDUHvwwuhNI1Nrd3sMnX.','editor','{\"dashboard\":1,\"programs\":1,\"events\":1,\"hero\":0,\"nec\":0,\"photos\":0,\"donations\":0,\"members\":0,\"messages\":1,\"users\":0,\"site\":0,\"settings\":0,\"reports\":0}','active','2026-11-07 19:31:44');
+(1,'admin','Administrator','admin@zglf.org','$2y$12$OO3VtL4iHdVAOnGSDPpx3umF2B8YHvuiR.VERSie7QPA2eyzZaemO','admin','{\"dashboard\":1,\"hero\":1,\"site\":1,\"footer\":1,\"donations\":1,\"programs\":1,\"events\":1,\"photos\":1,\"nec\":1,\"members\":1,\"messages\":1,\"users\":1,\"reports\":1,\"settings\":1}','active','2026-11-07 21:16:18'),
+(2,'editor1','editor1','ed@zglf.ng','$2y$12$D6mrDLrji9uxTZS8kY/MK.XE5myscRraEqce9segFi.EyYKxDxN1.','editor','{\"dashboard\":1,\"programs\":1,\"events\":1,\"hero\":0,\"nec\":0,\"photos\":0,\"donations\":0,\"members\":0,\"messages\":1,\"users\":0,\"site\":0,\"settings\":0,\"reports\":0}','active','2026-11-07 21:16:30');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 COMMIT;
@@ -532,4 +534,4 @@ SET AUTOCOMMIT=@OLD_AUTOCOMMIT;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-11-07 19:31:52
+-- Dump completed on 2026-11-07 21:16:56

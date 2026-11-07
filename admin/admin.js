@@ -1,619 +1,996 @@
-/* ZGLF Admin Dashboard — professional admin panel */
-const API=window.location.pathname.replace(/\/admin\/.*$/,'/api');
+/* ============================================================
+   ZGLF Admin — connects to PHP backend at /api/
+============================================================ */
+const API=(function(){const u=new URL(window.location.href);const p=u.pathname.replace(/\/admin\/.*$/,'/');return p+'api/';})();
 let TOKEN=localStorage.getItem('zglf_token')||'';
-let ME=null;
-const faIcons=['fa-crown','fa-hands-helping','fa-pen-fancy','fa-file-alt','fa-coins','fa-calculator','fa-bullhorn','fa-heart','fa-star','fa-user-tie','fa-user','fa-user-friends','fa-users','fa-user-shield','fa-user-check','fa-user-graduate','fa-graduation-cap','fa-book','fa-book-open','fa-school','fa-chalkboard-teacher','fa-heartbeat','fa-stethoscope','fa-notes-medical','fa-pills','fa-hospital','fa-hand-holding-medical','fa-hands-usd','fa-money-bill-wave','fa-piggy-bank','fa-hand-holding-usd','fa-briefcase','fa-tools','fa-seedling','fa-tractor','fa-truck','fa-tint','fa-home','fa-place-of-worship','fa-utensils','fa-apple-alt','fa-bread-slice','fa-hands','fa-dove','fa-globe-africa','fa-flag','fa-award','fa-trophy','fa-medal','fa-ribbon','fa-gem','fa-bullhorn','fa-newspaper','fa-microphone','fa-camera','fa-video','fa-share-alt','fa-envelope','fa-phone','fa-map-marker-alt','fa-paper-plane','fa-gift','fa-donate','fa-hand-holding-heart','fa-praying-hands','fa-leaf','fa-tree','fa-sun','fa-fist-raised','fa-balance-scale','fa-gavel','fa-landmark','fa-shield-alt','fa-key','fa-lock','fa-unlock','fa-cog','fa-sliders-h','fa-wrench','fa-chart-line','fa-chart-bar','fa-chart-pie','fa-tasks','fa-clipboard-list','fa-list-alt','fa-calendar-alt','fa-calendar-check','fa-clock','fa-map-marked-alt','fa-compass','fa-route','fa-flag-checkered','fa-rocket','fa-lightbulb','fa-eye','fa-smile','fa-handshake','fa-link','fa-puzzle-piece','fa-futbol','fa-palette','fa-music','fa-theater-masks','fa-pray','fa-mosque','fa-church','fa-university'];
-const state={currentPage:'dashboard',pageData:{}};
-const $=s=>document.querySelector(s);const $$=s=>document.querySelectorAll(s);
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmtDate=d=>d?new Date(d+' UTC').toLocaleDateString('en-NG',{year:'numeric',month:'short',day:'numeric'}):'';
-const fmtMoney=n=>'₦'+Number(n||0).toLocaleString('en-NG',{minimumFractionDigits:2,maximumFractionDigits:2});
+let USER=JSON.parse(localStorage.getItem('zglf_user')||'null');
+let DATA={};
+let CURRENT_PAGE='dashboard';
 
-function authHeaders(){const h={'Content-Type':'application/json'};if(TOKEN)h['Authorization']='Bearer '+TOKEN;return h;}
-async function api(path,opts={}){opts.headers=opts.headers||{};if(!(opts.body instanceof FormData)&&!opts.headers['Content-Type'])opts.headers['Content-Type']='application/json';if(TOKEN)opts.headers['Authorization']='Bearer '+TOKEN;const r=await fetch(API+path,opts);if(r.status===401){localStorage.removeItem('zglf_token');TOKEN='';if(!location.hash.includes('login'))location.hash='login';throw new Error('Unauthorized');}const ct=r.headers.get('content-type')||'';const data=ct.includes('json')?await r.json():await r.text();if(!r.ok)throw new Error(data.error||data||'Error '+r.status);return data;}
-async function uploadFile(file,subdir='images'){const fd=new FormData();fd.append('file',file);fd.append('subdir',subdir);const r=await fetch(API+'/upload',{method:'POST',headers:{Authorization:'Bearer '+TOKEN},body:fd});const d=await r.json();if(!r.ok)throw new Error(d.error||'Upload failed');return d.media;}
-function can(p){return ME&&(ME.role==='admin'||(ME.perms&&ME.perms[p]));}
-function toast(m,type='ok'){const t=document.createElement('div');t.className='toast toast-'+type;t.textContent=m;$('#toasts').appendChild(t);setTimeout(()=>t.remove(),4000);}
-function overlay(content){$('#overlayContent').innerHTML=content;$('#overlay').classList.add('open');}
-function closeOverlay(){$('#overlay').classList.remove('open');$('#overlayContent').innerHTML='';}
+/* ---------- API helper ---------- */
+async function api(endpoint,opts={}){
+  const o={method:opts.method||'GET',headers:{'Content-Type':'application/json'}};
+  if(TOKEN)o.headers['Authorization']='Bearer '+TOKEN;
+  if(opts.body)o.body=typeof opts.body==='string'?opts.body:JSON.stringify(opts.body);
+  if(opts.form){
+    const fd=new FormData();
+    for(const k in opts.form)if(opts.form[k]!==null&&opts.form[k]!==undefined)fd.append(k,opts.form[k]);
+    delete o.headers['Content-Type'];o.body=fd;o.method='POST';
+  }
+  const r=await fetch(API+endpoint,o);
+  if(r.status===401){TOKEN='';USER=null;localStorage.removeItem('zglf_token');localStorage.removeItem('zglf_user');location.hash='#/login';throw new Error('Unauthorized');}
+  const ct=r.headers.get('content-type')||'';
+  const data=ct.includes('application/json')?await r.json():await r.text();
+  if(!r.ok){if(data.error)toast(data.error,'error');throw new Error(data.error||'Request failed');}
+  return data;
+}
+let opps; // typo guard
 
-/* ==================== WYSIWYG EDITOR ==================== */
-function initWysiwyg(containerId, initialHtml, onChange) {
-  const c = document.getElementById(containerId);
-  if (!c) return;
-  c.innerHTML = `
-    <div class="wysiwyg-toolbar">
-      <button type="button" data-cmd="bold" title="Bold"><i class="fas fa-bold"></i></button>
-      <button type="button" data-cmd="italic" title="Italic"><i class="fas fa-italic"></i></button>
-      <button type="button" data-cmd="underline" title="Underline"><i class="fas fa-underline"></i></button>
-      <span class="tb-sep"></span>
-      <button type="button" data-cmd="formatBlock" data-val="h2" title="Heading">H</button>
-      <button type="button" data-cmd="formatBlock" data-val="h3" title="Subheading">h</button>
-      <button type="button" data-cmd="formatBlock" data-val="p" title="Paragraph">P</button>
-      <span class="tb-sep"></span>
-      <button type="button" data-cmd="insertUnorderedList" title="Bullet list"><i class="fas fa-list-ul"></i></button>
-      <button type="button" data-cmd="insertOrderedList" title="Numbered list"><i class="fas fa-list-ol"></i></button>
-      <span class="tb-sep"></span>
-      <button type="button" data-cmd="justifyLeft" title="Align left"><i class="fas fa-align-left"></i></button>
-      <button type="button" data-cmd="justifyCenter" title="Align center"><i class="fas fa-align-center"></i></button>
-      <button type="button" data-cmd="justifyRight" title="Align right"><i class="fas fa-align-right"></i></button>
-      <span class="tb-sep"></span>
-      <button type="button" data-cmd="createLink" title="Link"><i class="fas fa-link"></i></button>
-      <button type="button" data-cmd="removeFormat" title="Clear formatting"><i class="fas fa-eraser"></i></button>
-    </div>
-    <div class="wysiwyg-area" contenteditable="true"></div>`;
-  const area = c.querySelector('.wysiwyg-area');
-  area.innerHTML = initialHtml || '';
-  c.querySelectorAll('.wysiwyg-toolbar button').forEach(b=>{
-    b.addEventListener('mousedown',e=>{e.preventDefault();});
-    b.addEventListener('click',e=>{
-      e.preventDefault();
-      const cmd=b.dataset.cmd, val=b.dataset.val||null;
-      if(cmd==='createLink'){const u=prompt('Enter URL:','https://');if(u)document.execCommand('createLink',false,u);}
-      else document.execCommand(cmd,false,val);
-      area.focus();
-      if(onChange)onChange(area.innerHTML);
-    });
-  });
-  area.addEventListener('input',()=>{if(onChange)onChange(area.innerHTML);});
-  area.addEventListener('blur',()=>{if(onChange)onChange(area.innerHTML);});
-  return area;
-}
-function getWysiwyg(id){const a=document.querySelector('#'+id+' .wysiwyg-area');return a?a.innerHTML:'';}
-function setWysiwyg(id,html){const a=document.querySelector('#'+id+' .wysiwyg-area');if(a)a.innerHTML=html||'';}
-
-/* ==================== ICON PICKER ==================== */
-function iconPicker(selectedIcon,onPick){
-  const grid=faIcons.map(ic=>`<button type="button" class="ipick ${ic===selectedIcon?'sel':''}" data-icon="${ic}" title="${ic}"><i class="fas ${ic}"></i></button>`).join('');
-  return `<div class="icon-picker">
-    <div class="ipick-sel"><i class="fas ${selectedIcon||'fa-star'}"></i> <span>${selectedIcon||'choose'}</span></div>
-    <div class="ipick-grid">${grid}</div>
-    <input type="hidden" class="ipick-value" value="${esc(selectedIcon||'')}">
-  </div>`;
-}
-function bindIconPicker(root,onPick){
-  root.querySelectorAll('.icon-picker').forEach(picker=>{
-    const selBtn=picker.querySelector('.ipick-sel');
-    const grid=picker.querySelector('.ipick-grid');
-    selBtn.addEventListener('click',e=>{e.stopPropagation();document.querySelectorAll('.ipick-grid.open').forEach(g=>{if(g!==grid)g.classList.remove('open');});grid.classList.toggle('open');});
-    grid.querySelectorAll('.ipick').forEach(b=>{
-      b.addEventListener('click',e=>{
-        e.stopPropagation();
-        grid.querySelectorAll('.ipick.sel').forEach(x=>x.classList.remove('sel'));
-        b.classList.add('sel');
-        const ic=b.dataset.icon;
-        picker.querySelector('.ipick-value').value=ic;
-        selBtn.innerHTML=`<i class="fas ${ic}"></i> <span>${ic}</span>`;
-        grid.classList.remove('open');
-        if(onPick)onPick(ic);
-      });
-    });
-  });
-  document.addEventListener('click',()=>{root.querySelectorAll('.ipick-grid.open').forEach(g=>g.classList.remove('open'));});
-}
-function getIconPicker(root){const i=root.querySelector('.ipick-value');return i?i.value:'';}
-
-/* ==================== MEDIA UPLOADER (local only, shows preview) ==================== */
-function mediaUploader(name,currentUrl,opts={}){
-  const accept=opts.accept||'image/*';
-  const label=opts.label||'Image';
-  return `<div class="media-uploader" data-name="${name}">
-    <label class="mu-label">${label}</label>
-    <div class="mu-wrap">
-      <div class="mu-preview ${currentUrl?'has':''}">
-        ${currentUrl?(/\.mp4|\.webm|\.mov/i.test(currentUrl)?`<video src="${esc(currentUrl)}" controls></video>`:`<img src="${esc(currentUrl)}" alt="">`):`<i class="fas fa-image"></i><span>No image selected</span>`}
-      </div>
-      <div class="mu-actions">
-        <button type="button" class="btn-secondary mu-browse"><i class="fas fa-upload"></i> Choose file</button>
-        <button type="button" class="btn-ghost mu-clear" ${currentUrl?'':'style=display:none'}><i class="fas fa-times"></i> Remove</button>
-        <input type="file" class="mu-file" accept="${accept}" hidden>
-        <input type="hidden" class="mu-url" value="${esc(currentUrl||'')}">
-        <div class="mu-status"></div>
-      </div>
-    </div>
-  </div>`;
-}
-function bindMediaUploader(root,onChange){
-  root.querySelectorAll('.media-uploader').forEach(mu=>{
-    const preview=mu.querySelector('.mu-preview');
-    const fileInp=mu.querySelector('.mu-file');
-    const urlInp=mu.querySelector('.mu-url');
-    const clearBtn=mu.querySelector('.mu-clear');
-    const browse=mu.querySelector('.mu-browse');
-    const status=mu.querySelector('.mu-status');
-    const showPreview=(url)=>{
-      if(!url){preview.innerHTML=`<i class="fas fa-image"></i><span>No image selected</span>`;preview.classList.remove('has');clearBtn.style.display='none';return;}
-      preview.classList.add('has');clearBtn.style.display='';
-      if(/\.(mp4|webm|mov)/i.test(url))preview.innerHTML=`<video src="${esc(url)}" controls></video>`;
-      else preview.innerHTML=`<img src="${esc(url)}" alt="">`;
-    };
-    browse.onclick=()=>fileInp.click();
-    fileInp.onchange=async()=>{
-      const f=fileInp.files[0];if(!f)return;
-      status.textContent='Uploading…';browse.disabled=true;
-      try{
-        const subdir=mu.dataset.subdir||(/video/i.test(f.type)?'events':'images');
-        const m=await uploadFile(f,subdir);
-        urlInp.value=m.url;showPreview(m.url);status.textContent='';if(onChange)onChange(m.url);
-      }catch(e){status.textContent='Upload failed: '+e.message;}
-      browse.disabled=false;
-    };
-    clearBtn.onclick=()=>{urlInp.value='';fileInp.value='';showPreview('');if(onChange)onChange('');};
-  });
-}
-function getMU(root,name){const i=root.querySelector(`.media-uploader[data-name="${name}"] .mu-url`);return i?i.value:'';}
-
-/* ==================== ROUTING ==================== */
-function navigate(){
-  const h=(location.hash||'#dashboard').replace('#','');
-  state.currentPage=h;
-  $$('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.page===h));
-  renderPage(h);
-}
-window.addEventListener('hashchange',navigate);
-
-/* ==================== LOGIN ==================== */
-async function doLogin(e){
+/* ---------- Auth ---------- */
+document.getElementById('loginForm').addEventListener('submit',async e=>{
   e.preventDefault();
-  const u=$('#loginUser').value,p=$('#loginPass').value;
-  try{const d=await api('/auth/login',{method:'POST',body:JSON.stringify({username:u,password:p})});
-  TOKEN=d.token;ME=d.user;localStorage.setItem('zglf_token',TOKEN);location.hash='dashboard';
-  }catch(e){$('#loginErr').textContent=e.message;}
-}
-async function boot(){
-  $('#toasts').innerHTML='';
-  if(!TOKEN){renderLogin();return;}
-  try{ME=await api('/auth/me');}catch(e){renderLogin();return;}
-  renderShell();navigate();
-}
-function logout(){localStorage.removeItem('zglf_token');TOKEN='';ME=null;location.hash='login';renderLogin();}
-
-function renderLogin(){
-  document.body.classList.add('on-login');
-  $('#shell').style.display='none';
-  $('#loginScreen').style.display='flex';
-}
-function renderShell(){
-  document.body.classList.remove('on-login');
-  $('#shell').style.display='grid';
-  $('#loginScreen').style.display='none';
-  const pages=[
-    {id:'dashboard',label:'Dashboard',icon:'fa-tachometer-alt'},
-    {id:'hero',label:'Homepage Hero',icon:'fa-image'},
-    {id:'site',label:'Site Info',icon:'fa-cog'},
-    {id:'footer',label:'Footer Content',icon:'fa-shoe-prints'},
-    {id:'donations',label:'Donations & Payments',icon:'fa-hand-holding-heart'},
-    {id:'programs',label:'Programs',icon:'fa-book'},
-    {id:'events',label:'Events',icon:'fa-calendar'},
-    {id:'nec',label:'NEC / Leadership',icon:'fa-users-cog'},
-    {id:'photos',label:'Media Library',icon:'fa-images'},
-    {id:'members',label:'Members',icon:'fa-user-friends'},
-    {id:'messages',label:'Messages',icon:'fa-envelope'},
-    ...(can('users')?[{id:'users',label:'Users & Permissions',icon:'fa-user-shield'}]:[]),
-    {id:'settings',label:'Settings',icon:'fa-sliders-h'},
-  ];
-  const navHtml=pages.map(p=>`<div class="nav-item ${can(p.id)||['dashboard','settings'].includes(p.id)?'':'nav-disabled'}" data-page="${p.id}"><i class="fas ${p.icon}"></i><span>${p.label}</span></div>`).join('');
-  $('#sideNav').innerHTML=navHtml+`<div class="nav-item nav-logout" data-action="logout"><i class="fas fa-sign-out-alt"></i><span>Logout (${esc(ME.username)})</span></div>`;
-  $$('.nav-item').forEach(n=>{
-    n.onclick=()=>{if(n.dataset.action==='logout')logout();else location.hash=n.dataset.page;};
-  });
-  $('#brandLogo').innerHTML=`<img src="${API.replace('/api','/images/zglf-logo.png')}" alt="ZGLF" onerror="this.style.display='none'">ZGLF Admin`;
-}
-
-/* ==================== PAGES ==================== */
-async function renderPage(p){
-  const main=$('#pageMain');
-  main.innerHTML='<div class="loading">Loading…</div>';
+  const u=document.getElementById('loginEmail').value.trim();
+  const p=document.getElementById('loginPass').value;
   try{
-    switch(p){
-      case 'dashboard':await renderDashboard(main);break;
-      case 'hero':await renderHero(main);break;
-      case 'site':await renderSite(main);break;
-      case 'footer':await renderFooter(main);break;
-      case 'donations':await renderDonations(main);break;
-      case 'programs':await renderPrograms(main);break;
-      case 'events':await renderEvents(main);break;
-      case 'nec':await renderNEC(main);break;
-      case 'photos':await renderPhotos(main);break;
-      case 'members':await renderMembers(main);break;
-      case 'messages':await renderMessages(main);break;
-      case 'users':await renderUsers(main);break;
-      case 'settings':await renderSettings(main);break;
-      default:main.innerHTML=`<p>Page "${p}" coming soon.</p>`;
-    }
-  }catch(e){main.innerHTML=`<div class="error"><i class="fas fa-exclamation-triangle"></i> ${esc(e.message)}</div>`;}
+    const r=await api('auth/login',{body:{username:u,password:p},method:'POST'});
+    TOKEN=r.token;USER=r.user;
+    localStorage.setItem('zglf_token',TOKEN);localStorage.setItem('zglf_user',JSON.stringify(USER));
+    location.hash='#/dashboard';render();
+  }catch(err){document.getElementById('loginError').style.display='flex';document.querySelector('#loginError span').textContent='Invalid username or password.';}
+});
+async function logout(){
+  try{await api('auth/logout',{method:'POST'});}catch(e){}
+  TOKEN='';USER=null;localStorage.removeItem('zglf_token');localStorage.removeItem('zglf_user');location.hash='#/login';render();
+}
+function can(p){if(!USER)return false;if(USER.role==='admin')return true;return!!(USER.perms&&USER.perms[p]);}
+
+/* ---------- Utilities ---------- */
+function $(s,r=document){return r.querySelector(s);}
+function $$(s,r=document){return [...r.querySelectorAll(s)];}
+function money(n){const sym=DATA.settings?.currencySymbol||'₦';return sym+Number(n||0).toLocaleString();}
+function dateFmt(d){try{return new Date(d).toLocaleDateString('en-NG',{year:'numeric',month:'short',day:'numeric'});}catch(e){return d;}}
+function dateFmtShort(d){try{const dt=new Date(d);return{day:dt.getDate(),month:dt.toLocaleString('en-US',{month:'short'})};}catch(e){return{day:'?',month:'?'};}}
+function initials(n){return(n||'').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';}
+function esc(s){if(s===null||s===undefined)return'';return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function toast(msg,type='success'){const t=$('#toast');t.className='toast '+type;t.innerHTML=`<i class="fa-solid ${type==='error'?'fa-circle-xmark':'fa-circle-check'}"></i>${msg}`;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+function openModal(html,xl=false){const m=$('#modal'),i=$('#modalInner');i.className='modal'+(xl?' xl':'');i.innerHTML=html;m.classList.add('open');i.scrollTop=0;}
+function closeModal(){$('#modal').classList.remove('open');}
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+function toggleSidebar(){$('#sidebar').classList.toggle('open');$('#mobileOverlay').classList.toggle('open');}
+let op;// unused
+
+/* ---------- Menu ---------- */
+const MENU=[
+  {section:"Overview",items:[{key:"dashboard",label:"Dashboard",icon:"fa-gauge-high",perm:"dashboard"}]},
+  {section:"Homepage Builder",items:[
+    {key:"hero",label:"Hero Section",icon:"fa-panorama",perm:"hero"},
+    {key:"nec",label:"NEC / Leadership",icon:"fa-user-tie",perm:"nec"},
+    {key:"site",label:"Site Info",icon:"fa-building",perm:"site"},
+    {key:"media",label:"Media Library",icon:"fa-images",perm:"photos"}]},
+  {section:"Content",items:[
+    {key:"programs",label:"Programs",icon:"fa-diagram-project",perm:"programs"},
+    {key:"events",label:"Events",icon:"fa-calendar-days",perm:"events"}]},
+  {section:"Operations",items:[
+    {key:"donations",label:"Donations",icon:"fa-hand-holding-dollar",perm:"donations"},
+    {key:"members",label:"Members",icon:"fa-users",perm:"members"},
+    {key:"messages",label:"Messages",icon:"fa-envelope",perm:"messages",badge:true}]},
+  {section:"Administration",items:[
+    {key:"users",label:"Users & Roles",icon:"fa-user-shield",perm:"users"},
+    {key:"reports",label:"Reports",icon:"fa-chart-line",perm:"reports"},
+    {key:"settings",label:"Settings",icon:"fa-cog",perm:"settings"}]}
+];
+const PERM_LABEL={dashboard:"Dashboard",hero:"Hero",nec:"NEC/Leadership",site:"Site Info",programs:"Programs",events:"Events",donations:"Donations",photos:"Media",members:"Members",messages:"Messages",users:"Users",reports:"Reports",settings:"Settings"};
+const PERM_ICON={dashboard:"fa-gauge-high",hero:"fa-panorama",nec:"fa-user-tie",site:"fa-building",programs:"fa-diagram-project",events:"fa-calendar-days",donations:"fa-hand-holding-dollar",photos:"fa-images",members:"fa-users",messages:"fa-envelope",users:"fa-user-shield",reports:"fa-chart-line",settings:"fa-cog"};
+
+function buildSidebar(){
+  const nav=$('#sidebarNav');const unread=(DATA.messages||[]).filter(m=>!m.is_read||!m.read).length;
+  nav.innerHTML=MENU.map(sec=>{
+    const visible=sec.items.filter(it=>it.perm==="dashboard"||can(it.perm));
+    if(!visible.length)return'';
+    return `<div class="nav-section">${sec.section}</div>`+visible.map(it=>{
+      const badge=(it.key==='messages'&&unread)?`<span class="nav-badge">${unread}</span>`:'';
+      return `<div class="nav-item" data-route="${it.key}" onclick="navigate('${it.key}')"><i class="fa-solid ${it.icon}"></i>${it.label}${badge}</div>`;
+    }).join('');
+  }).join('');
 }
 
-/* ---------- Dashboard ---------- */
-async function renderDashboard(main){
-  const s=await api('/stats');
-  state.pageData.stats=s;
-  const monthMax=Math.max(1,...(s.monthly_donations||[]).map(m=>Number(m.total)));
-  const bars=(s.monthly_donations||[]).map(m=>`<div class="bar" title="${m.month}: ₦${Number(m.total).toLocaleString()}"><div class="bar-fill" style="height:${(Number(m.total)/monthMax)*100}%"></div><div class="bar-lab">${m.month.slice(5)}</div></div>`).join('');
-  main.innerHTML=`
-    <div class="page-head"><h1>Dashboard</h1><p class="sub">Welcome back, ${esc(ME.name||ME.username)}. Here's what's happening today.</p></div>
-    <div class="kpi-grid">
-      <div class="kpi kpi-azure"><div class="kpi-val">${fmtMoney(s.donations_total)}</div><div class="kpi-lab">Verified Donations (${s.donations_count})</div></div>
-      <div class="kpi kpi-gold"><div class="kpi-val">${s.members_active}</div><div class="kpi-lab">Active Members</div></div>
-      <div class="kpi kpi-green"><div class="kpi-val">${s.events_upcoming}</div><div class="kpi-lab">Upcoming Events</div></div>
-      <div class="kpi kpi-coral"><div class="kpi-val">${s.messages_unread}</div><div class="kpi-lab">Unread Messages</div></div>
-    </div>
-    <div class="grid-2">
-      <div class="card"><h3>Monthly Donations</h3><div class="chart">${bars||'<p class="muted">No data yet</p>'}</div></div>
-      <div class="card"><h3>Pending Donations (${s.donations_pending})</h3><div id="pendList"></div></div>
-    </div>
-    <div class="card"><h3>Recent Activity</h3><div class="act-list">${(s.activity||[]).map(a=>`<div class="act-row"><i class="fas fa-clock"></i><div><b>${esc(a.user_name||'System')}</b> ${esc(a.action)} ${a.detail?`<span class="muted">— ${esc(a.detail)}</span>`:''}<div class="muted small">${fmtDate(a.created_at)}</div></div></div>`).join('')}</div>`;
-  renderPendingList();
-}
-async function renderPendingList(){
-  try{const dons=await api('/donations?status=pending');
-    const pending=dons.filter(d=>d.status==='pending');
-    $('#pendList').innerHTML=pending.length?pending.slice(0,6).map(d=>`<div class="pend-row"><div><b>${esc(d.donor)}</b> <span class="muted">${esc(d.campaign)}</span><br><span class="small">${esc(d.email||'')} · ${fmtDate(d.created_at)}</span></div><div class="pend-amts"><div class="amt">${fmtMoney(d.amount)}</div><button class="btn-primary small" onclick="verifyDon(${d.id})">Verify</button></div></div>`).join(''):'<p class="muted">No pending donations.</p>';
-  }catch(e){$('#pendList').innerHTML='<p class="muted">—</p>';}
-}
-async function verifyDon(id){try{await api('/donations/'+id+'/verify',{method:'POST',body:JSON.stringify({status:'verified'})});toast('Verified');navigate();}catch(e){toast(e.message,'err');}}
+/* ---------- Router ---------- */
+function navigate(k){location.hash='#/'+k;}
+function setActive(k){$$('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.route===k));}
 
-/* ---------- Hero ---------- */
-async function renderHero(main){
-  const data=await api('/hero');state.pageData.hero=data;
-  main.innerHTML=`<div class="page-head"><h1>Homepage Hero</h1><p class="sub">Manage the top banner slides and headline text.</p></div>
-  <div class="card"><h3>Hero Text</h3>
-    <form id="heroTextForm" class="form-grid">
-      <div class="field col2"><label>Headline</label><input id="ht-head" value="${esc(data.text.headline||'')}"></div>
-      <div class="field col2"><label>Subheadline</label><input id="ht-sub" value="${esc(data.text.subhead||'')}"></div>
-      <div class="field col2"><label>Vision quote (side panel)</label><textarea id="ht-quote" rows="2">${esc(data.text.visionquote||'')}</textarea></div>
-      <div class="field col2"><label>Body (welcome paragraph)</label><div id="ht-body-w"></div></div>
-      <div class="field"><label>Primary CTA button</label><input id="ht-cta1" value="${esc(data.text.cta1||'')}"></div>
-      <div class="field"><label>Secondary CTA button</label><input id="ht-cta2" value="${esc(data.text.cta2||'')}"></div>
-      <div class="col2"><button class="btn-primary" type="submit"><i class="fas fa-save"></i> Save Hero Text</button></div>
-    </form>
-  </div>
-  <div class="card"><h3>Slides <button class="btn-primary small" onclick="newSlide()"><i class="fas fa-plus"></i> Add slide</button></h3>
-    <div class="slides-list" id="slidesList"></div>
+const TITLES={dashboard:["Dashboard","Overview"],hero:["Hero Section","Slides, headline & CTAs"],nec:["NEC Leadership","Ranks, bios & photos"],programs:["Programs","Initiatives"],events:["Events","With photos & videos"],media:["Media Library","Photos & videos"],site:["Site Info","Organization details"],donations:["Donations","Track & verify"],members:["Members","Members & applicants"],messages:["Messages","Inbox"],users:["Users & Roles","Staff accounts"],reports:["Reports","Analytics & export"],settings:["Settings","Preferences"]};
+
+/* Media uploader */
+function mediaUploader(initial,inputId,hint){
+  const m=initial||null;
+  return `<div id="${inputId}-wrap">
+    <div class="upload-zone" onclick="document.getElementById('${inputId}-file').click()"><i class="fa-solid fa-cloud-arrow-up"></i><p><strong>Click to upload</strong></p><small>${hint||'Image or video'}</small><input type="file" id="${inputId}-file" accept="image/*,video/*" style="display:none" onchange="handleMediaUpload(event,'${inputId}')"></div>
+    <div class="url-input-row"><span>or URL:</span><input class="form-input" id="${inputId}-url" placeholder="https://..." value="${m?esc(m.url):''}"><button type="button" class="btn btn-sm btn-outline" onclick="applyMediaUrl('${inputId}')">Use</button></div>
+    <div class="media-preview" id="${inputId}-preview" style="${m?'':'display:none'}"><div class="media-thumb" id="${inputId}-thumb"></div></div>
+    <input type="hidden" id="${inputId}-data" value="${m?esc(JSON.stringify(m)):''}">
   </div>`;
-  initWysiwyg('ht-body-w', data.text.body||'', ()=>{});
-  $('#heroTextForm').onsubmit=async e=>{e.preventDefault();try{await api('/hero',{method:'POST',body:JSON.stringify({headline:$('#ht-head').value,subhead:$('#ht-sub').value,visionquote:$('#ht-quote').value,body:getWysiwyg('ht-body-w'),cta1:$('#ht-cta1').value,cta2:$('#ht-cta2').value})});toast('Saved');}catch(e){toast(e.message,'err');}};
+}
+function showMediaThumb(id,data){
+  const wrap=$('#'+id+'-preview');const thumb=$('#'+id+'-thumb');
+  wrap.style.display='flex';
+  thumb.innerHTML=(data.type==='video'?`<video src="${data.url}" muted style="width:100%;height:100px;object-fit:cover"></video>`:`<img src="${data.url}" style="width:100%;height:100px;object-fit:cover" onerror="this.style.opacity=0.3">`)+`<span class="media-type">${data.type==='video'?'Video':'Image'}</span><button type="button" class="remove-btn" onclick="clearMedia('${id}')"><i class="fa-solid fa-xmark"></i></button>`;
+}
+function handleMediaUpload(e,id){
+  const f=e.target.files[0];if(!f)return;
+  if(f.type.startsWith('video/')&&f.size>25*1024*1024){toast('Video >25MB. Use a URL instead.','error');return;}
+  const r=new FileReader();r.onload=ev=>{
+    const data={type:f.type.startsWith('video/')?'video':'image',url:ev.target.result,name:f.name,_file:f};
+    $('#'+id+'-data').value=JSON.stringify(data).replace(/"/g,'&quot;').replace(/'/g,"&#39;");// for form only
+    showMediaThumb(id,data);
+    // Actually we need to store the File reference for upload
+    window['__mu_'+id]=data;
+  };r.readAsDataURL(f);
+}
+function applyMediaUrl(id){
+  const url=$('#'+id+'-url').value.trim();if(!url)return;
+  const isVideo=/\.(mp4|webm|mov)(\?|$)/i.test(url);
+  const data={type:isVideo?'video':'image',url:url};
+  $('#'+id+'-data').value=JSON.stringify(data);
+  showMediaThumb(id,data);window['__mu_'+id]=data;
+}
+function clearMedia(id){$('#'+id+'-data').value='';$('#'+id+'-url').value='';$('#'+id+'-preview').style.display='none';$('#'+id+'-file').value='';window['__mu_'+id]=null;}
+function getMediaVal(id){
+  const v=$('#'+id+'-data').value;if(!v)return null;
+  try{return JSON.parse(v.replace(/&quot;/g,'"').replace(/&#39;/g,"'"));}catch(e){return null;}
+}
+// Async: upload if file, else return the url
+async function resolveMedia(id,subdir='images'){
+  const d=window['__mu_'+id];if(!d)return null;
+  if(d._file){
+    const fd=new FormData();fd.append('file',d._file);fd.append('subdir',subdir);
+    const r=await api('media',{form:fd});return r.media;
+  }
+  return d;
+}
+
+/* Multi-media */
+let mmItems={};
+function mmInit(id,containerId,hiddenId,existing){
+  mmItems[id]=existing?[...existing]:[];
+  mmRender(id,containerId,hiddenId);
+}
+function mmRender(id,cid,hid){
+  $(hid).value=JSON.stringify(mmItems[id]);
+  $('#'+cid).innerHTML=mmItems[id].map((m,i)=>`
+    <div class="media-thumb">
+      ${m.type==='video'?`<video src="${m.url}" muted style="width:100%;height:100px;object-fit:cover"></video>`:`<img src="${m.url}" style="width:100%;height:100px;object-fit:cover" onerror="this.style.opacity=0.3">`}
+      <span class="media-type">${m.type}</span>
+      <button type="button" class="remove-btn" onclick="mmRemove('${id}','${cid}','${hid}',${i})"><i class="fa-solid fa-xmark"></i></button>
+    </div>`).join('');
+}
+function mmAdd(id,cid,hid,data){mmItems[id].push(data);mmRender(id,cid,hid);}
+function mmRemove(id,cid,hid,i){mmItems[id].splice(i,1);mmRender(id,cid,hid);}
+async function mmAddFiles(id,cid,hid,files,subdir){
+  for(const f of files){
+    if(f.type.startsWith('video/')&&f.size>25*1024*1024){toast(`Skipping ${f.name} (too large)`,'error');continue;}
+    // Upload directly
+    const fd=new FormData();fd.append('file',f);fd.append('subdir',subdir);
+    try{const r=await api('media',{form:fd});mmItems[id].push(r.media);}catch(e){}
+  }
+  mmRender(id,cid,hid);
+}
+
+/* ---------- Router / Render ---------- */
+const PAGES={dashboard:renderDashboard,hero:renderHero,nec:renderNEC,programs:renderPrograms,events:renderEvents,media:renderMedia,site:renderSite,donations:renderDonations,members:renderMembers,messages:renderMessages,users:renderUsers,reports:renderReports,settings:renderSettings};
+
+async function render(){
+  if(!TOKEN||!USER){
+    try{const me=await api('auth/me');USER=me;localStorage.setItem('zglf_user',JSON.stringify(USER));}catch(e){$('#loginView').style.display='flex';$('#appView').style.display='none';return;}
+  }
+  const hash=location.hash.replace('#/','')||'dashboard';
+  let page=hash;if(!PAGES[page])page='dashboard';
+  const mi=MENU.flatMap(s=>s.items).find(i=>i.key===page);
+  if(mi&&mi.perm!=="dashboard"&&!can(mi.perm)){page='dashboard';toast('Permission denied','error');}
+  CURRENT_PAGE=page;
+  $('#loginView').style.display='none';$('#appView').style.display='block';
+  $('#userName').textContent=USER.name;
+  $('#userRole').textContent=USER.role==='admin'?'Administrator':'Staff';
+  $('#userAvatar').textContent=initials(USER.name);
+
+  // Load dynamic data needed for chrome
+  try{
+    const[p1,p2,p3]=await Promise.all([
+      api('stats'),api('site'),api('messages')
+    ]);
+    DATA.stats=p1;DATA.site=p2;DATA.messages=p3;
+  }catch(e){}
+  buildSidebar();setActive(page);
+  const t=TITLES[page];$('#pageTitle').textContent=t[0];$('#pageSubtitle').textContent=t[1];
+  const unread=(DATA.messages||[]).filter(m=>m.is_read==0||m.read==0).length;
+  const b=$('#msgBadge');b.textContent=unread;b.style.display=unread?'flex':'none';
+  try{await PAGES[page]();}catch(e){console.error(e);$('#pageContent').innerHTML='<div class="card"><div class="card-body" style="text-align:center;padding:60px;color:var(--gray-400)"><i class="fa-solid fa-triangle-exclamation" style="font-size:42px;display:block;margin-bottom:12px"></i><p>Error loading page.</p></div></div>';}
+}
+window.addEventListener('hashchange',render);
+
+/* ---------- DASHBOARD ---------- */
+async function renderDashboard(){
+  const s=DATA.stats||await api('stats');
+  const don=s.donations_total;pending=s.donations_pending||0;members=s.members_active;upcoming=s.events_upcoming;unread=s.messages_unread;media=s.media_count;
+  const videos=0;
+  $('#pageContent').innerHTML=`
+    <div class="stats-grid">
+      <div class="stat-card gold"><div class="stat-top"><div class="stat-icon gold"><i class="fa-solid fa-hand-holding-dollar"></i></div></div><div class="stat-label">Total Raised</div><div class="stat-value">${money(don)}</div></div>
+      <div class="stat-card"><div class="stat-top"><div class="stat-icon blue"><i class="fa-solid fa-users"></i></div></div><div class="stat-label">Active Members</div><div class="stat-value">${members}</div></div>
+      <div class="stat-card green"><div class="stat-top"><div class="stat-icon green"><i class="fa-solid fa-calendar-check"></i></div></div><div class="stat-label">Upcoming Events</div><div class="stat-value">${upcoming}</div></div>
+      <div class="stat-card red"><div class="stat-top"><div class="stat-icon red"><i class="fa-solid fa-envelope"></i></div></div><div class="stat-label">Unread Messages</div><div class="stat-value">${unread}</div></div>
+      <div class="stat-card purple"><div class="stat-top"><div class="stat-icon purple"><i class="fa-solid fa-photo-film"></i></div></div><div class="stat-label">Media Items</div><div class="stat-value">${media}</div></div>
+    </div>
+    <div class="quick-actions">
+      ${can('hero')?`<button class="quick-action" onclick="navigate('hero')"><i class="fa-solid fa-panorama"></i><h4>Edit Hero</h4><p>Slides & headline</p></button>`:''}
+      ${can('programs')?`<button class="quick-action" onclick="navigate('programs');setTimeout(()=>openProgramModal(),200)"><i class="fa-solid fa-plus"></i><h4>New Program</h4><p>Add initiative</p></button>`:''}
+      ${can('events')?`<button class="quick-action" onclick="navigate('events');setTimeout(()=>openEventModal(),200)"><i class="fa-solid fa-calendar-plus"></i><h4>Create Event</h4><p>Photos/videos</p></button>`:''}
+      ${can('nec')?`<button class="quick-action" onclick="navigate('nec');setTimeout(()=>openNecModal(),200)"><i class="fa-solid fa-user-plus"></i><h4>Add NEC</h4><p>Leadership member</p></button>`:''}
+      ${can('donations')&&pending?`<button class="quick-action" onclick="navigate('donations')"><i class="fa-solid fa-circle-check"></i><h4>${pending} pending</h4><p>Verify donations</p></button>`:''}
+    </div>
+    <div class="charts-grid">
+      <div class="card"><div class="card-header"><h3><i class="fa-solid fa-chart-column"></i>Donations (12 months)</h3></div><div class="card-body"><div class="chart-box"><canvas id="c1"></canvas></div></div></div>
+      <div class="card"><div class="card-header"><h3><i class="fa-solid fa-chart-pie"></i>By Campaign</h3></div><div class="card-body"><div class="chart-box"><canvas id="c2"></canvas></div></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" class="db2">
+      <div class="card"><div class="card-header"><h3><i class="fa-solid fa-clock-rotate-left"></i>Recent Activity</h3></div><div class="card-body" id="af"></div></div>
+      <div class="card"><div class="card-header"><h3><i class="fa-solid fa-calendar-days"></i>Upcoming Events</h3>${can('events')?`<button class="btn btn-sm btn-gold" onclick="openEventModal()"><i class="fa-solid fa-plus"></i>New</button>`:''}</div><div class="card-body p-sm" id="ue"></div></div>
+    </div>
+    <style>@media(max-width:900px){.db2{grid-template-columns:1fr!important}}</style>
+  `;
+  // Charts
+  setTimeout(()=>{
+    const md=s.monthly_donations||[];
+    const labels=md.map(x=>x.m);const data=md.map(x=>x.total/1000);
+    new Chart($('#c1'),{type:'bar',data:{labels,datasets:[{label:'₦ (thousands)',data,backgroundColor:'rgba(26,55,184,0.8)',borderRadius:8,maxBarThickness:36}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}});
+    const pc=s.by_campaign||[];
+    new Chart($('#c2'),{type:'doughnut',data:{labels:pc.map(x=>x.campaign),datasets:[{data:pc.map(x=>Number(x.total)),backgroundColor:['#1a37b8','#f5c842','#10b981','#ef4444','#8b5cf6','#ef6c00'],borderWidth:0}]},options:{cutout:'65%',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{padding:12,font:{size:11},usePointStyle:true}}}}});
+    // Activity
+    const acts=s.activity||[];
+    $('#af').innerHTML=acts.length?acts.map(a=>`<div class="activity-item"><div class="activity-icon" style="background:var(--azure-50);color:var(--azure-700)"><i class="fa-solid fa-circle-check"></i></div><div class="activity-body"><p><strong>${esc(a.user_name||'System')}</strong> ${esc(a.action)}</p><div class="activity-time">${dateFmt(a.created_at)}</div></div></div>`).join(''):'<p style="color:var(--gray-400);font-size:13px;text-align:center;padding:20px">No activity yet.</p>';
+  },50);
+  // Upcoming events
+  try{const evs=await api('events');const up=evs.filter(e=>e.status==='upcoming').slice(0,4);
+    $('#ue').innerHTML=up.length?up.map(e=>{const d=dateFmtShort(e.event_date);const cover=e.media&&e.media[0]?e.media[0]:null;
+      return`<div class="activity-item"><div class="activity-icon" style="background:var(--gold-50);color:var(--gold-600);border-radius:10px;width:48px;height:48px;font-size:11px;flex-direction:column;text-align:center;"><strong style="font-size:15px;line-height:1">${d.day}</strong><span style="font-size:8px;text-transform:uppercase;font-weight:700">${d.month}</span></div><div class="activity-body"><p><strong>${esc(e.title)}</strong></p><div class="activity-time"><i class="fa-solid fa-location-dot"></i> ${esc(e.location||'TBA')} · ${e.event_time||''} ${e.media&&e.media.some(m=>m.type==='video')?'<i class="fa-solid fa-video" style="color:var(--rose);margin-left:8px"></i>':''}</div></div></div>`;}).join(''):'<p style="color:var(--gray-400);font-size:13px;text-align:center;padding:16px">No upcoming events.</p>';
+  }catch(e){}
+}
+
+/* ---------- HERO ---------- */
+let HERO=null;
+async function renderHero(){
+  if(!can('hero'))return;
+  HERO=await api('hero');
+  $('#pageContent').innerHTML=`
+    <div class="card"><div class="card-header"><h3><i class="fa-solid fa-pen-to-square"></i>Hero Text & CTAs</h3></div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="full"><label class="form-label">Headline <span class="req">*</span></label><textarea class="form-input" id="h-hl" rows="3">${esc(HERO.text.headline)}</textarea><p class="form-help">Use &lt;em&gt;word&lt;/em&gt; to highlight words in gold italics.</p></div>
+        <div class="full"><label class="form-label">Top badge</label><input class="form-input" id="h-sub" value="${esc(HERO.text.subhead)}"></div>
+        <div class="full"><label class="form-label">Vision quote</label><textarea class="form-input" id="h-vq" rows="2">${esc(HERO.text.visionquote)}</textarea></div>
+        <div class="full"><label class="form-label">Body paragraph</label><textarea class="form-input" id="h-bd" rows="3">${esc(HERO.text.body)}</textarea></div>
+        <div><label class="form-label">Primary button</label><input class="form-input" id="h-c1" value="${esc(HERO.text.ctaPrimary)}"></div>
+        <div><label class="form-label">Secondary button</label><input class="form-input" id="h-c2" value="${esc(HERO.text.ctaSecondary)}"></div>
+      </div>
+      <div style="margin-top:18px;display:flex;justify-content:flex-end"><button class="btn btn-primary" style="width:auto" onclick="saveHeroText()"><i class="fa-solid fa-save"></i>Save Text</button></div>
+    </div></div>
+    <div class="card"><div class="card-header"><h3><i class="fa-solid fa-images"></i>Carousel Slides</h3>
+      <div><span class="tag gold">${HERO.slides.length} slides</span> <button class="btn btn-sm btn-gold" onclick="openSlideModal()"><i class="fa-solid fa-plus"></i>Add Slide</button></div></div>
+      <div class="card-body"><div id="slidesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px"></div></div>
+    </div>`;
   renderSlides();
 }
 function renderSlides(){
-  const s=state.pageData.hero;
-  $('#slidesList').innerHTML=(s.slides||[]).map((sl,i)=>`<div class="slide-row" data-id="${sl.id}"><div class="slide-thumb">${sl.type==='video'?`<i class="fas fa-video"></i>`:`<img src="${esc(sl.url)}" onerror="this.outerHTML='<i class=&quot;fas fa-image&quot;></i>'">`}</div><div class="slide-meta"><b>${sl.type}</b> · ${esc(sl.caption||sl.alt_text||'')}<br><span class="small muted">${esc(sl.url)}</span></div><div class="slide-acts"><button class="btn-ghost small" onclick="mvSlide(${sl.id},-1)" ${i===0?'disabled':''}><i class="fas fa-arrow-up"></i></button><button class="btn-ghost small" onclick="mvSlide(${sl.id},1)" ${i===s.slides.length-1?'disabled':''}><i class="fas fa-arrow-down"></i></button><button class="btn-secondary small" onclick="editSlide(${sl.id})"><i class="fas fa-edit"></i></button><button class="btn-danger small" onclick="delSlide(${sl.id})"><i class="fas fa-trash"></i></button></div></div>`).join('')||'<p class="muted">No slides yet. Add one!</p>';
+  $('#slidesGrid').innerHTML=HERO.slides.map((s,i)=>{
+    const total=HERO.slides.length;
+    return`<div class="hero-slide-preview ${i===0?'active':''}">
+      <div class="thumb" style="${s.type==='image'?`background-image:url('${s.url}')`:''}">
+        ${s.type==='video'?`<video src="${s.url}" muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></video>`:''}
+        <span class="media-type" style="position:absolute;top:10px;right:10px">${s.type}</span>
+        <div class="thumb-info"><h5>${esc(s.alt||'Slide '+(i+1))}</h5><small>${esc(s.caption||'')}</small></div>
+      </div>
+      <div class="hero-slide-actions">
+        <div class="left">
+          <button class="icon-btn" ${i===0?'disabled style="opacity:.3"':''} onclick="moveSlide(${i},-1)"><i class="fa-solid fa-chevron-up"></i></button>
+          <button class="icon-btn" ${i===total-1?'disabled style="opacity:.3"':''} onclick="moveSlide(${i},1)"><i class="fa-solid fa-chevron-down"></i></button>
+        </div>
+        <div><button class="icon-btn edit" onclick="openSlideModal(${s.id})"><i class="fa-solid fa-pen"></i></button><button class="icon-btn delete" onclick="deleteSlide(${s.id})"><i class="fa-solid fa-trash"></i></button></div>
+      </div></div>`;}).join('');
 }
-async function mvSlide(id,dir){try{await api('/hero/'+id+'/move',{method:'PUT',body:JSON.stringify({dir:dir<0?'up':'down'})});state.pageData.hero=await api('/hero');renderSlides();}catch(e){toast(e.message,'err');}}
-function newSlide(){slideForm(null);}
-function editSlide(id){const sl=state.pageData.hero.slides.find(s=>s.id===id);slideForm(sl);}
-function slideForm(sl){
-  const isEdit=!!sl;
-  overlay(`<h3>${isEdit?'Edit':'Add'} Slide</h3>
-    <form id="slideForm" class="form-grid">
-      <div class="field col2"><label>Type</label><select id="sl-type"><option value="image" ${sl?.type==='image'?'selected':''}>Image</option><option value="video" ${sl?.type==='video'?'selected':''}>Video</option></select></div>
-      <div class="col2">${mediaUploader('sl-media',sl?.url||'',{label:'Slide media (local upload only)',accept:sl?.type==='video'?'video/*':'image/*'})}</div>
-      <div class="field"><label>Alt text</label><input id="sl-alt" value="${esc(sl?.alt_text||'')}"></div>
-      <div class="field"><label>Caption</label><input id="sl-cap" value="${esc(sl?.caption||'')}"></div>
-      <div class="col2 flex gap"><button type="button" class="btn-secondary" onclick="closeOverlay()">Cancel</button><button class="btn-primary" type="submit"><i class="fas fa-save"></i> Save</button></div>
-    </form>`);
+async function saveHeroText(){
+  await api('hero',{body:{headline:$('#h-hl').value,subhead:$('#h-sub').value,visionquote:$('#h-vq').value,body:$('#h-bd').value,cta1:$('#h-c1').value,cta2:$('#h-c2').value},method:'POST'});
+  toast('Hero text saved.');HERO=await api('hero');
+}
+function openSlideModal(id){
+  const s=id?HERO.slides.find(x=>x.id==id):{type:'image',url:'',alt:'',caption:''};
+  openModal(`<div class="modal-header"><h3>${id?'Edit':'Add'} Slide</h3><button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="full"><label class="form-label">Image / Video</label>${mediaUploader(s,'sl','For hero carousel — landscape recommended')}</div>
+      <div><label class="form-label">Alt text</label><input class="form-input" id="sl-alt" value="${esc(s.alt||'')}"></div>
+      <div><label class="form-label">Caption (optional)</label><input class="form-input" id="sl-cap" value="${esc(s.caption||'')}"></div>
+    </div></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" style="width:auto" onclick="saveSlide(${id||0})"><i class="fa-solid fa-save"></i>${id?'Save':'Add'}</button></div>`,true);
+}
+async function saveSlide(id){
+  let m=getMediaVal('sl');
+  if(m&&m._file){const up=await api('media',{form:{file:m._file,subdir:'images',category:'Hero',title:'Hero slide'}});m={type:up.media.type,url:up.media.url};}
+  if(!m){toast('Add an image or video','error');return;}
+  const alt=$('#sl-alt').value,cap=$('#sl-cap').value;
+  if(id)await api('hero/slides/'+id,{body:{type:m.type,url:m.url,alt,caption},method:'PUT'});
+  else await api('hero/slides',{body:{type:m.type,url:m.url,alt,caption},method:'POST'});
+  toast(id?'Slide updated':'Slide added');closeModal();HERO=await api('hero');renderSlides();
+}
+async function moveSlide(i,dir){const s=HERO.slides[i];await api('hero/'+s.id+'/move',{body:{dir},method:'PUT'});HERO=await api('hero');renderSlides();}
+async function deleteSlide(id){if(!confirm('Delete this slide?'))return;await api('hero/'+id,{method:'DELETE'});toast('Slide deleted');HERO=await api('hero');renderSlides();}
+
+/* ---------- NEC ---------- */
+let NEC=[];
+async function renderNEC(){
+  if(!can('nec'))return;
+  NEC=await api('nec');
+  $('#pageContent').innerHTML=`
+    <div class="card"><div class="card-header"><h3><i class="fa-solid fa-user-tie"></i>NEC Leadership Ranks</h3>
+      <p style="font-size:12px;color:var(--gray-500);margin:0">Manage ranks/positions, names, photos, colors and duty descriptions.</p>
+      <button class="btn btn-sm btn-gold" onclick="openNecModal()"><i class="fa-solid fa-plus"></i>Add Position</button></div>
+      <div class="card-body p-sm"><div class="table-wrap"><table>
+        <thead><tr><th>Photo</th><th>Rank / Role</th><th>Name</th><th>Duty</th><th>Theme</th><th style="width:100px">Actions</th></tr></thead>
+        <tbody>${NEC.map(n=>`<tr>
+          <td><div style="width:50px;height:50px;border-radius:10px;background-size:cover;background-position:center;border:2px solid var(--gray-100);background-image:url('${n.photo||'../images/team-community.jpg'}');box-shadow:0 2px 8px rgba(0,0,0,0.08)"></div></td>
+          <td style="font-weight:700;color:var(--gray-900)">${esc(n.role_title)}</td>
+          <td style="color:${n.name?'var(--gray-800)':'var(--gray-400)'};font-style:${n.name?'normal':'italic'}">${esc(n.name)||'Position vacant'}</td>
+          <td style="font-size:12px;color:var(--gray-600);max-width:320px">${esc((n.duty||'').substring(0,100))}${(n.duty||'').length>100?'...':''}</td>
+          <td><span class="tag" style="background:linear-gradient(135deg,var(--${n.gradient?.includes('gold')?'gold-400':'azure-500'}),var(--${n.gradient?.includes('gold')?'gold-600':'azure-700'}));color:white">${esc(n.icon||'')}</span></td>
+          <td class="row-actions"><button class="icon-btn edit" onclick="openNecModal(${n.id})"><i class="fa-solid fa-pen"></i></button>${NEC.length>1?`<button class="icon-btn delete" onclick="deleteNec(${n.id})"><i class="fa-solid fa-trash"></i></button>`:''}</td>
+        </tr>`).join('')}</tbody></table></div></div>
+    </div>`;
+}
+function openNecModal(id){
+  const n=id?NEC.find(x=>x.id==id):{role_title:'',name:'',photo:'',gradient:'from-azure-500 to-azure-700',icon:'fa-star',duty:'',published:1};
+  const gradients=[
+    ['from-gold-400 to-gold-600','Gold (President/Patron)'],
+    ['from-azure-500 to-azure-700','Azure (Officers)'],
+    ['from-emerald-500 to-emerald-700','Emerald (Finance)'],
+    ['from-violet-500 to-violet-700','Violet (PRO)'],
+    ['from-rose-500 to-rose-700','Rose (Auditor)']
+  ];
+  openModal(`<div class="modal-header"><h3>${id?'Edit':'Add'} NEC Position</h3><button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div><label class="form-label">Rank / Role Title <span class="req">*</span></label><input class="form-input" id="n-role" value="${esc(n.role_title)}" placeholder="e.g. President"></div>
+      <div><label class="form-label">Officeholder Name</label><input class="form-input" id="n-name" value="${esc(n.name)}" placeholder="Leave blank if vacant"></div>
+      <div><label class="form-label">Color Theme</label><select class="form-input" id="n-grad">${gradients.map(g=>`<option value="${g[0]}" ${n.gradient===g[0]?'selected':''}>${g[1]}</option>`).join('')}</select></div>
+      <div><label class="form-label">Icon (Font Awesome)</label><input class="form-input" id="n-icon" value="${esc(n.icon)}" placeholder="fa-crown"></div>
+      <div class="full"><label class="form-label">Photo</label>${mediaUploader(n.photo?{type:'image',url:n.photo}:null,'n-photo','Portrait photo (square works best)')}</div>
+      <div class="full"><label class="form-label">Duties / Description</label><textarea class="form-input" id="n-duty" rows="4" placeholder="Describe the role...">${esc(n.duty||'')}</textarea></div>
+      <div class="full"><label class="form-check"><input type="checkbox" id="n-pub" ${n.published?'checked':''}><label>Published on website</label></div>
+    </div></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" style="width:auto" onclick="saveNec(${id||0})"><i class="fa-solid fa-save"></i>${id?'Save':'Add Position'}</button></div>`,true);
+}
+async function saveNec(id){
+  let ph=getMediaVal('n-photo');
+  if(ph&&ph._file){const up=await api('media',{form:{file:ph._file,subdir:'images',category:'NEC',title:'NEC photo'}});ph={url:up.media.url};}
+  const body={role_title:$('#n-role').value,name:$('#n-name').value,gradient:$('#n-grad').value,icon:$('#n-icon').value,duty:$('#n-duty').value,published:$('#n-pub').checked?1:0};
+  if(ph)body.photo=ph.url;
+  await api('nec'+(id?'/'+id:''),{body,method:'POST'});
+  toast(id?'Position updated':'Position added');closeModal();renderNEC();
+}
+async function deleteNec(id){if(!confirm('Delete this position?'))return;await api('nec/'+id,{method:'DELETE'});toast('Deleted');renderNEC();}
+
+/* ---------- PROGRAMS ---------- */
+let PROGRAMS=[];
+async function renderPrograms(){
+  if(!can('programs'))return;
+  PROGRAMS=await api('programs');
+  $('#pageContent').innerHTML=`<div class="card"><div class="card-header"><h3><i class="fa-solid fa-diagram-project"></i>Programs & Initiatives</h3><button class="btn btn-sm btn-gold" onclick="openProgramModal()"><i class="fa-solid fa-plus"></i>New Program</button></div>
+    <div class="card-body p-sm"><div class="table-wrap"><table><thead><tr><th>Cover</th><th>Program</th><th>Pillar</th><th>Short Description</th><th>Status</th><th style="width:110px">Actions</th></tr></thead>
+      <tbody>${PROGRAMS.map(p=>`<tr>
+        <td><div style="width:60px;height:44px;border-radius:8px;background-size:cover;background-position:center;border:1px solid var(--gray-200);background-image:url('${p.cover||'../images/team-community.jpg'}')"></div></td>
+        <td style="font-weight:700;color:var(--gray-900)"><i class="fa-solid ${p.icon}" style="color:${p.tag_color};margin-right:8px"></i>${esc(p.title)}</td>
+        <td><span class="tag" style="background:${p.tag_color}20;color:${p.tag_color}">${esc(p.tag)}</span></td>
+        <td style="max-width:320px;font-size:12px;color:var(--gray-600)">${esc(p.short_desc||'')}</td>
+        <td>${p.published?'<span class="tag green">Published</span>':'<span class="tag gray">Draft</span>'}</td>
+        <td class="row-actions"><button class="icon-btn edit" onclick="openProgramModal(${p.id})"><i class="fa-solid fa-pen"></i></button><button class="icon-btn delete" onclick="deleteProgram(${p.id})"><i class="fa-solid fa-trash"></i></button></td>
+      </tr>`).join('')}</tbody></table></div></div></div>`;
+}
+function openProgramModal(id){
+  const p=id?PROGRAMS.find(x=>x.id==id):{title:'',slug:'',tag:'',tag_color:'#1a37b8',icon:'fa-star',cover:'',short_desc:'',full_desc:'',published:0};
+  openModal(`<div class="modal-header"><h3>${id?'Edit':'New'} Program</h3><button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="full"><label class="form-label">Title <span class="req">*</span></label><input class="form-input" id="p-title" value="${esc(p.title)}"></div>
+      <div><label class="form-label">Pillar/Tag</label><input class="form-input" id="p-tag" value="${esc(p.tag)}"></div>
+      <div><label class="form-label">Tag color</label><input type="color" class="form-input" id="p-color" value="${p.tag_color}" style="height:44px;padding:4px"></div>
+      <div><label class="form-label">Icon</label><input class="form-input" id="p-icon" value="${esc(p.icon)}"></div>
+      <div><label class="form-label">Slug (URL)</label><input class="form-input" id="p-slug" value="${esc(p.slug)}"></div>
+      <div class="full"><label class="form-label">Short description</label><input class="form-input" id="p-short" value="${esc(p.short_desc||'')}"></div>
+      <div class="full"><label class="form-label">Cover Image</label>${mediaUploader(p.cover?{type:'image',url:p.cover}:null,'p-cover','Landscape 16:9')}</div>
+      <div class="full"><label class="form-label">Full description (HTML: h4, p, ul)</label><textarea class="form-input" id="p-full" rows="8">${esc(p.full_desc||'')}</textarea></div>
+      <div class="full"><label class="form-check"><input type="checkbox" id="p-pub" ${p.published?'checked':''}><label>Published</label></div>
+    </div></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" style="width:auto" onclick="saveProgram(${id||0})"><i class="fa-solid fa-save"></i>${id?'Save':'Create'}</button></div>`,true);
+}
+async function saveProgram(id){
+  let cov=getMediaVal('p-cover');
+  if(cov&&cov._file){const up=await api('media',{form:{file:cov._file,subdir:'images',category:'Programs'}});cov={url:up.media.url};}
+  const title=$('#p-title').value.trim();if(!title){toast('Title required','error');return;}
+  let slug=$('#p-slug').value.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  if(!slug)slug=title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const body={title,slug,tag:$('#p-tag').value,tag_color:$('#p-color').value,icon:$('#p-icon').value||'fa-star',short:$('#p-short').value,full:$('#p-full').value,published:$('#p-pub').checked?1:0};
+  if(cov)body.cover=cov.url;
+  await api('programs'+(id?'/'+id:''),{body,method:'POST'});
+  toast(id?'Program updated':'Program created');closeModal();renderPrograms();
+}
+async function deleteProgram(id){if(!confirm('Delete?'))return;await api('programs/'+id,{method:'DELETE'});toast('Deleted');renderPrograms();}
+
+/* ---------- EVENTS ---------- */
+let EVENTS=[];
+async function renderEvents(){
+  if(!can('events'))return;
+  EVENTS=await api('events');
+  const up=EVENTS.filter(e=>e.status==='upcoming').sort((a,b)=>new Date(a.event_date)-new Date(b.event_date));
+  const past=EVENTS.filter(e=>e.status!=='upcoming').sort((a,b)=>new Date(b.event_date)-new Date(a.event_date));
+  $('#pageContent').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+      <div><h2 style="font-size:16px;font-weight:700;color:var(--gray-900)">Upcoming Events</h2><p style="font-size:12px;color:var(--gray-500)">Add photos and videos to each event.</p></div>
+      <button class="btn btn-sm btn-gold" onclick="openEventModal()"><i class="fa-solid fa-plus"></i>Create Event</button>
+    </div>
+    <div class="event-grid" style="margin-bottom:32px">${up.length?up.map(evCard).join(''):'<div class="empty-state" style="grid-column:1/-1"><i class="fa-regular fa-calendar"></i><p>No upcoming events.</p></div>'}</div>
+    <h2 style="font-size:16px;font-weight:700;color:var(--gray-900);margin-bottom:18px">Past Events</h2>
+    <div class="event-grid">${past.length?past.map(evCard).join(''):'<div class="empty-state" style="grid-column:1/-1"><i class="fa-regular fa-folder-open"></i><p>No past events.</p></div>'}</div>`;
+}
+function evCard(e){
+  const d=dateFmtShort(e.event_date);const cover=e.media&&e.media[0]?e.media[0]:null;
+  const hasVideo=e.media&&e.media.some(m=>m.type==='video');
+  return`<div class="event-card ${hasVideo?'has-video':''}">
+    <div class="event-card-media">
+      ${cover?(cover.type==='video'?`<video src="${cover.url}" muted style="width:100%;height:100%;object-fit:cover"></video>`:`<img src="${cover.url}" alt="${esc(e.title)}" onerror="this.src='../images/team-community.jpg'">`):'<div style="width:100%;height:100%;background:var(--gray-100);display:flex;align-items:center;justify-content:center;color:var(--gray-400)"><i class="fa-solid fa-calendar" style="font-size:40px"></i></div>'}
+      <div class="event-card-date"><div class="day">${d.day}</div><div class="month">${d.month}</div></div>
+      ${hasVideo?'<div class="video-play"><i class="fa-solid fa-play" style="margin-left:3px"></i></div>':''}
+      <span class="tag" style="position:absolute;top:12px;right:12px;background:${e.status==='upcoming'?'rgba(16,185,129,.95)':'rgba(148,163,184,.95)'};color:white">${e.status}</span>
+    </div>
+    <div class="event-card-body"><h4>${esc(e.title)}</h4><p>${esc(e.description||'')}</p>
+      <div class="event-card-meta"><span><i class="fa-regular fa-clock"></i>${e.event_time||'TBA'}</span><span><i class="fa-solid fa-location-dot"></i>${esc(e.location||'TBA')}</span>${e.media?`<span><i class="fa-solid fa-photo-film"></i>${e.media.length}</span>`:''}</div></div>
+    <div class="event-card-actions"><button class="btn btn-ghost btn-sm" onclick="openEventModal(${e.id})"><i class="fa-solid fa-pen"></i>Edit</button><button class="btn btn-ghost btn-sm" style="color:var(--rose)" onclick="deleteEvent(${e.id})"><i class="fa-solid fa-trash"></i></button></div>
+  </div>`;
+}
+function openEventModal(id){
+  const e=id?EVENTS.find(x=>x.id==id):{title:'',event_date:new Date().toISOString().split('T')[0],event_time:'',location:'',status:'upcoming',description:'',media:[]};
+  openModal(`<div class="modal-header"><h3>${id?'Edit':'New'} Event</h3><button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="full"><label class="form-label">Title <span class="req">*</span></label><input class="form-input" id="e-title" value="${esc(e.title)}"></div>
+      <div><label class="form-label">Date</label><input type="date" class="form-input" id="e-date" value="${e.event_date||''}"></div>
+      <div><label class="form-label">Time</label><input type="time" class="form-input" id="e-time" value="${e.event_time||''}"></div>
+      <div class="full"><label class="form-label">Location</label><input class="form-input" id="e-loc" value="${esc(e.location||'')}"></div>
+      <div><label class="form-label">Status</label><select class="form-input" id="e-status"><option value="upcoming"${e.status==='upcoming'?' selected':''}>Upcoming</option><option value="completed"${e.status==='completed'?' selected':''}>Completed</option><option value="draft"${e.status==='draft'?' selected':''}>Draft</option></select></div>
+      <div class="full"><label class="form-label">Description</label><textarea class="form-input" id="e-desc" rows="3">${esc(e.description||'')}</textarea></div>
+      <div class="full"><label class="form-label">Photos & Videos</label>
+        <p class="form-help">Upload multiple photos and/or videos. First item becomes the cover.</p>
+        <div class="upload-zone" onclick="document.getElementById('e-file').click()"><i class="fa-solid fa-cloud-arrow-up"></i><p><strong>Click to add files</strong></p><small>Images or MP4/WebM videos</small><input type="file" id="e-file" accept="image/*,video/*" multiple style="display:none"></div>
+        <div class="media-preview" id="e-mp"></div>
+        <div style="margin-top:8px;display:flex;gap:8px"><input class="form-input" id="e-url" placeholder="...or paste URL, then Add" style="flex:1"><button type="button" class="btn btn-sm btn-outline" onclick="evAddUrl()"><i class="fa-solid fa-plus"></i>Add</button></div>
+      </div>
+    </div></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" style="width:auto" onclick="saveEvent(${id||0})"><i class="fa-solid fa-save"></i>${id?'Save':'Create'}</button></div>`,true);
+  mmInit('ev','e-mp','e-mm',(e.media||[]).map(m=>({type:m.type,url:m.url})));
+  $('#e-file').addEventListener('change',async ev=>{await mmAddFiles('ev','e-mp','e-mm',[...ev.target.files],'events');ev.target.value='';});
+}
+function evAddUrl(){
+  const url=$('#e-url').value.trim();if(!url)return;
+  const isVideo=/\.(mp4|webm|mov)($|\?)/i.test(url);
+  mmAdd('ev','e-mp','e-mm',{type:isVideo?'video':'image',url:url});
+  $('#e-url').value='';
+}
+async function saveEvent(id){
+  const media=JSON.parse($('#e-mm').value||'[]');
+  const body={title:$('#e-title').value.trim(),date:$('#e-date').value,time:$('#e-time').value,location:$('#e-loc').value,status:$('#e-status').value,description:$('#e-desc').value,media};
+  if(!body.title){toast('Title required','error');return;}
+  // Upload any base64 / File items in media
+  for(let i=0;i<body.media.length;i++){const m=body.media[i];if(m.url&&m.url.startsWith('data:')){
+    // convert to blob
+    const res=await fetch(m.url);const blob=await res.blob();const fd=new FormData();fd.append('file',blob,'upload.'+(m.type==='video'?'mp4':'jpg'));fd.append('subdir','events');
+    const r=await api('media',{form:fd});body.media[i]={type:r.media.type,url:r.media.url};
+  }}
+  const r=await api('events'+(id?'/'+id:''),{body,method:'POST'});
+  toast(id?'Event updated':'Event created');closeModal();renderEvents();
+}
+async function deleteEvent(id){if(!confirm('Delete event?'))return;await api('events/'+id,{method:'DELETE'});toast('Deleted');renderEvents();}
+
+/* ---------- MEDIA LIBRARY ---------- */
+let MEDIA=[];let mCat='All';
+async function renderMedia(){
+  if(!can('photos'))return;
+  MEDIA=await api('media');
+  const cats=['All',...new Set(MEDIA.map(m=>m.category))];
+  $('#pageContent').innerHTML=`<div class="card"><div class="card-header"><h3><i class="fa-solid fa-images"></i>Media Library</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><select class="form-input" style="width:auto;padding:8px 12px;font-size:13px" id="mcat" onchange="mCat=this.value;renderMediaGrid()">${cats.map(c=>`<option ${c===mCat?'selected':''}>${c}</option>`).join('')}</select>
+    <button class="btn btn-sm btn-gold" onclick="openMediaModal()"><i class="fa-solid fa-cloud-arrow-up"></i>Upload</button></div></div>
+    <div class="card-body"><div class="photo-grid" id="mgrid"></div></div></div>`;
+  renderMediaGrid();
+}
+function renderMediaGrid(){
+  const list=mCat==='All'?MEDIA:MEDIA.filter(m=>m.category===mCat);
+  $('#mgrid').innerHTML=list.length?list.map(m=>`<div class="photo-card"><div class="thumb">
+    ${m.type==='video'?`<video src="${m.url}" muted style="width:100%;height:100%;object-fit:cover"></video><span class="media-badge"><i class="fa-solid fa-video"></i> Video</span>`:`<img src="${m.url}" onerror="this.src='../images/team-community.jpg'"><span class="media-badge"><i class="fa-solid fa-image"></i> Photo</span>`}
+    <div class="photo-card-actions"><button onclick="deleteMedia(${m.id})"><i class="fa-solid fa-trash"></i></button></div>
+    </div><div class="photo-card-meta"><h5>${esc(m.title||'Untitled')}</h5><p>${esc(m.category)}</p></div></div>`).join(''):'<div class="empty-state" style="grid-column:1/-1"><i class="fa-regular fa-images"></i><p>No media here.</p></div>';
+}
+function openMediaModal(){
+  openModal(`<div class="modal-header"><h3>Upload Media</h3><button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="full"><label class="form-label">Title</label><input class="form-input" id="m-title" placeholder="Descriptive title"></div>
+      <div><label class="form-label">Category</label><input class="form-input" id="m-cat" placeholder="Hero, Events, etc."></div>
+      <div class="full"><label class="form-label">File</label><input type="file" id="m-file" class="form-input" accept="image/*,video/*" style="padding:8px">
+      <p class="form-help">or paste URL:</p><input class="form-input" id="m-url" placeholder="https://..."></div>
+    </div></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" style="width:auto" onclick="uploadMedia()"><i class="fa-solid fa-cloud-arrow-up"></i>Upload</button></div>`);
+}
+async function uploadMedia(){
+  const title=$('#m-title').value||'Uploaded';const cat=$('#m-cat').value||'General';
+  const f=$('#m-file').files[0];const url=$('#m-url').value.trim();
+  if(f){
+    const subdir=f.type.startsWith('video/')?'videos':'images';
+    const fd=new FormData();fd.append('file',f);fd.append('title',title);fd.append('category',cat);fd.append('subdir',subdir);
+    await api('media',{form:fd});
+  }else if(url){
+    const type=/\.(mp4|webm|mov)($|\?)/i.test(url)?'video':'image';
+    await api('media',{body:{title,category:cat,type,url},method:'POST'});
+  }else{toast('Pick a file or paste URL','error');return;}
+  toast('Uploaded');closeModal();renderMedia();
+}
+async function deleteMedia(id){if(!confirm('Delete?'))return;await api('media/'+id,{method:'DELETE'});toast('Deleted');renderMedia();}
+
+/* ---------- SITE INFO ---------- */
+async function renderSite(){
+  if(!can('site'))return;
+  const s=DATA.site||await api('site');
+  const fields=[['orgName','Organization Name'],['shortName','Abbreviation'],['motto','Motto'],['tagline','Tagline'],['vision','Vision'],['mission','Mission'],['address','Address'],['phone','Phone'],['email','Email'],['hours','Working Hours'],['facebook','Facebook URL'],['twitter','Twitter/X'],['instagram','Instagram'],['whatsapp','WhatsApp']];
+  $('#pageContent').innerHTML=`<div class="card"><div class="card-header"><h3><i class="fa-solid fa-building"></i>Organization Information</h3></div>
+    <div class="card-body"><div class="form-grid">${fields.map(f=>{const isLong=['vision','mission','address'].includes(f[0]);const type=f[0]==='email'?'email':'text';
+    return`<div class="${isLong?'full':''}"><label class="form-label">${f[1]}</label>${isLong?`<textarea class="form-input" id="s-${f[0]}" rows="${f[0]==='vision'||f[0]==='mission'?2:2}">${esc(s[f[0]]||'')}</textarea>`:`<input type="${type}" class="form-input" id="s-${f[0]}" value="${esc(s[f[0]]||'')}">`}</div>`;}).join('')}</div>
+    <div style="margin-top:20px;display:flex;justify-content:flex-end"><button class="btn btn-primary" style="width:auto" onclick="saveSite()"><i class="fa-solid fa-save"></i>Save</button></div></div></div>`;
+}
+async function saveSite(){
+  const body={};['orgName','shortName','motto','tagline','vision','mission','address','phone','email','hours','facebook','twitter','instagram','whatsapp'].forEach(k=>body[k]=$('#s-'+k).value);
+  await api('site',{body,method:'POST'});toast('Saved');DATA.site=await api('site');
+}
+
+/* ---------- DONATIONS ---------- */
+async function renderDonations(){
+  if(!can('donations'))return;
+  const d=await api('donations');
+  const tot=d.filter(x=>x.status==='verified').reduce((a,b)=>a+Number(b.amount),0);
+  const pend=d.filter(x=>x.status==='pending').length;
+  $('#pageContent').innerHTML=`
+    <div class="stats-grid" style="margin-bottom:20px">
+      <div class="stat-card green"><div class="stat-top"><div class="stat-icon green"><i class="fa-solid fa-circle-check"></i></div></div><div class="stat-label">Verified Total</div><div class="stat-value">${money(tot)}</div></div>
+      <div class="stat-card red"><div class="stat-top"><div class="stat-icon red"><i class="fa-solid fa-clock"></i></div></div><div class="stat-label">Pending</div><div class="stat-value">${pend}</div></div>
+      <div class="stat-card gold"><div class="stat-top"><div class="stat-icon gold"><i class="fa-solid fa-gift"></i></div></div><div class="stat-label">Total Donations</div><div class="stat-value">${d.length}</div></div>
+    </div>
+    <div class="card"><div class="card-header"><h3><i class="fa-solid fa-hand-holding-dollar"></i>All Donations</h3></div>
+    <div class="card-body p-sm"><div class="table-wrap"><table><thead><tr><th>Donor</th><th>Amount</th><th>Campaign</th><th>Method</th><th>Date</th><th>Status</th><th style="width:120px">Actions</th></tr></thead>
+      <tbody>${d.slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).map(x=>`<tr>
+        <td><div class="donor-cell"><div class="donor-avatar">${x.anonymous?'A':initials(x.donor)}</div><div><div style="font-weight:600;font-size:13px">${x.anonymous?'Anonymous':esc(x.donor)}</div><div style="font-size:11px;color:var(--gray-400)">${x.anonymous?'':esc(x.email||'')}</div></div></div></td>
+        <td class="donation-amount">${money(x.amount)}</td><td><span class="tag blue">${esc(x.campaign)}</span></td><td style="font-size:12px">${esc(x.method)}</td><td style="font-size:12px">${dateFmt(x.created_at)}</td>
+        <td>${x.status==='verified'?'<span class="tag green"><i class="fa-solid fa-check"></i>Verified</span>':x.status==='pending'?'<span class="tag gold"><i class="fa-solid fa-clock"></i>Pending</span>':'<span class="tag red">Rejected</span>'}</td>
+        <td class="row-actions">${x.status==='pending'?`<button class="icon-btn edit" onclick="verifyDon(${x.id})" title="Verify"><i class="fa-solid fa-check"></i></button>`:''}<button class="icon-btn delete" onclick="delDon(${x.id})"><i class="fa-solid fa-trash"></i></button></td>
+      </tr>`).join('')}</tbody></table></div></div></div>`;
+}
+async function verifyDon(id){await api('donations/'+id+'/verify',{method:'POST'});toast('Verified');renderDonations();}
+async function delDon(id){if(!confirm('Delete?'))return;await api('donations/'+id,{method:'DELETE'});toast('Deleted');renderDonations();}
+
+/* ---------- MEMBERS ---------- */
+async function renderMembers(){
+  if(!can('members'))return;
+  const m=await api('members');
+  $('#pageContent').innerHTML=`<div class="card"><div class="card-header"><h3><i class="fa-solid fa-users"></i>Members</h3><button class="btn btn-sm btn-gold" onclick="openMemberModal()"><i class="fa-solid fa-user-plus"></i>Add</button></div>
+    <div class="card-body p-sm"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>State</th><th>Tier</th><th>Joined</th><th>Status</th><th style="width:110px">Actions</th></tr></thead>
+      <tbody>${m.map(x=>`<tr><td style="font-weight:600"><div class="donor-cell"><div class="donor-avatar">${initials(x.name)}</div>${esc(x.name)}</div></td><td style="font-size:12px">${esc(x.email||'')}</td><td style="font-size:12px">${esc(x.phone||'')}</td><td>${esc(x.state||'')}</td><td><span class="tag blue">${esc(x.tier)}</span></td><td style="font-size:12px">${dateFmt(x.joined)}</td><td>${x.status==='active'?'<span class="tag green">Active</span>':'<span class="tag gold">Pending</span>'}</td><td class="row-actions"><button class="icon-btn edit" onclick="openMemberModal(${x.id})"><i class="fa-solid fa-pen"></i></button><button class="icon-btn delete" onclick="delMember(${x.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')}</tbody></table></div></div></div>`;
+}
+function openMemberModal(id){
+  const m=id?(DATA.members.find(x=>x.id==id)||{name:'',email:'',phone:'',state:'',tier:'Full Member',status:'active'}):{name:'',email:'',phone:'',state:'',tier:'Full Member',status:'active'};
+  openModal(`<div class="modal-header"><h3>${id?'Edit':'Add'} Member</h3><button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="full"><label class="form-label">Name <span class="req">*</span></label><input class="form-input" id="mb-name" value="${esc(m.name)}"></div>
+      <div><label class="form-label">Email</label><input class="form-input" id="mb-email" value="${esc(m.email||'')}"></div>
+      <div><label class="form-label">Phone</label><input class="form-input" id="mb-phone" value="${esc(m.phone||'')}"></div>
+      <div><label class="form-label">State</label><input class="form-input" id="mb-state" value="${esc(m.state||'')}"></div>
+      <div><label class="form-label">Tier</label><select class="form-input" id="mb-tier"><option ${m.tier==='Full Member'?'selected':''}>Full Member</option><option ${m.tier==='Applicant'?'selected':''}>Applicant</option><option ${m.tier==='Volunteer'?'selected':''}>Volunteer</option><option ${m.tier==='Patron/Matron'?'selected':''}>Patron/Matron</option></select></div>
+      <div><label class="form-label">Status</label><select class="form-input" id="mb-status"><option value="active"${m.status==='active'?' selected':''}>Active</option><option value="pending"${m.status==='pending'?' selected':''}>Pending</option><option value="inactive"${m.status==='inactive'?' selected':''}>Inactive</option></select></div>
+    </div></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" style="width:auto" onclick="saveMember(${id||0})">${id?'Save':'Add'}</button></div>`);
+}
+async function saveMember(id){const body={name:$('#mb-name').value,email:$('#mb-email').value,phone:$('#mb-phone').value,state:$('#mb-state').value,tier:$('#mb-tier').value,status:$('#mb-status').value};if(!body.name){toast('Name required','error');return}await api('members'+(id?'/'+id:''),{body,method:'POST'});toast('Saved');closeModal();renderMembers();}
+async function delMember(id){if(!confirm('Remove?'))return;await api('members/'+id,{method:'DELETE'});toast('Removed');renderMembers();}
+
+/* ---------- MESSAGES ---------- */
+async function renderMessages(){
+  if(!can('messages'))return;
+  const msgs=await api('messages');msgs.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  $('#pageContent').innerHTML=`<div class="card"><div class="card-header"><h3><i class="fa-solid fa-envelope"></i>Inbox</h3><span class="tag gold">${msgs.filter(m=>!m.is_read).length} unread</span></div>
+    <div class="card-body p-sm">${msgs.length?msgs.map(m=>`<div class="activity-item" style="padding:18px;border-bottom:1px solid var(--gray-100);${!m.is_read?'background:var(--azure-50);margin:0 -24px;padding-left:24px;padding-right:24px':''}">
+      <div class="activity-icon" style="background:${m.is_read?'var(--gray-100)':'var(--azure-700)'};color:${m.is_read?'var(--gray-500)':'white'}"><i class="fa-solid fa-envelope${m.is_read?'-open':''}"></i></div>
+      <div class="activity-body"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div><p style="font-weight:700;font-size:14px;color:var(--gray-900)">${esc(m.name)} ${!m.is_read?'<span class="tag blue" style="margin-left:8px">New</span>':''} <span style="font-size:11px;color:var(--gray-400);font-weight:400">${esc(m.source||'contact')}</span></p><p style="font-size:12px;color:var(--gray-500)">${esc(m.email)} · ${dateFmt(m.created_at)}</p></div>
+        <div class="row-actions">${!m.is_read?`<button class="icon-btn edit" onclick="markRead(${m.id})"><i class="fa-solid fa-check"></i></button>`:''}<button class="icon-btn delete" onclick="delMsg(${m.id})"><i class="fa-solid fa-trash"></i></button></div></div>
+        <p style="font-weight:600;font-size:14px;margin-top:8px">${esc(m.subject)}</p><p style="font-size:13px;color:var(--gray-600);margin-top:6px;line-height:1.6">${esc(m.message)}</p></div></div>`).join(''):'<div class="empty-state"><i class="fa-regular fa-inbox"></i><p>No messages.</p></div>'}</div></div>`;
+}
+async function markRead(id){await api('messages/'+id+'/read',{method:'POST'});toast('Marked read');renderMessages();}
+async function delMsg(id){if(!confirm('Delete?'))return;await api('messages/'+id,{method:'DELETE'});toast('Deleted');renderMessages();}
+
+/* ---------- USERS ---------- */
+let USERS=[];
+async function renderUsers(){
+  if(!can('users'))return;
+  USERS=await api('users');
+  $('#pageContent').innerHTML=`<div class="card"><div class="card-header"><h3><i class="fa-solid fa-user-shield"></i>Users & Roles</h3><button class="btn btn-sm btn-gold" onclick="openUserModal()"><i class="fa-solid fa-user-plus"></i>Add User</button></div>
+    <div class="card-body p-sm"><div class="table-wrap"><table><thead><tr><th>User</th><th>Email</th><th>Role</th><th>Permissions</th><th>Status</th><th style="width:110px">Actions</th></tr></thead>
+      <tbody>${USERS.map(u=>`<tr><td style="font-weight:600"><div class="donor-cell"><div class="donor-avatar">${initials(u.name)}</div><div><div>${esc(u.name)}</div><div style="font-size:11px;color:var(--gray-400)">@${esc(u.username)}</div></div></div></td>
+      <td style="font-size:12px">${esc(u.email||'')}</td>
+      <td>${u.role==='admin'?'<span class="tag gold"><i class="fa-solid fa-crown"></i>Admin</span>':'<span class="tag blue"><i class="fa-solid fa-user"></i>Staff</span>'}</td>
+      <td style="font-size:11px">${u.role==='admin'?'<span class="tag gray">All</span>':Object.keys(u.perms||{}).filter(k=>u.perms[k]).map(k=>`<span class="tag gray" style="margin:1px">${PERM_LABEL[k]||k}</span>`).join(' ')}</td>
+      <td>${u.status==='active'?'<span class="tag green">Active</span>':'<span class="tag red">Disabled</span>'}</td>
+      <td class="row-actions"><button class="icon-btn edit" onclick="openUserModal(${u.id})"><i class="fa-solid fa-pen"></i></button>${u.id!==USER.id?`<button class="icon-btn delete" onclick="delUser(${u.id})"><i class="fa-solid fa-trash"></i></button>`:''}</td></tr>`).join('')}</tbody></table></div></div></div>`;
+}
+function openUserModal(id){
+  const u=id?USERS.find(x=>x.id==id):{name:'',email:'',username:'',role:'staff',perms:{},status:'active'};
+  const keys=['dashboard','hero','nec','site','programs','events','donations','photos','members','messages','reports','settings'];
+  openModal(`<div class="modal-header"><h3>${id?'Edit':'Add'} User</h3><button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div><label class="form-label">Name <span class="req">*</span></label><input class="form-input" id="u-name" value="${esc(u.name)}"></div>
+      <div><label class="form-label">Username <span class="req">*</span></label><input class="form-input" id="u-uname" value="${esc(u.username)}"></div>
+      <div class="full"><label class="form-label">Email</label><input type="email" class="form-input" id="u-email" value="${esc(u.email||'')}"></div>
+      <div><label class="form-label">${id?'New Password (blank=keep)':'Password <span class=req>*</span>'}</label><input type="password" class="form-input" id="u-pass"></div>
+      <div><label class="form-label">Role</label><select class="form-input" id="u-role" onchange="document.getElementById('perm-block').style.display=this.value==='admin'?'none':'block'"><option value="staff"${u.role==='staff'?' selected':''}>Staff</option><option value="admin"${u.role==='admin'?' selected':''}>Administrator</option></select></div>
+      <div><label class="form-label">Status</label><select class="form-input" id="u-status"><option value="active"${u.status==='active'?' selected':''}>Active</option><option value="disabled"${u.status==='disabled'?' selected':''}>Disabled</option></select></div>
+      <div class="full" id="perm-block" style="${u.role==='admin'?'display:none':''}"><label class="form-label">Permissions</label>
+        <div class="perm-grid">${keys.filter(k=>k!=='users'||USER.role==='admin').map(k=>`<label class="form-check"><input type="checkbox" class="perm-cb" data-p="${k}" ${u.perms&&u.perms[k]?'checked':''}><label><i class="fa-solid ${PERM_ICON[k]}" style="color:var(--gray-400);margin-right:6px;font-size:11px"></i>${PERM_LABEL[k]}</label></label>`).join('')}</div></div>
+    </div></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" style="width:auto" onclick="saveUser(${id||0})"><i class="fa-solid fa-save"></i>${id?'Save':'Create'}</button></div>`,true);
+}
+async function saveUser(id){
+  const perms={};document.querySelectorAll('.perm-cb').forEach(cb=>{if(cb.checked)perms[cb.dataset.p]=1;});
+  const body={name:$('#u-name').value,username:$('#u-uname').value.toLowerCase().replace(/\s+/g,'_'),email:$('#u-email').value,role:$('#u-role').value,status:$('#u-status').value,perms};
+  const pw=$('#u-pass').value;if(pw)body.password=pw;
+  if(!body.name||!body.username){toast('Name and username required','error');return;}
+  if(!id&&!pw){toast('Password required','error');return;}
+  await api('users'+(id?'/'+id:''),{body,method:'POST'});
+  toast(id?'User updated':'User created');closeModal();
+  if(id==USER.id){USER=await api('auth/me');localStorage.setItem('zglf_user',JSON.stringify(USER));}
+  renderUsers();
+}
+async function delUser(id){if(id===USER.id){toast("Cannot delete yourself",'error');return;}if(!confirm('Delete user?'))return;await api('users/'+id,{method:'DELETE'});toast('Deleted');renderUsers();}
+
+/* ---------- REPORTS ---------- */
+async function renderReports(){
+  if(!can('reports'))return;
+  const s=DATA.stats||await api('stats');
+  $('#pageContent').innerHTML=`
+    <div class="stats-grid">
+      <div class="stat-card green"><div class="stat-top"><div class="stat-icon green"><i class="fa-solid fa-sack-dollar"></i></div></div><div class="stat-label">Total Raised</div><div class="stat-value">${money(s.donations_total)}</div></div>
+      <div class="stat-card"><div class="stat-top"><div class="stat-icon blue"><i class="fa-solid fa-hand-holding-dollar"></i></div></div><div class="stat-label">Donors</div><div class="stat-value">${s.donations_count}</div></div>
+      <div class="stat-card gold"><div class="stat-top"><div class="stat-icon gold"><i class="fa-solid fa-users"></i></div></div><div class="stat-label">Active Members</div><div class="stat-value">${s.members_active}</div></div>
+      <div class="stat-card purple"><div class="stat-top"><div class="stat-icon purple"><i class="fa-solid fa-calendar"></i></div></div><div class="stat-label">Events Held</div><div class="stat-value">${s.events_completed}</div></div>
+    </div>
+    <div class="charts-grid">
+      <div class="card"><div class="card-header"><h3><i class="fa-solid fa-chart-pie"></i>By Campaign</h3></div><div class="card-body"><div class="chart-box"><canvas id="r1"></canvas></div></div></div>
+      <div class="card"><div class="card-header"><h3><i class="fa-solid fa-chart-column"></i>By Method</h3></div><div class="card-body"><div class="chart-box"><canvas id="r2"></canvas></div></div></div>
+    </div>
+    <div class="card"><div class="card-header"><h3><i class="fa-solid fa-file-export"></i>Export Data</h3></div>
+      <div class="card-body"><p style="font-size:13px;color:var(--gray-600);margin-bottom:16px">Download CSV reports for board meetings, accounting, or records.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-outline" onclick="exportCSV('donations')"><i class="fa-solid fa-file-csv"></i>Donations</button>
+        <button class="btn btn-outline" onclick="exportCSV('members')"><i class="fa-solid fa-file-csv"></i>Members</button>
+        <button class="btn btn-outline" onclick="exportCSV('events')"><i class="fa-solid fa-file-csv"></i>Events</button>
+      </div></div></div>`;
   setTimeout(()=>{
-    bindMediaUploader($('#slideForm'));
-    $('#slideForm').onsubmit=async e=>{e.preventDefault();
-      const payload={type:$('#sl-type').value,url:getMU($('#slideForm'),'sl-media'),alt:$('#sl-alt').value,caption:$('#sl-cap').value};
-      try{if(isEdit){await api('/hero/'+sl.id,{method:'PUT',body:JSON.stringify(payload)});}else{await api('/hero/slides',{method:'POST',body:JSON.stringify(payload)});}
-      closeOverlay();toast('Saved');state.pageData.hero=await api('/hero');renderSlides();}catch(e){toast(e.message,'err');}};
-  },10);
+    const pc=s.by_campaign||[];new Chart($('#r1'),{type:'doughnut',data:{labels:pc.map(x=>x.campaign),datasets:[{data:pc.map(x=>Number(x.total)),backgroundColor:['#1a37b8','#f5c842','#10b981','#ef4444','#8b5cf6','#ef6c00'],borderWidth:0}]},options:{cutout:'65%',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{padding:12,usePointStyle:true}}}}});
+    const pm=s.by_method||[];new Chart($('#r2'),{type:'bar',data:{labels:pm.map(x=>x.method),datasets:[{label:'Amount',data:pm.map(x=>Number(x.total)),backgroundColor:'rgba(26,55,184,0.8)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}});
+  },50);
 }
-async function delSlide(id){if(!confirm('Delete this slide?'))return;try{await api('/hero/'+id,{method:'DELETE'});state.pageData.hero=await api('/hero');renderSlides();toast('Deleted');}catch(e){toast(e.message,'err');}}
-
-/* ---------- Site Info ---------- */
-async function renderSite(main){
-  const s=await api('/site');
-  main.innerHTML=`<div class="page-head"><h1>Site Info</h1><p class="sub">Organization identity, contact info, and branding.</p></div>
-  <div class="card"><form id="siteForm" class="form-grid">
-    <div class="field col2"><label>Organization name</label><input name="site_name" value="${esc(s.site_name||'')}"></div>
-    <div class="field col2"><label>Tagline</label><input name="site_tagline" value="${esc(s.site_tagline||'')}"></div>
-    <div class="field"><label>Org type badge</label><input name="org_type" value="${esc(s.org_type||'')}"></div>
-    <div class="field"><label>HQ Address</label><input name="hq_address" value="${esc(s.hq_address||'')}"></div>
-    <div class="field"><label>Phone</label><input name="phone" value="${esc(s.phone||'')}"></div>
-    <div class="field"><label>Email</label><input name="email" value="${esc(s.email||'')}"></div>
-    <div class="field"><label>Facebook URL</label><input name="facebook" value="${esc(s.facebook||'')}"></div>
-    <div class="field"><label>Twitter/X URL</label><input name="twitter" value="${esc(s.twitter||'')}"></div>
-    <div class="field"><label>Instagram URL</label><input name="instagram" value="${esc(s.instagram||'')}"></div>
-    <div class="field"><label>LinkedIn URL</label><input name="linkedin" value="${esc(s.linkedin||'')}"></div>
-    <div class="field"><label>YouTube URL</label><input name="youtube" value="${esc(s.youtube||'')}"></div>
-    <div class="field"><label>Primary color</label><input type="color" name="primary_color" value="${esc(s.primary_color||'#1a37b8')}"></div>
-    <div class="field"><label>Accent (gold) color</label><input type="color" name="accent_color" value="${esc(s.accent_color||'#d4a84b')}"></div>
-    <div class="col2">${mediaUploader('logo',s.logo_url||'',{label:'Logo'})}${mediaUploader('favicon',s.favicon_url||'',{label:'Favicon'})}</div>
-    <div class="field col2"><label>About section title</label><input name="about_title" value="${esc(s.about_title||'')}"></div>
-    <div class="field col2"><label>About body (rich text)</label><div id="about-body-w"></div></div>
-    <div class="field"><label>About CTA text</label><input name="about_cta" value="${esc(s.about_cta||'')}"></div>
-    <div class="field"><label>Mission title</label><input name="mission_title" value="${esc(s.mission_title||'')}"></div>
-    <div class="field col2"><label>Mission body</label><div id="mission-body-w"></div></div>
-    <div class="field"><label>Vision title</label><input name="vision_title" value="${esc(s.vision_title||'')}"></div>
-    <div class="field col2"><label>Vision body</label><div id="vision-body-w"></div></div>
-    <div class="field"><label>Values title</label><input name="values_title" value="${esc(s.values_title||'')}"></div>
-    <div class="field col2"><label>Values body</label><div id="values-body-w"></div></div>
-    <div class="col2"><button class="btn-primary" type="submit"><i class="fas fa-save"></i> Save Site Info</button></div>
-  </form></div>`;
-  initWysiwyg('about-body-w',s.about_body||'');initWysiwyg('mission-body-w',s.mission_body||'');initWysiwyg('vision-body-w',s.vision_body||'');initWysiwyg('values-body-w',s.values_body||'');
-  bindMediaUploader($('#siteForm'));
-  $('#siteForm').onsubmit=async e=>{e.preventDefault();
-    const fd=new FormData($('#siteForm'));const obj={};fd.forEach((v,k)=>obj[k]=v);
-    obj.about_body=getWysiwyg('about-body-w');obj.mission_body=getWysiwyg('mission-body-w');obj.vision_body=getWysiwyg('vision-body-w');obj.values_body=getWysiwyg('values-body-w');
-    obj.logo_url=getMU($('#siteForm'),'logo');obj.favicon_url=getMU($('#siteForm'),'favicon');
-    try{await api('/site',{method:'POST',body:JSON.stringify(obj)});toast('Saved');}catch(e){toast(e.message,'err');}
-  };
+function download(fn,content,type='text/csv'){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=fn;a.click();URL.revokeObjectURL(url);}
+function csv(v){return'"'+String(v==null?'':v).replace(/"/g,'""')+'"';}
+async function exportCSV(type){
+  let rows=[];let fn='zglf-'+type+'.csv';
+  if(type==='donations'){const d=await api('donations');rows=[['Donor','Email','Amount','Campaign','Method','Date','Status','Anonymous','Note']];d.forEach(x=>rows.push([x.donor,x.email,x.amount,x.campaign,x.method,x.created_at,x.status,x.anonymous?'Yes':'No',x.note||'']));}
+  else if(type==='members'){const m=await api('members');rows=[['Name','Email','Phone','State','Tier','Joined','Status']];m.forEach(x=>rows.push([x.name,x.email,x.phone,x.state,x.tier,x.joined,x.status]));}
+  else if(type==='events'){const e=await api('events');rows=[['Title','Date','Time','Location','Status','Media count']];e.forEach(x=>rows.push([x.title,x.event_date,x.event_time,x.location,x.status,(x.media||[]).length]));}
+  download(fn,rows.map(r=>r.map(csv).join(',')).join('\n'));toast('Exported');
 }
 
-/* ---------- Footer ---------- */
-async function renderFooter(main){
-  const s=await api('/site');
-  main.innerHTML=`<div class="page-head"><h1>Footer Content</h1><p class="sub">Edit the footer that appears on every page.</p></div>
-  <div class="card"><form id="footerForm" class="form-grid">
-    <div class="field col2"><label>About column (rich text)</label><div id="foot-about-w"></div></div>
-    <div class="field col2"><label>Copyright line</label><input name="footerCopyright" value="${esc(s.footerCopyright||'')}"></div>
-    <div class="col2"><button class="btn-primary" type="submit"><i class="fas fa-save"></i> Save Footer</button></div>
-  </form></div>`;
-  initWysiwyg('foot-about-w',s.footerAbout||'');
-  $('#footerForm').onsubmit=async e=>{e.preventDefault();
-    const obj={footerAbout:getWysiwyg('foot-about-w'),footerCopyright:$('#footerForm input[name=footerCopyright]').value};
-    try{await api('/site',{method:'POST',body:JSON.stringify(obj)});toast('Saved');}catch(e){toast(e.message,'err');}
-  };
+/* ---------- SETTINGS ---------- */
+async function renderSettings(){
+  if(!can('settings'))return;
+  const s=DATA.site||await api('site');
+  $('#pageContent').innerHTML=`
+    <div class="card"><div class="card-header"><h3><i class="fa-solid fa-cog"></i>Preferences</h3></div>
+      <div class="card-body"><div class="form-grid">
+        <div><label class="form-label">Currency</label><select class="form-input" id="set-cur"><option value="NGN"${s.currency==='NGN'?' selected':''}>Nigerian Naira (₦)</option><option value="USD"${s.currency==='USD'?' selected':''}>US Dollar ($)</option><option value="EUR"${s.currency==='EUR'?' selected':''}>Euro (€)</option><option value="GBP"${s.currency==='GBP'?' selected':''}>British Pound (£)</option></select></div>
+        <div><label class="form-label">Contact Email</label><input class="form-input" id="set-email" value="${esc(s.contactEmail||s.email||'')}"></div>
+        <div class="full"><label class="form-check"><input type="checkbox" id="set-maint" ${s.maintenanceMode=='1'?'checked':''}><label>Maintenance mode</label></div>
+      </div><div style="margin-top:20px;display:flex;justify-content:flex-end"><button class="btn btn-primary" style="width:auto" onclick="saveSettings()"><i class="fa-solid fa-save"></i>Save</button></div></div></div>
+    <div class="card"><div class="card-header"><h3><i class="fa-solid fa-key"></i>Change Password</h3></div>
+      <div class="card-body"><div class="form-grid" style="max-width:400px">
+        <div class="full"><label class="form-label">Current password</label><input type="password" class="form-input" id="pw-cur"></div>
+        <div class="full"><label class="form-label">New password (min 6)</label><input type="password" class="form-input" id="pw-new"></div>
+        <div><button class="btn btn-primary" style="width:auto" onclick="changePw()"><i class="fa-solid fa-key"></i>Update</button></div>
+      </div></div></div>`;
 }
+async function saveSettings(){await api('settings',{body:{currency:$('#set-cur').value,contactEmail:$('#set-email').value,maintenanceMode:$('#set-maint').checked?'1':'0'},method:'POST'});toast('Settings saved');DATA.site=await api('site');}
+async function changePw(){const c=$('#pw-cur').value,n=$('#pw-new').value;if(n.length<6){toast('Min 6 characters','error');return;}try{await api('auth/password',{body:{current:c,password:n},method:'POST'});toast('Password changed');$('#pw-cur').value='';$('#pw-new').value='';}catch(e){}}
 
-/* ---------- Donations / Payments ---------- */
-async function renderDonations(main){
-  const s=await api('/site');
-  let banks=[];try{banks=JSON.parse(s.bankAccounts||'[]');if(!Array.isArray(banks))banks=[];}catch(e){banks=[];}
-  main.innerHTML=`<div class="page-head"><h1>Donations & Payment Gateways</h1><p class="sub">Manage verified donations, bank account details, and Paystack integration.</p></div>
-  <div class="card"><h3>Bank Accounts (shown on donate page)</h3><div id="bankList"></div><button class="btn-secondary" id="addBank"><i class="fas fa-plus"></i> Add Bank Account</button></div>
-  <div class="card"><h3>Paystack Payment Gateway</h3><form id="payForm" class="form-grid">
-    <div class="field col2"><label class="toggle"><input type="checkbox" id="ps-en" ${s.paystackEnabled=='1'?'checked':''}> Enable Paystack (online card payments)</label></div>
-    <div class="field"><label>Public Key</label><input id="ps-pub" value="${esc(s.paystackKey||'')}" placeholder="pk_test_..."></div>
-    <div class="field"><label>Secret Key</label><input id="ps-secret" type="password" value="${esc(s.paystackSecret||'')}" placeholder="sk_test_..."></div>
-    <div class="field col2"><label>Donate page title</label><input id="dtitle" value="${esc(s.donationTitle||'Support Our Mission')}"></div>
-    <div class="field col2"><label>Donate page note</label><div id="dnote-w"></div></div>
-    <div class="col2"><button class="btn-primary" type="submit"><i class="fas fa-save"></i> Save Payment Settings</button></div>
-  </form></div>
-  <div class="card"><h3>All Donations <button class="btn-secondary small" onclick="exportCSV()">Export CSV</button></h3><div id="donList"></div></div>`;
-  renderBankList(banks);
-  initWysiwyg('dnote-w',s.donationNote||'');
-  $('#addBank').onclick=()=>addBankRow({bankName:'',accountName:'',accountNumber:''});
-  $('#payForm').onsubmit=async e=>{e.preventDefault();
-    const bankRows=[...document.querySelectorAll('.bank-row')].map(r=>({bankName:r.querySelector('.bn').value,accountName:r.querySelector('.an').value,accountNumber:r.querySelector('.anum').value}));
-    const payload={bankAccounts:JSON.stringify(bankRows),paystackEnabled:$('#ps-en').checked?'1':'0',paystackKey:$('#ps-pub').value,paystackSecret:$('#ps-secret').value,donationTitle:$('#dtitle').value,donationNote:getWysiwyg('dnote-w')};
-    try{await api('/settings',{method:'POST',body:JSON.stringify(payload)});toast('Saved');}catch(e){toast(e.message,'err');}
-  };
-  const dons=await api('/donations');
-  $('#donList').innerHTML=`<table class="data-tbl"><thead><tr><th>Date</th><th>Donor</th><th>Amount</th><th>Campaign</th><th>Method</th><th>Status</th><th></th></tr></thead><tbody>${dons.map(d=>`<tr><td>${fmtDate(d.created_at)}</td><td>${esc(d.donor||'')} ${d.anonymous?'<span class="badge">anon</span>':''}<br><span class="small muted">${esc(d.email||'')}</span></td><td>${fmtMoney(d.amount)}</td><td>${esc(d.campaign)}</td><td>${esc(d.method)}</td><td><span class="badge b-${d.status}">${d.status}</span></td><td>${d.status==='pending'?`<button class="btn-primary small" onclick="verifyDon(${d.id})">Verify</button>`:''}</td></tr>`).join('')}</tbody></table>`;
-}
-function renderBankList(banks){
-  $('#bankList').innerHTML=banks.length?'':`<p class="muted">No bank accounts added yet. Click "Add Bank Account" below.</p>`;
-  banks.forEach(b=>addBankRow(b));
-}
-function addBankRow(b){
-  const wrap=document.createElement('div');wrap.className='bank-row form-grid';
-  wrap.innerHTML=`<div class="field"><label>Bank Name</label><input class="bn" value="${esc(b.bankName||'')}" placeholder="e.g. Access Bank"></div>
-    <div class="field"><label>Account Name</label><input class="an" value="${esc(b.accountName||'')}" placeholder="Zee Glow Link Foundation"></div>
-    <div class="field"><label>Account Number</label><input class="anum" value="${esc(b.accountNumber||'')}" placeholder="0123456789"></div>
-    <div class="field" style="align-self:end"><button type="button" class="btn-danger small remove-bank"><i class="fas fa-trash"></i></button></div>`;
-  wrap.querySelector('.remove-bank').onclick=()=>wrap.remove();
-  $('#bankList').appendChild(wrap);
-}
+/* ---------- Login button on public site is already added by link in footer; wire login redirect ---------- */
+render();
 
-/* ---------- Programs ---------- */
-async function renderPrograms(main){
-  const ps=await api('/programs');
-  main.innerHTML=`<div class="page-head"><h1>Programs & Pillars</h1><p class="sub">Manage the organization's core programs. <button class="btn-primary" id="newProg"><i class="fas fa-plus"></i> New Program</button></p></div>
-  <div class="grid-3" id="progGrid"></div>`;
-  $('#progGrid').innerHTML=ps.map(p=>`<div class="prog-card"><div class="prog-cover">${p.cover?`<img src="${esc(p.cover)}">`:`<i class="fas ${esc(p.icon)}"></i>`}<span class="tag" style="background:${esc(p.tag_color)}">${esc(p.tag||'')}</span></div><div class="prog-body"><h4>${esc(p.title)}</h4><p>${esc((p.short_desc||'').replace(/<[^>]+>/g,'').slice(0,120))}</p><div class="acts"><button class="btn-secondary small" onclick="editProg(${p.id})"><i class="fas fa-edit"></i></button><button class="btn-danger small" onclick="delProg(${p.id})"><i class="fas fa-trash"></i></button><span class="badge ${p.published?'b-verified':'b-pending'}">${p.published?'Live':'Draft'}</span></div></div></div>`).join('');
-  $('#newProg').onclick=()=>progForm(null);
-  window.editProg=id=>progForm(ps.find(p=>p.id===id));
-  window.delProg=async id=>{if(!confirm('Delete this program?'))return;await api('/programs/'+id,{method:'DELETE'});toast('Deleted');navigate();};
-}
-function progForm(p){
-  const isEdit=!!p;
-  overlay(`<h3>${isEdit?'Edit':'New'} Program</h3><form id="progForm" class="form-grid">
-    <div class="field col2"><label>Title</label><input id="p-title" value="${esc(p?.title||'')}"></div>
-    <div class="field"><label>Tag (pill label)</label><input id="p-tag" value="${esc(p?.tag||'')}"></div>
-    <div class="field"><label>Tag color</label><input type="color" id="p-tc" value="${esc(p?.tag_color||'#1a37b8')}"></div>
-    <div class="field"><label>Icon</label><div id="p-icon"></div></div>
-    <div class="field"><label>Slug (URL)</label><input id="p-slug" value="${esc(p?.slug||'')}" placeholder="auto-from-title"></div>
-    <div class="col2">${mediaUploader('p-cover',p?.cover||'',{label:'Cover image (local upload only)'})}</div>
-    <div class="field col2"><label>Short description (card)</label><textarea id="p-short" rows="2">${esc(p?.short_desc||'')}</textarea></div>
-    <div class="field col2"><label>Full description (rich text)</label><div id="p-full-w"></div></div>
-    <div class="field col2"><label class="toggle"><input type="checkbox" id="p-pub" ${p?.published?'checked':''}> Published (visible on site)</label></div>
-    <div class="col2 flex gap"><button type="button" class="btn-secondary" onclick="closeOverlay()">Cancel</button><button class="btn-primary" type="submit"><i class="fas fa-save"></i> Save</button></div>
-  </form>`);
-  setTimeout(()=>{
-    $('#p-icon').innerHTML=iconPicker(p?.icon||'fa-star');
-    initWysiwyg('p-full-w',p?.full_desc||'');
-    bindMediaUploader($('#progForm'));bindIconPicker($('#progForm'));
-    $('#progForm').onsubmit=async e=>{e.preventDefault();
-      const payload={title:$('#p-title').value,tag:$('#p-tag').value,tag_color:$('#p-tc').value,icon:getIconPicker($('#progForm')),slug:$('#p-slug').value,cover:getMU($('#progForm'),'p-cover'),short_desc:$('#p-short').value,full_desc:getWysiwyg('p-full-w'),published:$('#p-pub').checked?1:0};
-      try{await api('/programs'+(isEdit?'/'+p.id:''),{method:'POST',body:JSON.stringify(payload)});closeOverlay();toast('Saved');navigate();}catch(e){toast(e.message,'err');}
-    };
-  },10);
-}
+/* =============================================================
+   PATCHES (client demo fixes) — appended after original code
+   - WYSIWYG rich text editor (replaces HTML-tag textareas)
+   - Visual icon picker (replaces plain text fa-crown inputs)
+   - Media uploader: show pre-populated thumb, remove URL input
+   - Event create: fix body field naming
+   - New pages: Footer Content, Donations/Banks/Paystack settings
+   - Media library grid shows ALL items (already grid; fixed upload path)
+   - Public donate page shows banks + Paystack CTA
+   ============================================================= */
 
-/* ---------- Events ---------- */
-async function renderEvents(main){
-  const es=await api('/events');
-  main.innerHTML=`<div class="page-head"><h1>Events</h1><p class="sub">Upcoming and past events. <button class="btn-primary" id="newEvt"><i class="fas fa-plus"></i> New Event</button></p></div>
-  <div class="evt-grid" id="evtGrid"></div>`;
-  $('#evtGrid').innerHTML=es.map(ev=>{
-    const img=ev.featured_image||(ev.media&&ev.media[0]?.url)||'';
-    return `<div class="evt-card"><div class="evt-cover">${img?`<img src="${esc(img)}">`:`<i class="fas fa-calendar"></i>`}<span class="badge b-${ev.status}">${ev.status}</span></div><div class="evt-body"><div class="evt-date"><i class="fas fa-calendar-alt"></i> ${fmtDate(ev.event_date)} ${ev.event_time?atob?('· '+esc(ev.event_time)):''}</div><h4>${esc(ev.title)}</h4><div class="muted small"><i class="fas fa-map-marker-alt"></i> ${esc(ev.location||'TBA')}</div><p>${esc((ev.excerpt||ev.description||'').replace(/<[^>]+>/g,'').slice(0,140))}</p><div class="acts"><button class="btn-secondary small" onclick="editEvt(${ev.id})"><i class="fas fa-edit"></i></button><button class="btn-danger small" onclick="delEvt(${ev.id})"><i class="fas fa-trash"></i></button></div></div></div>`;
-  }).join('');
-  $('#newEvt').onclick=()=>evtForm(null);
-  window.editEvt=id=>evtForm(es.find(e=>e.id===id));
-  window.delEvt=async id=>{if(!confirm('Delete this event?'))return;await api('/events/'+id,{method:'DELETE'});toast('Deleted');navigate();};
-}
-function evtForm(ev){
-  const isEdit=!!ev;
-  const media=ev?.media||[];
-  overlay(`<h3>${isEdit?'Edit':'New'} Event</h3><form id="evtForm" class="form-grid">
-    <div class="field col2"><label>Event title</label><input id="e-title" value="${esc(ev?.title||'')}"></div>
-    <div class="field"><label>Date</label><input type="date" id="e-date" value="${esc(ev?.event_date||'')}"></div>
-    <div class="field"><label>Time</label><input type="time" id="e-time" value="${esc(ev?.event_time||'')}"></div>
-    <div class="field col2"><label>Location</label><input id="e-loc" value="${esc(ev?.location||'')}"></div>
-    <div class="field"><label>Status</label><select id="e-status"><option value="upcoming" ${ev?.status==='upcoming'?'selected':''}>Upcoming</option><option value="ongoing" ${ev?.status==='ongoing'?'selected':''}>Ongoing</option><option value="completed" ${ev?.status==='completed'?'selected':''}>Completed</option></select></div>
-    <div class="field col2"><label>Featured image (local upload)</label><div id="e-feat"></div></div>
-    <div class="field col2"><label>Description (rich text)</label><div id="e-desc-w"></div></div>
-    <div class="col2"><h4 style="margin:10px 0 4px">Gallery (optional)</h4><div id="e-gallery"></div><button type="button" class="btn-secondary small" id="addGal"><i class="fas fa-plus"></i> Add gallery image</button></div>
-    <div class="col2 flex gap"><button type="button" class="btn-secondary" onclick="closeOverlay()">Cancel</button><button class="btn-primary" type="submit"><i class="fas fa-save"></i> Save Event</button></div>
-  </form>`);
-  setTimeout(()=>{
-    $('#e-feat').innerHTML=mediaUploader('e-feat-mu',ev?.featured_image||(media[0]?.url||''),{label:'Featured image'});
-    initWysiwyg('e-desc-w',ev?.description||'');
-    bindMediaUploader($('#evtForm'));
-    const galWrap=document.createElement('div');galWrap.id='galItems';galWrap.style.display='grid';galWrap.style.gap='10px';galWrap.style.gridTemplateColumns='repeat(3,1fr)';
-    $('#e-gallery').appendChild(galWrap);
-    const gal=[];
-    function addGal(url){const item={url:url||''};gal.push(item);renderGal();}
-    function renderGal(){galWrap.innerHTML='';gal.forEach((it,idx)=>{const d=document.createElement('div');d.innerHTML=mediaUploader('gal-'+idx,it.url,{label:'Image '+(idx+1)});galWrap.appendChild(d);bindMediaUploader(d,u=>{it.url=u;});});}
-    media.filter(m=>m.type!=='featured'||idx).forEach(m=>addGal(m.url));
-    $('#addGal').onclick=()=>addGal('');
-    $('#evtForm').onsubmit=async e=>{e.preventDefault();
-      const feat=getMU($('#evtForm'),'e-feat-mu');
-      const mediaList=[];if(feat)mediaList.push({type:'image',url:feat});gal.forEach(g=>{if(g.url)mediaList.push({type:'image',url:g.url});});
-      const payload={title:$('#e-title').value,event_date:$('#e-date').value,event_time:$('#e-time').value,location:$('#e-loc').value,status:$('#e-status').value,description:getWysiwyg('e-desc-w'),featured_image:feat,media:mediaList};
-      try{await api('/events'+(isEdit?'/'+ev.id:''),{method:'POST',body:JSON.stringify(payload)});closeOverlay();toast('Saved');navigate();}catch(e){toast(e.message,'err');}
-    };
-  },10);
-}
+const faIcons=['fa-crown','fa-hands-helping','fa-hand-holding-heart','fa-pen-fancy','fa-file-alt','fa-coins','fa-calculator','fa-bullhorn','fa-heart','fa-star','fa-user-tie','fa-user','fa-users','fa-user-shield','fa-user-check','fa-user-graduate','fa-graduation-cap','fa-book','fa-book-open','fa-school','fa-heartbeat','fa-stethoscope','fa-notes-medical','fa-pills','fa-hospital','fa-hand-holding-medical','fa-hand-holding-dollar','fa-money-bill-wave','fa-sack-dollar','fa-piggy-bank','fa-briefcase','fa-tools','fa-seedling','fa-tractor','fa-truck','fa-tint','fa-home','fa-utensils','fa-hands','fa-dove','fa-globe','fa-flag','fa-award','fa-trophy','fa-medal','fa-gem','fa-newspaper','fa-microphone','fa-camera','fa-video','fa-share-alt','fa-envelope','fa-phone','fa-location-dot','fa-paper-plane','fa-gift','fa-donate','fa-pray','fa-leaf','fa-tree','fa-sun','fa-fist-raised','fa-balance-scale','fa-gavel','fa-landmark','fa-shield-halved','fa-key','fa-lock','fa-cog','fa-sliders','fa-wrench','fa-chart-line','fa-chart-bar','fa-chart-pie','fa-list-check','fa-clipboard-list','fa-calendar-check','fa-clock','fa-compass','fa-rocket','fa-lightbulb','fa-eye','fa-smile','fa-handshake','fa-link','fa-futbol','fa-palette','fa-music','fa-masks-theater','fa-mosque','fa-church','fa-university','fa-people-group','fa-children','fa-person-breastfeeding','fa-hand-holding-droplet','fa-droplet','fa-plate-wheat','fa-bowl-rice','fa-hands-holding-child','fa-people-carry-box','fa-house-chimney','fa-recycle','fa-earth-africa','fa-infinity'];
 
-/* ---------- NEC / Leadership ---------- */
-async function renderNEC(main){
-  const ns=await api('/nec');
-  main.innerHTML=`<div class="page-head"><h1>NEC / Leadership</h1><p class="sub">National Executive Committee members per ZGLF constitution. <button class="btn-primary" id="newNEC"><i class="fas fa-plus"></i> Add Officer</button></p></div>
-  <div class="nec-grid" id="necGrid"></div>`;
-  $('#necGrid').innerHTML=ns.map(n=>`<div class="nec-card"><div class="nec-photo">${n.photo?`<img src="${esc(n.photo)}">`:`<i class="fas ${esc(n.icon||'fa-user')}"></i>`}</div><div class="nec-body"><h4>${esc(n.role_title||'')}</h4><div class="muted">${esc(n.name||'(vacant)')}</div><p class="small">${esc((n.duty||'').replace(/<[^>]+>/g,'').slice(0,110))}</p><div class="acts"><button class="btn-secondary small" onclick="editNEC(${n.id})"><i class="fas fa-edit"></i></button><button class="btn-danger small" onclick="delNEC(${n.id})"><i class="fas fa-trash"></i></button><span class="badge ${n.published?'b-verified':'b-pending'}">${n.published?'Published':'Hidden'}</span></div></div></div>`).join('');
-  $('#newNEC').onclick=()=>necForm(null);
-  window.editNEC=id=>necForm(ns.find(n=>n.id===id));
-  window.delNEC=async id=>{if(!confirm('Remove this officer?'))return;await api('/nec/'+id,{method:'DELETE'});toast('Removed');navigate();};
-}
-function necForm(n){
-  const isEdit=!!n;
-  overlay(`<h3>${isEdit?'Edit':'Add'} NEC Officer</h3><form id="necForm" class="form-grid">
-    <div class="field col2"><label>Position / Role title</label><input id="n-role" value="${esc(n?.role_title||'')}" placeholder="e.g. National President"></div>
-    <div class="field col2"><label>Name of officer</label><input id="n-name" value="${esc(n?.name||'')}" placeholder="Leave empty if vacant"></div>
-    <div class="field col2"><label>Photo (local upload)</label><div id="n-photo"></div></div>
-    <div class="field"><label>Icon (shown if no photo)</label><div id="n-icon"></div></div>
-    <div class="field"><label>Accent gradient</label><select id="n-grad">
-      <option value="from-azure-500 to-azure-700" ${n?.gradient==='from-azure-500 to-azure-700'?'selected':''}>Azure Blue</option>
-      <option value="from-gold-500 to-yellow-600" ${n?.gradient==='from-gold-500 to-yellow-600'?'selected':''}>Gold</option>
-      <option value="from-sky-500 to-cyan-600" ${n?.gradient==='from-sky-500 to-cyan-600'?'selected':''}>Sky</option>
-      <option value="from-green-500 to-emerald-600" ${n?.gradient==='from-green-500 to-emerald-600'?'selected':''}>Green</option>
-      <option value="from-rose-500 to-red-600" ${n?.gradient==='from-rose-500 to-red-600'?'selected':''}>Rose</option>
-    </select></div>
-    <div class="field col2"><label>Duties / bio (rich text)</label><div id="n-duty-w"></div></div>
-    <div class="field col2"><label class="toggle"><input type="checkbox" id="n-pub" ${n?.published?'checked':''}> Published (visible on site)</label></div>
-    <div class="col2 flex gap"><button type="button" class="btn-secondary" onclick="closeOverlay()">Cancel</button><button class="btn-primary" type="submit"><i class="fas fa-save"></i> Save</button></div>
-  </form>`);
-  setTimeout(()=>{
-    $('#n-photo').innerHTML=mediaUploader('n-photo-mu',n?.photo||'',{label:'Photo'});
-    $('#n-icon').innerHTML=iconPicker(n?.icon||'fa-user');
-    initWysiwyg('n-duty-w',n?.duty||'');
-    bindMediaUploader($('#necForm'));bindIconPicker($('#necForm'));
-    $('#necForm').onsubmit=async e=>{e.preventDefault();
-      const payload={role_title:$('#n-role').value,name:$('#n-name').value,photo:getMU($('#necForm'),'n-photo-mu'),icon:getIconPicker($('#necForm')),gradient:$('#n-grad').value,duty:getWysiwyg('n-duty-w'),published:$('#n-pub').checked?1:0};
-      try{await api('/nec'+(isEdit?'/'+n.id:''),{method:'POST',body:JSON.stringify(payload)});closeOverlay();toast('Saved');navigate();}catch(e){toast(e.message,'err');}
-    };
-  },10);
-}
-
-/* ---------- Media Library ---------- */
-async function renderPhotos(main){
-  const ms=await api('/media');
-  main.innerHTML=`<div class="page-head"><h1>Media Library</h1><p class="sub">Upload images (local files only). No URL inputs.</p></div>
-  <div class="card"><h3>Upload New</h3><form id="upForm"><input type="file" id="upFile" accept="image/*,video/*"><button class="btn-primary" type="submit"><i class="fas fa-upload"></i> Upload</button><span id="upStat" class="muted"></span></form></div>
-  <div class="card"><h3>Library (${ms.length} items)</h3><div class="media-grid" id="medGrid"></div></div>`;
-  $('#medGrid').innerHTML=ms.length?ms.map(m=>`<div class="media-tile"><div class="mt-thumb">${m.type==='video'?`<video src="${esc(m.url)}"></video>`:`<img src="${esc(m.url)}">`}<button class="mt-del" onclick="delMedia(${m.id})" title="Delete"><i class="fas fa-trash"></i></button><button class="mt-copy" onclick="copyUrl('${esc(m.url)}')" title="Copy URL"><i class="fas fa-copy"></i></button></div><div class="mt-name">${esc(m.title||m.url.split('/').pop())}</div></div>`).join(''):'<p class="muted">No media yet. Upload one above!</p>';
-  $('#upForm').onsubmit=async e=>{e.preventDefault();const f=$('#upFile').files[0];if(!f){toast('Pick a file first','err');return;}$('#upStat').textContent='Uploading…';try{await uploadFile(f,'images');toast('Uploaded');navigate();}catch(e){$('#upStat').textContent=e.message;}};
-  window.delMedia=async id=>{if(!confirm('Delete this media?'))return;try{await api('/media/'+id,{method:'DELETE'});toast('Deleted');navigate();}catch(e){toast(e.message,'err');}};
-  window.copyUrl=u=>{navigator.clipboard.writeText(u);toast('URL copied');};
-}
-
-/* ---------- Members ---------- */
-async function renderMembers(main){
-  const ms=await api('/members');
-  main.innerHTML=`<div class="page-head"><h1>Members</h1><p class="sub">Registered members and applicants.</p></div>
-  <div class="card"><table class="data-tbl"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>State</th><th>Tier</th><th>Status</th><th>Joined</th><th></th></tr></thead><tbody>${ms.map(m=>`<tr><td>${esc(m.name)}</td><td>${esc(m.email||'')}</td><td>${esc(m.phone||'')}</td><td>${esc(m.state||'')}</td><td>${esc(m.tier)}</td><td><span class="badge b-${m.status==='active'?'verified':(m.status==='pending'?'pending':'rejected')}">${m.status}</span></td><td>${fmtDate(m.joined)}</td><td><select onchange="updMember(${m.id},this.value)"><option value="">Change status…</option><option value="active">Approve (active)</option><option value="suspended">Suspend</option><option value="pending">Pending</option></select></td></tr>`).join('')}</tbody></table></div>`;
-  window.updMember=async(id,st)=>{if(!st)return;try{await api('/members/'+id,{method:'POST',body:JSON.stringify({status:st})});toast('Updated');navigate();}catch(e){toast(e.message,'err');}};
-}
-
-/* ---------- Messages ---------- */
-async function renderMessages(main){
-  const ms=await api('/messages');
-  main.innerHTML=`<div class="page-head"><h1>Messages</h1><p class="sub">Contact form submissions.</p></div>
-  <div class="card"><div class="msg-list">${ms.map(m=>`<div class="msg-row ${m.is_read?'read':'unread'}"><div class="msg-head"><b>${esc(m.name)}</b> <span class="muted small">${esc(m.email)} · ${fmtDate(m.created_at)}</span><span class="badge" style="margin-left:8px">${esc(m.source||'contact')}</span></div><div class="subj"><b>${esc(m.subject||'')}</b></div><div class="msg-body">${esc(m.message||'')}</div><div class="msg-acts"><button class="btn-${m.is_read?'ghost':'primary'} small" onclick="toggleMsg(${m.id},${m.is_read?0:1})">${m.is_read?'Mark unread':'Mark read'}</button></div></div>`).join('')}</div></div>`;
-  window.toggleMsg=async(id,r)=>{await api('/messages/'+id,{method:'POST',body:JSON.stringify({is_read:r})});navigate();};
-}
-
-/* ---------- Users ---------- */
-async function renderUsers(main){
-  const us=await api('/users');
-  const perms=['dashboard','hero','site','footer','donations','programs','events','photos','nec','members','messages','users','reports','settings'];
-  main.innerHTML=`<div class="page-head"><h1>Users & Permissions</h1><button class="btn-primary" id="newUsr"><i class="fas fa-plus"></i> New User</button></div>
-  <div class="card"><table class="data-tbl"><thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody>${us.map(u=>`<tr><td>${esc(u.username)}</td><td>${esc(u.name||'')}</td><td>${esc(u.email||'')}</td><td>${esc(u.role)}</td><td>${esc(u.status)}</td><td>${fmtDate(u.created_at)}</td><td><button class="btn-secondary small" onclick="editUser(${u.id})"><i class="fas fa-edit"></i></button> ${u.username!=='admin'?`<button class="btn-danger small" onclick="delUser(${u.id})"><i class="fas fa-trash"></i></button>`:''}</td></tr>`).join('')}</tbody></table></div>`;
-  $('#newUsr').onclick=()=>userForm(null,perms);
-  window.editUser=id=>userForm(us.find(u=>u.id===id),perms);
-  window.delUser=async id=>{if(!confirm('Delete this user?'))return;await api('/users/'+id,{method:'DELETE'});toast('Deleted');navigate();};
-}
-function userForm(u,perms){
-  overlay(`<h3>${u?'Edit':'New'} User</h3><form id="usrForm" class="form-grid">
-    <div class="field"><label>Username</label><input id="u-un" value="${esc(u?.username||'')}"></div>
-    <div class="field"><label>Full name</label><input id="u-nm" value="${esc(u?.name||'')}"></div>
-    <div class="field col2"><label>Email</label><input id="u-em" type="email" value="${esc(u?.email||'')}"></div>
-    <div class="field"><label>Role</label><select id="u-role"><option value="staff" ${u?.role==='staff'?'selected':''}>Staff</option><option value="editor" ${u?.role==='editor'?'selected':''}>Editor</option><option value="admin" ${u?.role==='admin'?'selected':''}>Admin</option></select></div>
-    <div class="field"><label>Status</label><select id="u-st"><option value="active" ${u?.status==='active'?'selected':''}>Active</option><option value="disabled" ${u?.status==='disabled'?'selected':''}>Disabled</option></select></div>
-    <div class="field col2"><label>Password ${u?'(leave blank to keep)':''}</label><input id="u-pw" type="password" ${u?'':'required'}></div>
-    <div class="field col2"><label>Module permissions</label><div class="perm-grid" id="permGrid"></div></div>
-    <div class="col2 flex gap"><button type="button" class="btn-secondary" onclick="closeOverlay()">Cancel</button><button class="btn-primary" type="submit"><i class="fas fa-save"></i> Save</button></div>
-  </form>`);
-  setTimeout(()=>{
-    const pg=$('#permGrid');
-    perms.forEach(p=>{
-      const lbl=document.createElement('label');lbl.className='perm-cb';
-      const cb=document.createElement('input');cb.type='checkbox';cb.value=p;cb.checked=u?.perms?.[p]?true:false;if(u?.role==='admin')cb.checked=true;
-      lbl.appendChild(cb);lbl.appendChild(document.createTextNode(' '+p));pg.appendChild(lbl);
+/* ---- WYSIWYG ---- */
+function makeWysiwyg(textarea){
+  const val=textarea.value||'';
+  const wrap=document.createElement('div');wrap.className='wysiwyg-wrap';
+  wrap.innerHTML=`<div class="wysiwyg-toolbar">
+    <button type="button" data-c="bold" title="Bold"><i class="fas fa-bold"></i></button>
+    <button type="button" data-c="italic" title="Italic"><i class="fas fa-italic"></i></button>
+    <button type="button" data-c="underline" title="Underline"><i class="fas fa-underline"></i></button>
+    <span class="tb-sep"></span>
+    <button type="button" data-c="formatBlock" data-v="h4" title="Heading">H</button>
+    <button type="button" data-c="formatBlock" data-v="p" title="Paragraph">P</button>
+    <span class="tb-sep"></span>
+    <button type="button" data-c="insertUnorderedList" title="Bullet list"><i class="fas fa-list-ul"></i></button>
+    <button type="button" data-c="insertOrderedList" title="Numbered list"><i class="fas fa-list-ol"></i></button>
+    <span class="tb-sep"></span>
+    <button type="button" data-c="justifyLeft" title="Align left"><i class="fas fa-align-left"></i></button>
+    <button type="button" data-c="justifyCenter" title="Align center"><i class="fas fa-align-center"></i></button>
+    <span class="tb-sep"></span>
+    <button type="button" data-c="createLink" title="Link"><i class="fas fa-link"></i></button>
+    <button type="button" data-c="removeFormat" title="Clear"><i class="fas fa-eraser"></i></button>
+  </div><div class="wysiwyg-area" contenteditable="true"></div>`;
+  const area=wrap.querySelector('.wysiwyg-area');area.innerHTML=val;
+  wrap.querySelectorAll('.wysiwyg-toolbar button').forEach(b=>{
+    b.addEventListener('mousedown',e=>e.preventDefault());
+    b.addEventListener('click',e=>{e.preventDefault();const c=b.dataset.c,v=b.dataset.v||null;
+      if(c==='createLink'){const u=prompt('Enter URL:','https://');if(u)document.execCommand('createLink',false,u);}
+      else document.execCommand(c,false,v);
+      area.focus();textarea.value=area.innerHTML;
     });
-    $('#u-role').onchange=()=>{if($('#u-role').value==='admin')pg.querySelectorAll('input').forEach(c=>c.checked=true);};
-    $('#usrForm').onsubmit=async e=>{e.preventDefault();
-      const permObj={};[...pg.querySelectorAll('input:checked')].forEach(c=>permObj[c.value]=1);
-      const payload={username:$('#u-un').value,name:$('#u-nm').value,email:$('#u-em').value,role:$('#u-role').value,status:$('#u-st').value,password:$('#u-pw').value,perms:permObj};
-      try{await api('/users'+(u?'/'+u.id:''),{method:'POST',body:JSON.stringify(payload)});closeOverlay();toast('Saved');navigate();}catch(e){toast(e.message,'err');}
-    };
-  },10);
+  });
+  area.addEventListener('input',()=>{textarea.value=area.innerHTML;});
+  area.addEventListener('blur',()=>{textarea.value=area.innerHTML;});
+  textarea.style.display='none';
+  textarea.parentNode.insertBefore(wrap,textarea);
+  textarea._wysiwygArea=area;
 }
 
-/* ---------- Settings ---------- */
-async function renderSettings(main){
-  const s=await api('/site');
-  main.innerHTML=`<div class="page-head"><h1>Settings</h1><p class="sub">Currency, maintenance mode, and global options.</p></div>
-  <div class="card"><form id="setForm" class="form-grid">
-    <div class="field"><label>Currency code</label><input name="currency" value="${esc(s.currency||'NGN')}"></div>
-    <div class="field"><label>Currency symbol</label><input name="currencySymbol" value="${esc(s.currencySymbol||'₦')}"></div>
-    <div class="field col2"><label class="toggle"><input type="checkbox" name="maintenanceMode" value="1" ${s.maintenanceMode=='1'?'checked':''}> Maintenance mode (locks public site)</label></div>
-    <div class="field col2"><label class="toggle"><input type="checkbox" name="nav_login" value="1" ${s.nav_login=='1'?'checked':''}> Show Login button in public nav</label></div>
-    <div class="field col2"><label class="toggle"><input type="checkbox" name="nav_donate" value="1" ${s.nav_donate=='1'?'checked':''}> Show Donate button in public nav</label></div>
-    <div class="col2"><button class="btn-primary" type="submit"><i class="fas fa-save"></i> Save Settings</button><div class="muted small" style="margin-top:12px">Default admin login is admin / admin123. <a href="#" onclick="chgPw();return false;">Change your password</a></div></div>
-  </form></div>
-  <div id="pwArea"></div>`;
-  $('#setForm').onsubmit=async e=>{e.preventDefault();
-    const fd=new FormData($('#setForm'));const obj={};fd.forEach((v,k)=>obj[k]=v);
-    obj.maintenanceMode=$('#setForm input[name=maintenanceMode]').checked?'1':'0';
-    obj.nav_login=$('#setForm input[name=nav_login]').checked?'1':'0';
-    obj.nav_donate=$('#setForm input[name=nav_donate]').checked?'1':'0';
-    try{await api('/settings',{method:'POST',body:JSON.stringify(obj)});toast('Saved');}catch(e){toast(e.message,'err');}
-  };
-  window.chgPw=()=>{
-    $('#pwArea').innerHTML=`<div class="card"><h3>Change your password</h3><form id="pwForm" class="form-grid">
-      <div class="field"><label>Current password</label><input type="password" id="pw-cur"></div>
-      <div class="field"><label>New password (min 6)</label><input type="password" id="pw-new"></div>
-      <div class="col2"><button class="btn-primary" type="submit">Update Password</button></div></form></div>`;
-    $('#pwForm').onsubmit=async e=>{e.preventDefault();try{await api('/auth/password',{method:'POST',body:JSON.stringify({current:$('#pw-cur').value,password:$('#pw-new').value})});toast('Password updated');$('#pwArea').innerHTML='';}catch(e){toast(e.message,'err');}};
-  };
+/* ---- Icon picker ---- */
+function makeIconPicker(input){
+  const cur=input.value.trim()||'fa-star';
+  const wrap=document.createElement('div');wrap.className='icon-picker';
+  wrap.innerHTML=`<div class="ipick-sel"><i class="fas ${cur}"></i> <span>${cur}</span></div>
+    <div class="ipick-grid">${faIcons.map(ic=>`<button type="button" class="ipick ${ic===cur?'sel':''}" data-icon="${ic}" title="${ic}"><i class="fas ${ic}"></i></button>`).join('')}</div>`;
+  const selBtn=wrap.querySelector('.ipick-sel');const grid=wrap.querySelector('.ipick-grid');
+  selBtn.addEventListener('click',e=>{e.stopPropagation();document.querySelectorAll('.ipick-grid.open').forEach(g=>{if(g!==grid)g.classList.remove('open');});grid.classList.toggle('open');});
+  grid.querySelectorAll('.ipick').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation();grid.querySelectorAll('.ipick.sel').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');
+    const ic=b.dataset.icon;input.value=ic;selBtn.innerHTML=`<i class="fas ${ic}"></i> <span>${ic}</span>`;grid.classList.remove('open');
+  }));
+  document.addEventListener('click',()=>grid.classList.remove('open'));
+  input.style.display='none';input.parentNode.insertBefore(wrap,input);
 }
 
-function exportCSV(){toast('CSV export coming soon');}
+/* ---- Patch mediaUploader to show existing thumb, no URL row ---- */
+const _origMediaUploader=mediaUploader;
+mediaUploader=function(initial,inputId,hint){
+  const html=_origMediaUploader.call(this,initial,inputId,hint||'Image (upload local file)');
+  // schedule showMediaThumb immediately if initial present
+  setTimeout(()=>{if(initial){showMediaThumb(inputId,initial);const urlInput=document.getElementById(inputId+'-url');if(urlInput){urlInput.value='';urlInput.placeholder='URL input disabled; upload local file';urlInput.disabled=true;}}},0);
+  return html;
+};
 
-boot();
+/* ---- Patch handleMediaUpload to use correct /upload endpoint and post-process ---- */
+const _origHandleMediaUpload=handleMediaUpload;
+handleMediaUpload=async function(e,id){
+  const f=e.target.files[0];if(!f)return;
+  const wrap=document.getElementById(id+'-wrap');
+  const status=document.createElement('div');status.className='mu-status';status.textContent='Uploading…';
+  wrap.querySelector('.upload-zone').after(status);
+  try{
+    const fd=new FormData();fd.append('file',f);fd.append('subdir',f.type.startsWith('video/')?'events':'images');
+    const r=await api('upload',{form:fd});
+    const data={type:r.media.type,url:r.media.url};
+    document.getElementById(id+'-data').value=JSON.stringify(data);
+    showMediaThumb(id,data);
+    window['__mu_'+id]=data;
+    status.textContent='Uploaded ✓';setTimeout(()=>status.remove(),2000);
+  }catch(err){status.textContent='Upload failed: '+err.message;status.style.color='var(--rose)';}
+};
+
+/* ---- Override openSlideModal to init WYSIWYG on alt/caption? Keep simple ---- */
+/* (slides use plain text — fine) */
+
+/* ---- Override openNecModal to add icon picker + WYSIWYG on duty ---- */
+const _origOpenNecModal=openNecModal;
+openNecModal=function(id){
+  _origOpenNecModal(id);
+  setTimeout(()=>{
+    const iconInp=document.getElementById('n-icon');if(iconInp)makeIconPicker(iconInp);
+    const duty=document.getElementById('n-duty');if(duty)makeWysiwyg(duty);
+    // Replace n-photo mediaUploader to have no URL field (already handled via CSS)
+  },50);
+};
+
+/* ---- Override openProgramModal to add WYSIWYG on full_desc + icon picker ---- */
+const _origOpenProgramModal=openProgramModal;
+openProgramModal=function(id){
+  _origOpenProgramModal(id);
+  setTimeout(()=>{
+    const iconInp=document.getElementById('p-icon');if(iconInp)makeIconPicker(iconInp);
+    const full=document.getElementById('p-full');if(full){full.rows=10;makeWysiwyg(full);}
+    const sh=document.getElementById('p-short');if(sh)makeWysiwyg(sh);
+  },50);
+};
+
+/* ---- Override openEventModal to fix date field + WYSIWYG on description ---- */
+const _origOpenEventModal=openEventModal;
+openEventModal=function(id){
+  _origOpenEventModal(id);
+  setTimeout(()=>{
+    const desc=document.getElementById('e-desc');if(desc)makeWysiwyg(desc);
+    // The form expects date= field named "date" but our API accepts both — fix the saved media: add mu-preview after upload
+    const fileInp=document.getElementById('e-file');
+    const oldHandler=fileInp.onchange;
+    fileInp.removeEventListener('change',oldHandler);
+    fileInp.addEventListener('change',async ev=>{await mmAddFiles('ev','e-mp','e-mm',[...ev.target.files],'events');ev.target.value='';});
+  },50);
+};
+/* Fix saveEvent: send event_date (API accepts both) and handle mmItems having urls (not base64 blobs) */
+const _origSaveEvent=saveEvent;
+saveEvent=async function(id){
+  try{
+    const media=JSON.parse(document.getElementById('e-mm').value||'[]');
+    // Upload any items that still have a File blob via data: URL (fallback already handled in orig)
+    const body={title:document.getElementById('e-title').value.trim(),
+      event_date:document.getElementById('e-date').value,date:document.getElementById('e-date').value,
+      time:document.getElementById('e-time').value,event_time:document.getElementById('e-time').value,
+      location:document.getElementById('e-loc').value,
+      status:document.getElementById('e-status').value,
+      description:document.getElementById('e-desc').value,media};
+    if(!body.title){toast('Title required','error');return;}
+    for(let i=0;i<body.media.length;i++){
+      const m=body.media[i];
+      if(m.url&&m.url.startsWith('data:')){
+        const res=await fetch(m.url);const blob=await res.blob();
+        const fd=new FormData();fd.append('file',blob,'upload.'+(m.type==='video'?'mp4':'jpg'));fd.append('subdir','events');
+        const r=await api('media',{form:fd});body.media[i]={type:r.media.type,url:r.media.url};
+      }
+    }
+    await api('events'+(id?'/'+id:''),{body,method:'POST'});
+    toast(id?'Event updated':'Event created');closeModal();renderEvents();
+  }catch(e){console.error(e);}
+};
+
+/* ---- Override openSiteModal / renderSite to add WYSIWYG on vision/mission ---- */
+const _origRenderSite=renderSite;
+renderSite=async function(){
+  await _origRenderSite();
+  setTimeout(()=>{
+    ['s-vision','s-mission','s-address'].forEach(id=>{const t=document.getElementById(id);if(t)makeWysiwyg(t);});
+  },50);
+};
+
+/* ---- Add menu entries for new pages ---- */
+MENU[1].items.push({key:'footer',label:'Footer Content',icon:'fa-shoe-prints',perm:'site'});
+MENU[2].items.push({key:'banks',label:'Payment Settings',icon:'fa-credit-card',perm:'donations'});
+const _origTITLES=TITLES;
+TITLES.footer=['Footer Content','Edit the footer that appears on every page'];
+TITLES.banks=['Donation & Payment Settings','Bank accounts & Paystack gateway'];
+PAGES.footer=renderFooterPage;
+PAGES.banks=renderBanksPage;
+
+async function renderFooterPage(){
+  if(!can('site'))return;
+  const s=DATA.site||await api('site');
+  document.getElementById('pageContent').innerHTML=`
+    <div class="card">
+      <div class="card-header"><h3><i class="fa-solid fa-shoe-prints"></i>Footer Content</h3>
+        <p style="font-size:12px;color:var(--gray-500);margin:0">Edit the footer shown at the bottom of every page.</p></div>
+      <div class="card-body"><div class="form-grid">
+        <div class="full"><label class="form-label">About column (rich text)</label><textarea class="form-input" id="f-about" rows="5">${esc(s.footerAbout||'')}</textarea></div>
+        <div class="full"><label class="form-label">Copyright line</label><input class="form-input" id="f-copy" value="${esc(s.footerCopyright||'')}"></div>
+      </div>
+      <div style="margin-top:20px;display:flex;justify-content:flex-end"><button class="btn btn-primary" style="width:auto" onclick="saveFooter()"><i class="fa-solid fa-save"></i>Save Footer</button></div></div>
+    </div>`;
+  setTimeout(()=>makeWysiwyg(document.getElementById('f-about')),50);
+}
+async function saveFooter(){
+  await api('site',{method:'POST',body:{footerAbout:document.getElementById('f-about').value,footerCopyright:document.getElementById('f-copy').value}});
+  toast('Footer saved');DATA.site=await api('site');
+}
+
+async function renderBanksPage(){
+  if(!can('donations'))return;
+  const s=DATA.site||await api('site');
+  let banks=[];try{banks=JSON.parse(s.bankAccounts||'[]');if(!Array.isArray(banks))banks=[];}catch(e){banks=[];}
+  document.getElementById('pageContent').innerHTML=`
+    <div class="card">
+      <div class="card-header"><h3><i class="fa-solid fa-university"></i>Bank Accounts</h3>
+        <p style="font-size:12px;color:var(--gray-500);margin:0">Shown on the public Donate page.</p></div>
+      <div class="card-body">
+        <div id="bankList"></div>
+        <button class="btn btn-outline btn-sm" id="addBank" style="margin-top:8px"><i class="fa-solid fa-plus"></i>Add Bank Account</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3><i class="fa-solid fa-credit-card"></i>Paystack Online Payments</h3></div>
+      <div class="card-body"><div class="form-grid">
+        <div class="full"><label class="form-check"><input type="checkbox" id="ps-en" ${s.paystackEnabled=='1'?'checked':''}><label>Enable Paystack online card payments</label></div>
+        <div><label class="form-label">Public Key</label><input class="form-input" id="ps-pub" value="${esc(s.paystackKey||'')}" placeholder="pk_test_..."></div>
+        <div><label class="form-label">Secret Key</label><input type="password" class="form-input" id="ps-secret" value="${esc(s.paystackSecret||'')}" placeholder="sk_test_..."></div>
+        <div class="full"><label class="form-label">Donate page title</label><input class="form-input" id="dtitle" value="${esc(s.donationTitle||'Support Our Mission')}"></div>
+        <div class="full"><label class="form-label">Donate page note (rich text)</label><textarea class="form-input" id="dnote" rows="4">${esc(s.donationNote||'')}</textarea></div>
+      </div>
+      <div style="margin-top:20px;display:flex;justify-content:flex-end"><button class="btn btn-primary" style="width:auto" onclick="savePaySettings()"><i class="fa-solid fa-save"></i>Save Payment Settings</button></div></div>
+    </div>`;
+  const bl=document.getElementById('bankList');
+  function addBank(b){b=b||{bankName:'',accountName:'',accountNumber:''};
+    const row=document.createElement('div');row.className='bank-row';
+    row.innerHTML=`<div style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><b style="color:var(--azure-700)"><i class="fa-solid fa-university"></i> Bank Account</b><button type="button" class="icon-btn delete" title="Remove"><i class="fa-solid fa-trash"></i></button></div>
+      <div class="form-group"><label class="form-label">Bank Name</label><input class="form-input bn" value="${esc(b.bankName)}" placeholder="e.g. Access Bank"></div>
+      <div class="form-group"><label class="form-label">Account Name</label><input class="form-input an" value="${esc(b.accountName)}" placeholder="Zee Glow Link Foundation"></div>
+      <div class="form-group"><label class="form-label">Account Number</label><input class="form-input anum" value="${esc(b.accountNumber)}" placeholder="0123456789"></div>`;
+    row.querySelector('.delete').onclick=()=>row.remove();
+    bl.appendChild(row);
+  }
+  banks.forEach(addBank);
+  document.getElementById('addBank').onclick=()=>addBank();
+  setTimeout(()=>makeWysiwyg(document.getElementById('dnote')),50);
+}
+async function savePaySettings(){
+  const banks=[...document.querySelectorAll('#bankList .bank-row')].map(r=>({
+    bankName:r.querySelector('.bn').value,accountName:r.querySelector('.an').value,accountNumber:r.querySelector('.anum').value
+  })).filter(b=>b.bankName||b.accountNumber);
+  const payload={
+    bankAccounts:JSON.stringify(banks),
+    paystackEnabled:document.getElementById('ps-en').checked?'1':'0',
+    paystackKey:document.getElementById('ps-pub').value,
+    paystackSecret:document.getElementById('ps-secret').value,
+    donationTitle:document.getElementById('dtitle').value,
+    donationNote:document.getElementById('dnote').value
+  };
+  await api('settings',{method:'POST',body:payload});
+  toast('Payment settings saved');DATA.site=await api('site');
+}
+
+/* ---- Override buildSidebar to include new pages ---- */
+// (we already pushed new items to MENU above; sidebar rebuilds naturally)
+
+/* ---- Wire the hero body textarea to be WYSIWYG ---- */
+const _origRenderHero=renderHero;
+renderHero=async function(){
+  await _origRenderHero();
+  setTimeout(()=>{
+    // The original body is #h-bd textarea
+    const bd=document.getElementById('h-bd');if(bd)makeWysiwyg(bd);
+  },50);
+};
+
+/* ---- Make textareas for program full_desc already handled; event body handled ---- */
+
+/* ---- Patch hero save to read wysiwyg body ---- */
+const _origSaveHero=saveHeroText;
+saveHeroText=async function(){
+  const bd=document.getElementById('h-bd');
+  await api('hero',{body:{headline:document.getElementById('h-hl').value,subhead:document.getElementById('h-sub').value,visionquote:document.getElementById('h-vq').value,body:bd.value,cta1:document.getElementById('h-c1').value,cta2:document.getElementById('h-c2').value},method:'POST'});
+  toast('Hero text saved.');HERO=await api('hero');
+};
+
+/* ---- Patch site save to include long fields ---- */
+// already uses dynamic iteration; fine
+
