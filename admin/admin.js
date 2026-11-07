@@ -720,20 +720,23 @@ async function changePw(){const c=$('#pw-cur').value,n=$('#pw-new').value;if(n.l
 render();
 
 /* =============================================================
-   PATCHES (client demo fixes) — appended after original code
-   - WYSIWYG rich text editor (replaces HTML-tag textareas)
-   - Visual icon picker (replaces plain text fa-crown inputs)
-   - Media uploader: show pre-populated thumb, remove URL input
-   - Event create: fix body field naming
-   - New pages: Footer Content, Donations/Banks/Paystack settings
-   - Media library grid shows ALL items (already grid; fixed upload path)
-   - Public donate page shows banks + Paystack CTA
+   CORRECTED PATCHES — v2
+   Fixes from client feedback:
+   1. WYSIWYG on hero/program/event/site textareas, no raw <em> tag hints
+   2. showMediaThumb called on initial render for existing media (previews show)
+   3. Media upload: hit /upload directly for single-field uploads; /api/media for media library
+   4. Icon picker on NEC + Programs
+   5. Footer page + Payment Settings page populated correctly
+   6. Event modal: hidden #e-mm input added, saveEvent no longer fails
+   7. Footer edit page renders form correctly
+   8. URL input row hidden
    ============================================================= */
 
-const faIcons=['fa-crown','fa-hands-helping','fa-hand-holding-heart','fa-pen-fancy','fa-file-alt','fa-coins','fa-calculator','fa-bullhorn','fa-heart','fa-star','fa-user-tie','fa-user','fa-users','fa-user-shield','fa-user-check','fa-user-graduate','fa-graduation-cap','fa-book','fa-book-open','fa-school','fa-heartbeat','fa-stethoscope','fa-notes-medical','fa-pills','fa-hospital','fa-hand-holding-medical','fa-hand-holding-dollar','fa-money-bill-wave','fa-sack-dollar','fa-piggy-bank','fa-briefcase','fa-tools','fa-seedling','fa-tractor','fa-truck','fa-tint','fa-home','fa-utensils','fa-hands','fa-dove','fa-globe','fa-flag','fa-award','fa-trophy','fa-medal','fa-gem','fa-newspaper','fa-microphone','fa-camera','fa-video','fa-share-alt','fa-envelope','fa-phone','fa-location-dot','fa-paper-plane','fa-gift','fa-donate','fa-pray','fa-leaf','fa-tree','fa-sun','fa-fist-raised','fa-balance-scale','fa-gavel','fa-landmark','fa-shield-halved','fa-key','fa-lock','fa-cog','fa-sliders','fa-wrench','fa-chart-line','fa-chart-bar','fa-chart-pie','fa-list-check','fa-clipboard-list','fa-calendar-check','fa-clock','fa-compass','fa-rocket','fa-lightbulb','fa-eye','fa-smile','fa-handshake','fa-link','fa-futbol','fa-palette','fa-music','fa-masks-theater','fa-mosque','fa-church','fa-university','fa-people-group','fa-children','fa-person-breastfeeding','fa-hand-holding-droplet','fa-droplet','fa-plate-wheat','fa-bowl-rice','fa-hands-holding-child','fa-people-carry-box','fa-house-chimney','fa-recycle','fa-earth-africa','fa-infinity'];
+const faIcons=['fa-crown','fa-hands-helping','fa-hand-holding-heart','fa-pen-fancy','fa-file-alt','fa-coins','fa-calculator','fa-bullhorn','fa-heart','fa-star','fa-user-tie','fa-user','fa-users','fa-user-shield','fa-user-check','fa-user-graduate','fa-graduation-cap','fa-book','fa-book-open','fa-school','fa-heartbeat','fa-stethoscope','fa-notes-medical','fa-pills','fa-hospital','fa-hand-holding-medical','fa-hand-holding-dollar','fa-money-bill-wave','fa-sack-dollar','fa-piggy-bank','fa-briefcase','fa-tools','fa-seedling','fa-tractor','fa-truck','fa-tint','fa-home','fa-utensils','fa-hands','fa-dove','fa-globe','fa-flag','fa-award','fa-trophy','fa-medal','fa-gem','fa-newspaper','fa-microphone','fa-camera','fa-video','fa-share-alt','fa-envelope','fa-phone','fa-location-dot','fa-paper-plane','fa-gift','fa-donate','fa-pray','fa-leaf','fa-tree','fa-sun','fa-balance-scale','fa-gavel','fa-landmark','fa-shield-halved','fa-key','fa-lock','fa-cog','fa-sliders','fa-wrench','fa-chart-line','fa-chart-bar','fa-chart-pie','fa-list-check','fa-clipboard-list','fa-calendar-check','fa-clock','fa-compass','fa-rocket','fa-lightbulb','fa-eye','fa-smile','fa-handshake','fa-link','fa-futbol','fa-palette','fa-music','fa-masks-theater','fa-people-group','fa-children','fa-earth-africa','fa-droplet','fa-bowl-rice','fa-hand-holding-droplet','fa-plate-wheat','fa-hands-holding-child','fa-people-carry-box'];
 
 /* ---- WYSIWYG ---- */
 function makeWysiwyg(textarea){
+  if(!textarea||textarea._wysiwygInit)return;
   const val=textarea.value||'';
   const wrap=document.createElement('div');wrap.className='wysiwyg-wrap';
   wrap.innerHTML=`<div class="wysiwyg-toolbar">
@@ -764,13 +767,15 @@ function makeWysiwyg(textarea){
   });
   area.addEventListener('input',()=>{textarea.value=area.innerHTML;});
   area.addEventListener('blur',()=>{textarea.value=area.innerHTML;});
+  textarea._wysiwygArea=area;textarea._wysiwygInit=true;
   textarea.style.display='none';
   textarea.parentNode.insertBefore(wrap,textarea);
-  textarea._wysiwygArea=area;
 }
+function syncWysiwyg(textarea){if(textarea&&textarea._wysiwygArea)textarea.value=textarea._wysiwygArea.innerHTML;}
 
 /* ---- Icon picker ---- */
 function makeIconPicker(input){
+  if(!input||input._iconInit)return;input._iconInit=true;
   const cur=input.value.trim()||'fa-star';
   const wrap=document.createElement('div');wrap.className='icon-picker';
   wrap.innerHTML=`<div class="ipick-sel"><i class="fas ${cur}"></i> <span>${cur}</span></div>
@@ -785,115 +790,176 @@ function makeIconPicker(input){
   input.style.display='none';input.parentNode.insertBefore(wrap,input);
 }
 
-/* ---- Patch mediaUploader to show existing thumb, no URL row ---- */
-const _origMediaUploader=mediaUploader;
-mediaUploader=function(initial,inputId,hint){
-  const html=_origMediaUploader.call(this,initial,inputId,hint||'Image (upload local file)');
-  // schedule showMediaThumb immediately if initial present
-  setTimeout(()=>{if(initial){showMediaThumb(inputId,initial);const urlInput=document.getElementById(inputId+'-url');if(urlInput){urlInput.value='';urlInput.placeholder='URL input disabled; upload local file';urlInput.disabled=true;}}},0);
-  return html;
-};
+/* ---- Fix media upload to use /api/upload directly AND show existing thumb ---- */
+async function _doUpload(file,subdir){
+  if(!file)return null;
+  const fd=new FormData();fd.append('file',file);fd.append('subdir',subdir||'images');
+  const r=await api('upload',{form:fd});
+  return r.media;
+}
 
-/* ---- Patch handleMediaUpload to use correct /upload endpoint and post-process ---- */
-const _origHandleMediaUpload=handleMediaUpload;
+/* Wrap the original handleMediaUpload to use direct /upload */
+const _origHMU=handleMediaUpload;
 handleMediaUpload=async function(e,id){
   const f=e.target.files[0];if(!f)return;
-  const wrap=document.getElementById(id+'-wrap');
-  const status=document.createElement('div');status.className='mu-status';status.textContent='Uploading…';
-  wrap.querySelector('.upload-zone').after(status);
+  const wrap=document.getElementById(id+'-wrap');if(!wrap)return;
+  let status=wrap.querySelector('.mu-status');if(!status){status=document.createElement('div');status.className='mu-status';wrap.appendChild(status);}
+  status.style.color='';status.textContent='Uploading…';
   try{
-    const fd=new FormData();fd.append('file',f);fd.append('subdir',f.type.startsWith('video/')?'events':'images');
-    const r=await api('upload',{form:fd});
-    const data={type:r.media.type,url:r.media.url};
+    const subdir=f.type.startsWith('video/')?'events':'images';
+    const m=await _doUpload(f,subdir);
+    const data={type:m.type,url:m.url};
     document.getElementById(id+'-data').value=JSON.stringify(data);
     showMediaThumb(id,data);
     window['__mu_'+id]=data;
     status.textContent='Uploaded ✓';setTimeout(()=>status.remove(),2000);
-  }catch(err){status.textContent='Upload failed: '+err.message;status.style.color='var(--rose)';}
+  }catch(err){status.style.color='var(--rose)';status.textContent='Upload failed: '+err.message;}
 };
 
-/* ---- Override openSlideModal to init WYSIWYG on alt/caption? Keep simple ---- */
-/* (slides use plain text — fine) */
-
-/* ---- Override openNecModal to add icon picker + WYSIWYG on duty ---- */
-const _origOpenNecModal=openNecModal;
-openNecModal=function(id){
-  _origOpenNecModal(id);
+/* Override mediaUploader to hide URL row + show existing thumb */
+const _origMU=mediaUploader;
+mediaUploader=function(initial,inputId,hint){
+  const html=_origMU.call(this,initial,inputId,hint||'Image (upload local file)');
   setTimeout(()=>{
-    const iconInp=document.getElementById('n-icon');if(iconInp)makeIconPicker(iconInp);
-    const duty=document.getElementById('n-duty');if(duty)makeWysiwyg(duty);
-    // Replace n-photo mediaUploader to have no URL field (already handled via CSS)
-  },50);
+    // Hide URL row
+    const urlRow=document.getElementById(inputId+'-url');
+    if(urlRow){const row=urlRow.closest('.url-input-row');if(row)row.style.display='none';urlRow.disabled=true;urlRow.value='';urlRow.placeholder='URL upload disabled; use local file';}
+    // Show initial thumb if present
+    if(initial){try{showMediaThumb(inputId,typeof initial==='string'?{type:'image',url:initial}:initial);}catch(e){}}
+  },0);
+  return html;
 };
 
-/* ---- Override openProgramModal to add WYSIWYG on full_desc + icon picker ---- */
-const _origOpenProgramModal=openProgramModal;
+/* ---- Add menu entries for new pages BEFORE PAGES is used ---- */
+MENU[1].items.push({key:'footer',label:'Footer Content',icon:'fa-shoe-prints',perm:'site'});
+MENU[2].items.push({key:'banks',label:'Payment Settings',icon:'fa-credit-card',perm:'donations'});
+TITLES.footer=['Footer Content','Edit the footer shown on every page'];
+TITLES.banks=['Donation & Payment Settings','Bank accounts & Paystack gateway'];
+PAGES.footer=renderFooterPage;
+PAGES.banks=renderBanksPage;
+
+/* ---- Wire WYSIWYG + icon pickers + previews to existing openXxxModals ---- */
+const _origOpenNec=openNecModal;
+openNecModal=function(id){
+  _origOpenNec(id);
+  setTimeout(()=>{
+    const icon=document.getElementById('n-icon');if(icon)makeIconPicker(icon);
+    const duty=document.getElementById('n-duty');if(duty)makeWysiwyg(duty);
+  },60);
+};
+const _origSaveNec=saveNec;
+saveNec=async function(id){
+  syncWysiwyg(document.getElementById('n-duty'));
+  await _origSaveNec(id);
+};
+
+const _origOpenProgram=openProgramModal;
 openProgramModal=function(id){
   _origOpenProgramModal(id);
   setTimeout(()=>{
-    const iconInp=document.getElementById('p-icon');if(iconInp)makeIconPicker(iconInp);
-    const full=document.getElementById('p-full');if(full){full.rows=10;makeWysiwyg(full);}
+    const icon=document.getElementById('p-icon');if(icon)makeIconPicker(icon);
+    const full=document.getElementById('p-full');if(full)makeWysiwyg(full);
     const sh=document.getElementById('p-short');if(sh)makeWysiwyg(sh);
-  },50);
+  },60);
+};
+const _origSaveProgram=saveProgram;
+saveProgram=async function(id){
+  syncWysiwyg(document.getElementById('p-full'));
+  syncWysiwyg(document.getElementById('p-short'));
+  // Read wysiwyg values before save — the original saveProgram reads from #p-full / #p-short directly;
+  // since textarea display=none but value synced, it already works.
+  await _origSaveProgram(id);
 };
 
-/* ---- Override openEventModal to fix date field + WYSIWYG on description ---- */
-const _origOpenEventModal=openEventModal;
+const _origOpenEvent=openEventModal;
 openEventModal=function(id){
-  _origOpenEventModal(id);
+  _origOpenEvent(id);
   setTimeout(()=>{
+    // Add hidden #e-mm if original modal is missing it
+    if(!document.getElementById('e-mm')){
+      const hidden=document.createElement('input');hidden.type='hidden';hidden.id='e-mm';hidden.value='[]';
+      document.getElementById('e-file')?.closest('.full')?.appendChild(hidden);
+    }
     const desc=document.getElementById('e-desc');if(desc)makeWysiwyg(desc);
-    // The form expects date= field named "date" but our API accepts both — fix the saved media: add mu-preview after upload
+    // Re-init mmInit now that #e-mm exists (the original mmInit fires before modal DOM is added)
+    const e=id?EVENTS.find(x=>x.id==id):null;
+    if(e){
+      mmItems['ev']=(e.media||[]).map(m=>({type:m.type,url:m.url}));
+      mmRender('ev','e-mp','e-mm');
+    }
+    // Re-bind file listener (original bound before #e-mm existed)
     const fileInp=document.getElementById('e-file');
-    const oldHandler=fileInp.onchange;
-    fileInp.removeEventListener('change',oldHandler);
-    fileInp.addEventListener('change',async ev=>{await mmAddFiles('ev','e-mp','e-mm',[...ev.target.files],'events');ev.target.value='';});
-  },50);
+    if(fileInp){
+      const newInp=fileInp.cloneNode(true);fileInp.parentNode.replaceChild(newInp,fileInp);
+      newInp.addEventListener('change',async ev=>{await mmAddFiles('ev','e-mp','e-mm',[...ev.target.files],'events');ev.target.value='';});
+    }
+    const urlBtn=document.querySelector('#e-url + button');if(urlBtn)urlBtn.onclick=evAddUrl;
+  },80);
 };
-/* Fix saveEvent: send event_date (API accepts both) and handle mmItems having urls (not base64 blobs) */
+
+function evAddUrl(){
+  const url=document.getElementById('e-url').value.trim();if(!url)return;
+  const isVideo=/\.(mp4|webm|mov)($|\?)/i.test(url);
+  mmAdd('ev','e-mp','e-mm',{type:isVideo?'video':'image',url:url});
+  document.getElementById('e-url').value='';
+}
+
+/* Fix mmAddFiles to use _doUpload properly (it already uses api/media which is correct for library; but
+   ensure it uses upload endpoint that returns the media url in the right shape). api('media',{form:fd}) returns {ok,id,media} so r.media is correct. */
+
+/* Fix saveEvent: sync wysiwyg desc, don't double-upload already-server-resident media */
 const _origSaveEvent=saveEvent;
 saveEvent=async function(id){
   try{
+    syncWysiwyg(document.getElementById('e-desc'));
     const media=JSON.parse(document.getElementById('e-mm').value||'[]');
-    // Upload any items that still have a File blob via data: URL (fallback already handled in orig)
     const body={title:document.getElementById('e-title').value.trim(),
       event_date:document.getElementById('e-date').value,date:document.getElementById('e-date').value,
       time:document.getElementById('e-time').value,event_time:document.getElementById('e-time').value,
       location:document.getElementById('e-loc').value,
       status:document.getElementById('e-status').value,
-      description:document.getElementById('e-desc').value,media};
+      description:document.getElementById('e-desc').value,media:[]};
     if(!body.title){toast('Title required','error');return;}
-    for(let i=0;i<body.media.length;i++){
-      const m=body.media[i];
+    for(let i=0;i<media.length;i++){
+      const m=media[i];
       if(m.url&&m.url.startsWith('data:')){
         const res=await fetch(m.url);const blob=await res.blob();
-        const fd=new FormData();fd.append('file',blob,'upload.'+(m.type==='video'?'mp4':'jpg'));fd.append('subdir','events');
-        const r=await api('media',{form:fd});body.media[i]={type:r.media.type,url:r.media.url};
-      }
+        const up=await _doUpload(new File([blob],'upload.'+(m.type==='video'?'mp4':'jpg'),{type:blob.type}),'events');
+        body.media.push({type:up.type,url:up.url});
+      }else{body.media.push(m);}
     }
     await api('events'+(id?'/'+id:''),{body,method:'POST'});
     toast(id?'Event updated':'Event created');closeModal();renderEvents();
-  }catch(e){console.error(e);}
+  }catch(e){toast(e.message,'error');console.error(e);}
 };
 
-/* ---- Override openSiteModal / renderSite to add WYSIWYG on vision/mission ---- */
+/* Hero WYSIWYG on body + remove literal <em> hint */
+const _origRenderHero=renderHero;
+renderHero=async function(){
+  await _origRenderHero();
+  setTimeout(()=>{
+    const bd=document.getElementById('h-bd');if(bd)makeWysiwyg(bd);
+    // Remove the "Use <em>word</em>" help paragraph that shows raw tags
+    const help=document.querySelector('p.form-help');if(help&&help.innerHTML.includes('&lt;em&gt;'))help.remove();
+  },60);
+};
+const _origSaveHero=saveHeroText;
+saveHeroText=async function(){
+  syncWysiwyg(document.getElementById('h-bd'));
+  await api('hero',{body:{headline:document.getElementById('h-hl').value,subhead:document.getElementById('h-sub').value,visionquote:document.getElementById('h-vq').value,body:document.getElementById('h-bd').value,cta1:document.getElementById('h-c1').value,cta2:document.getElementById('h-c2').value},method:'POST'});
+  toast('Hero text saved.');HERO=await api('hero');
+};
+
+/* Site page WYSIWYG on vision/mission */
 const _origRenderSite=renderSite;
 renderSite=async function(){
   await _origRenderSite();
   setTimeout(()=>{
     ['s-vision','s-mission','s-address'].forEach(id=>{const t=document.getElementById(id);if(t)makeWysiwyg(t);});
-  },50);
+  },60);
 };
 
-/* ---- Add menu entries for new pages ---- */
-MENU[1].items.push({key:'footer',label:'Footer Content',icon:'fa-shoe-prints',perm:'site'});
-MENU[2].items.push({key:'banks',label:'Payment Settings',icon:'fa-credit-card',perm:'donations'});
-const _origTITLES=TITLES;
-TITLES.footer=['Footer Content','Edit the footer that appears on every page'];
-TITLES.banks=['Donation & Payment Settings','Bank accounts & Paystack gateway'];
-PAGES.footer=renderFooterPage;
-PAGES.banks=renderBanksPage;
-
+/* Footer page */
 async function renderFooterPage(){
   if(!can('site'))return;
   const s=DATA.site||await api('site');
@@ -901,19 +967,23 @@ async function renderFooterPage(){
     <div class="card">
       <div class="card-header"><h3><i class="fa-solid fa-shoe-prints"></i>Footer Content</h3>
         <p style="font-size:12px;color:var(--gray-500);margin:0">Edit the footer shown at the bottom of every page.</p></div>
-      <div class="card-body"><div class="form-grid">
-        <div class="full"><label class="form-label">About column (rich text)</label><textarea class="form-input" id="f-about" rows="5">${esc(s.footerAbout||'')}</textarea></div>
-        <div class="full"><label class="form-label">Copyright line</label><input class="form-input" id="f-copy" value="${esc(s.footerCopyright||'')}"></div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="full"><label class="form-label">About column (rich text)</label><textarea class="form-input" id="f-about" rows="6">${esc(s.footerAbout||'')}</textarea></div>
+          <div class="full"><label class="form-label">Copyright line</label><input class="form-input" id="f-copy" value="${esc(s.footerCopyright||'')}"></div>
+        </div>
+        <div style="margin-top:20px;display:flex;justify-content:flex-end"><button class="btn btn-primary" style="width:auto" onclick="saveFooter()"><i class="fa-solid fa-save"></i>Save Footer</button></div>
       </div>
-      <div style="margin-top:20px;display:flex;justify-content:flex-end"><button class="btn btn-primary" style="width:auto" onclick="saveFooter()"><i class="fa-solid fa-save"></i>Save Footer</button></div></div>
     </div>`;
-  setTimeout(()=>makeWysiwyg(document.getElementById('f-about')),50);
+  setTimeout(()=>makeWysiwyg(document.getElementById('f-about')),60);
 }
 async function saveFooter(){
+  syncWysiwyg(document.getElementById('f-about'));
   await api('site',{method:'POST',body:{footerAbout:document.getElementById('f-about').value,footerCopyright:document.getElementById('f-copy').value}});
   toast('Footer saved');DATA.site=await api('site');
 }
 
+/* Payment Settings page */
 async function renderBanksPage(){
   if(!can('donations'))return;
   const s=DATA.site||await api('site');
@@ -929,14 +999,16 @@ async function renderBanksPage(){
     </div>
     <div class="card">
       <div class="card-header"><h3><i class="fa-solid fa-credit-card"></i>Paystack Online Payments</h3></div>
-      <div class="card-body"><div class="form-grid">
-        <div class="full"><label class="form-check"><input type="checkbox" id="ps-en" ${s.paystackEnabled=='1'?'checked':''}><label>Enable Paystack online card payments</label></div>
-        <div><label class="form-label">Public Key</label><input class="form-input" id="ps-pub" value="${esc(s.paystackKey||'')}" placeholder="pk_test_..."></div>
-        <div><label class="form-label">Secret Key</label><input type="password" class="form-input" id="ps-secret" value="${esc(s.paystackSecret||'')}" placeholder="sk_test_..."></div>
-        <div class="full"><label class="form-label">Donate page title</label><input class="form-input" id="dtitle" value="${esc(s.donationTitle||'Support Our Mission')}"></div>
-        <div class="full"><label class="form-label">Donate page note (rich text)</label><textarea class="form-input" id="dnote" rows="4">${esc(s.donationNote||'')}</textarea></div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="full"><label class="form-check"><input type="checkbox" id="ps-en" ${s.paystackEnabled=='1'?'checked':''}><label>Enable Paystack online card payments</label></div>
+          <div><label class="form-label">Public Key</label><input class="form-input" id="ps-pub" value="${esc(s.paystackKey||'')}" placeholder="pk_test_..."></div>
+          <div><label class="form-label">Secret Key</label><input type="password" class="form-input" id="ps-secret" value="${esc(s.paystackSecret||'')}" placeholder="sk_test_..."></div>
+          <div class="full"><label class="form-label">Donate page title</label><input class="form-input" id="dtitle" value="${esc(s.donationTitle||'Support Our Mission')}"></div>
+          <div class="full"><label class="form-label">Donate page note (rich text)</label><textarea class="form-input" id="dnote" rows="4">${esc(s.donationNote||'')}</textarea></div>
+        </div>
+        <div style="margin-top:20px;display:flex;justify-content:flex-end"><button class="btn btn-primary" style="width:auto" onclick="savePaySettings()"><i class="fa-solid fa-save"></i>Save Payment Settings</button></div>
       </div>
-      <div style="margin-top:20px;display:flex;justify-content:flex-end"><button class="btn btn-primary" style="width:auto" onclick="savePaySettings()"><i class="fa-solid fa-save"></i>Save Payment Settings</button></div></div>
     </div>`;
   const bl=document.getElementById('bankList');
   function addBank(b){b=b||{bankName:'',accountName:'',accountNumber:''};
@@ -950,47 +1022,23 @@ async function renderBanksPage(){
   }
   banks.forEach(addBank);
   document.getElementById('addBank').onclick=()=>addBank();
-  setTimeout(()=>makeWysiwyg(document.getElementById('dnote')),50);
+  setTimeout(()=>makeWysiwyg(document.getElementById('dnote')),60);
 }
 async function savePaySettings(){
+  syncWysiwyg(document.getElementById('dnote'));
   const banks=[...document.querySelectorAll('#bankList .bank-row')].map(r=>({
     bankName:r.querySelector('.bn').value,accountName:r.querySelector('.an').value,accountNumber:r.querySelector('.anum').value
   })).filter(b=>b.bankName||b.accountNumber);
-  const payload={
-    bankAccounts:JSON.stringify(banks),
+  const payload={bankAccounts:JSON.stringify(banks),
     paystackEnabled:document.getElementById('ps-en').checked?'1':'0',
     paystackKey:document.getElementById('ps-pub').value,
     paystackSecret:document.getElementById('ps-secret').value,
     donationTitle:document.getElementById('dtitle').value,
-    donationNote:document.getElementById('dnote').value
-  };
+    donationNote:document.getElementById('dnote').value};
   await api('settings',{method:'POST',body:payload});
   toast('Payment settings saved');DATA.site=await api('site');
 }
 
-/* ---- Override buildSidebar to include new pages ---- */
-// (we already pushed new items to MENU above; sidebar rebuilds naturally)
-
-/* ---- Wire the hero body textarea to be WYSIWYG ---- */
-const _origRenderHero=renderHero;
-renderHero=async function(){
-  await _origRenderHero();
-  setTimeout(()=>{
-    // The original body is #h-bd textarea
-    const bd=document.getElementById('h-bd');if(bd)makeWysiwyg(bd);
-  },50);
-};
-
-/* ---- Make textareas for program full_desc already handled; event body handled ---- */
-
-/* ---- Patch hero save to read wysiwyg body ---- */
-const _origSaveHero=saveHeroText;
-saveHeroText=async function(){
-  const bd=document.getElementById('h-bd');
-  await api('hero',{body:{headline:document.getElementById('h-hl').value,subhead:document.getElementById('h-sub').value,visionquote:document.getElementById('h-vq').value,body:bd.value,cta1:document.getElementById('h-c1').value,cta2:document.getElementById('h-c2').value},method:'POST'});
-  toast('Hero text saved.');HERO=await api('hero');
-};
-
-/* ---- Patch site save to include long fields ---- */
-// already uses dynamic iteration; fine
+/* Messages: ensure markRead toggles properly, list is refreshed after */
+// (original code already works — kept for reference)
 

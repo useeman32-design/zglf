@@ -1087,7 +1087,7 @@
         const loc=e.location?'<span class="text-azure-500 text-[11px] sm:text-xs"><i class="fa-solid fa-location-dot mr-1"></i>'+e.location+'</span>':'';
         const dt=e.event_date?'<span class="text-gold-700 text-[11px] sm:text-xs font-semibold"><i class="fa-solid fa-calendar mr-1"></i>'+fmtDate(e.event_date)+'</span>':'';
         const desc=e.excerpt||(e.description?e.description.substring(0,120)+'…':'');
-        return `<div class="bg-white rounded-2xl sm:rounded-3xl overflow-hidden card-hover shadow-sm border border-gold-400/15 reveal">
+        return `<div class="bg-white rounded-2xl sm:rounded-3xl overflow-hidden card-hover shadow-sm border border-gold-400/15 reveal cursor-pointer" onclick='showEventModal(${JSON.stringify(e).replace(/'/g,"&#39;")})'>
           <div class="relative h-44 sm:h-52 overflow-hidden">
             <img src="${cover}" alt="${e.title||''}" class="w-full h-full object-cover" onerror="this.src='images/zglf-logo.jpg';this.classList.add('object-contain','p-8','bg-azure-50')">
             <div class="absolute inset-0 bg-gradient-to-t from-azure-950/80 via-azure-950/10 to-transparent"></div>
@@ -1099,6 +1099,7 @@
           <div class="p-5 sm:p-6">
             <h4 class="font-serif text-lg sm:text-xl font-bold text-azure-950 mb-2 leading-snug">${e.title||''}</h4>
             <p class="text-azure-600 text-xs sm:text-sm leading-relaxed mb-3">${desc}</p>
+            <span class="text-gold-600 text-xs sm:text-sm font-semibold inline-flex items-center gap-1">View details <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
           </div>
         </div>`;
       }).join('');
@@ -1161,6 +1162,26 @@
         // Animate counters with live stats
         if(d.stats)updateCounters(d.stats);
         // Donation page: bank accounts + Paystack button
+        window.showEventModal=function(e){
+          const cover=(e.featured_image?(e.featured_image.startsWith('/')?e.featured_image:'/'+e.featured_image):(e.media&&e.media[0]?e.media[0].url:'images/zglf-logo.jpg'));
+          const ov=document.createElement('div');
+          ov.className='fixed inset-0 bg-azure-950/80 z-[100] flex items-center justify-center p-4 overflow-y-auto';
+          ov.innerHTML=`<div class="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full my-8 overflow-hidden shadow-2xl">
+            <div class="relative h-64 sm:h-80 overflow-hidden">
+              <img src="${cover}" class="w-full h-full object-cover" onerror="this.src='images/zglf-logo.jpg'">
+              <div class="absolute inset-0 bg-gradient-to-t from-azure-950/80 to-transparent"></div>
+              <button onclick="this.closest('.fixed').remove()" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur text-white hover:bg-white/30 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+              <div class="absolute bottom-4 left-4 right-4 text-white">
+                <div class="flex items-center gap-2 mb-2">${e.event_date?'<span class="bg-gold-400 text-azure-950 px-3 py-1 rounded-full text-xs font-bold"><i class="fa-solid fa-calendar mr-1"></i>'+new Date(e.event_date).toLocaleDateString('en-NG',{year:'numeric',month:'long',day:'numeric'})+(e.event_time?' · '+e.event_time:'')+'</span>':''}${e.status?'<span class="px-3 py-1 rounded-full text-xs font-bold '+(e.status==='upcoming'?'bg-emerald-500':e.status==='ongoing'?'bg-gold-400 text-azure-950':'bg-gray-400')+' text-white">'+e.status.charAt(0).toUpperCase()+e.status.slice(1)+'</span>':''}</div>
+                <h2 class="font-serif text-2xl sm:text-3xl font-bold leading-tight">${e.title||''}</h2>
+                ${e.location?'<p class="text-white/80 text-sm mt-1"><i class="fa-solid fa-location-dot mr-1"></i>'+e.location+'</p>':''}
+              </div>
+            </div>
+            <div class="p-6 sm:p-8"><div class="prose prose-sm max-w-none text-azure-700 leading-relaxed">${e.description||'<p class="text-azure-400">Details coming soon.</p>'}</div></div>
+          </div>`;
+          ov.addEventListener('click',ev=>{if(ev.target===ov)ov.remove();});
+          document.body.appendChild(ov);
+        };
         if(d.donation){
           const don=d.donation;
           const bw=document.getElementById('bankListWrap');
