@@ -53,7 +53,20 @@ async function api(endpoint,opts={}){
     delete o.headers['Content-Type'];o.body=fd;o.method='POST';
   }
   const r=await fetch(API+endpoint,o);
-  if(r.status===401){TOKEN='';USER=null;localStorage.removeItem('zglf_token');localStorage.removeItem('zglf_user');location.hash='#/login';throw new Error('Unauthorized');}
+  if(r.status===401){
+    TOKEN='';USER=null;
+    localStorage.removeItem('zglf_token');localStorage.removeItem('zglf_user');
+    sessionStorage.clear();
+    // Force-show login, hide app, force reload to guarantee clean state
+    const lv=document.getElementById('loginView');const av=document.getElementById('appView');
+    if(lv)lv.style.display='flex';if(av)av.style.display='none';
+    document.getElementById('loginError').style.display='flex';
+    document.querySelector('#loginError span').textContent='Session expired — please log in again.';
+    location.hash='#/login';
+    // Don't throw uncaught — surface it clearly
+    toast('Please log in again','error');
+    throw new Error('Unauthorized — please log in again');
+  }
   const ct=r.headers.get('content-type')||'';
   const data=ct.includes('application/json')?await r.json():await r.text();
   if(!r.ok){if(data.error)toast(data.error,'error');throw new Error(data.error||'Request failed');}
