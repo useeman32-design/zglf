@@ -1166,11 +1166,11 @@
     }
     function patchNec(nec){
       if(!nec||!nec.length)return;
-      // DB NEC overrides images/names, but we keep constitution role mapping
       nec.forEach(n=>{
-        // Match by position or by role name substring
-        let c=CONST.nec.find(x=>x.role===n.position);
-        if(!c)c=CONST.nec.find(x=>(n.position||'').toLowerCase().indexOf(x.role.toLowerCase().replace(/\s*\/.*$/,''))>=0);
+        const rt=(n.role_title||'').toLowerCase();
+        // Match by exact role_title then fuzzy contains
+        let c=CONST.nec.find(x=>x.role.toLowerCase()===rt);
+        if(!c)c=CONST.nec.find(x=>rt.indexOf(x.role.toLowerCase().replace(/\s*\/.*$/,''))>=0||x.role.toLowerCase().indexOf(rt.replace(/\s*\/.*$/,''))>=0);
         if(c){
           if(n.photo)c.img=uimg(n.photo);
           if(n.name)c.name=n.name;
@@ -1257,7 +1257,9 @@
           const don=d.donation;
           const bw=document.getElementById('bankListWrap');
           if(bw){
-            const banks=don.bankAccounts||[];
+            // bankAccounts may come as JSON string from old saves — parse if needed
+            let banks=don.bankAccounts||[];
+            if(typeof banks==='string'){try{banks=JSON.parse(banks)||[];}catch(e){banks=[];}}
             if(banks.length){
               bw.innerHTML=`<div class="grid sm:grid-cols-2 gap-3 sm:gap-4">${banks.map(b=>`<div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 border-l-4 border-gold-500 border border-gold-200/50 shadow-sm"><div class="flex items-start gap-3"><i class="fa-solid fa-university text-gold-600 text-lg mt-1"></i><div class="flex-1"><div class="font-bold text-azure-950 text-sm sm:text-base">${b.bankName||''}</div><div class="font-mono text-lg sm:text-xl font-extrabold text-azure-700 tracking-wide my-1">${b.accountNumber||''}</div><div class="text-xs sm:text-sm text-azure-600">${b.accountName||'Zee Glow Link Foundation'}</div></div></div></div>`).join('')}</div>`;
             }else{bw.innerHTML='';}
