@@ -1259,8 +1259,12 @@
         setTimeout(render,50);
       }catch(err){/* offline / first load — static content still displays */}
     }
-    // Sync after initial render
-    window.addEventListener('load',()=>{setTimeout(sync,400);});
+    // Auto-refresh content every 5 seconds so admin edits show immediately
+    function startAutoSync(){setInterval(sync,5000);}
+    // Sync after initial render, then start polling
+    window.addEventListener('load',()=>{setTimeout(()=>{sync();startAutoSync();},400);});
+    // Also re-sync when user navigates to a new route (hash change)
+    window.addEventListener('hashchange',()=>{setTimeout(sync,100);});
   })();
   </script>
   <style>.coming-soon-btn{display:inline-block;padding:8px 18px;border-radius:50px;background:linear-gradient(135deg,#94a3b8,#cbd5e1);color:#fff;font-weight:700;font-size:12px;cursor:not-allowed;border:none}.cs-btn{padding:10px 22px;border-radius:50px;background:linear-gradient(135deg,#94a3b8,#cbd5e1);color:#fff;font-weight:600;cursor:not-allowed;border:none;font-size:13px;display:inline-flex;align-items:center;gap:6px}</style>

@@ -1018,8 +1018,10 @@ async function renderFooterPage(){
 }
 async function saveFooter(){
   syncWysiwyg(document.getElementById('f-about'));
-  await api('site',{method:'POST',body:{footerAbout:document.getElementById('f-about').value,footerCopyright:document.getElementById('f-copy').value}});
-  toast('Footer saved');DATA.site=await api('site');
+  const fv=document.getElementById('f-about').value,cv=document.getElementById('f-copy').value;
+  const r=await api('site',{method:'POST',body:{footerAbout:fv,footerCopyright:cv}});
+  toast('Footer saved ✓');
+  DATA.site=await api('site');
 }
 
 /* Payment Settings page */
@@ -1066,15 +1068,15 @@ async function renderBanksPage(){
 async function savePaySettings(){
   syncWysiwyg(document.getElementById('dnote'));
   const banks=[...document.querySelectorAll('#bankList .bank-row')].map(r=>({
-    bankName:r.querySelector('.bn').value,accountName:r.querySelector('.an').value,accountNumber:r.querySelector('.anum').value
-  })).filter(b=>b.bankName||b.accountNumber);
-  const payload={bankAccounts:JSON.stringify(banks),
+    bankName:r.querySelector('.bn').value.trim(),accountName:r.querySelector('.an').value.trim(),accountNumber:r.querySelector('.anum').value.trim()
+  })).filter(b=>b.bankName||b.accountNumber||b.accountNumber);
+  const payload={bankAccounts:banks, // send as ARRAY — PHP json-encodes it; sending pre-stringified causes double-encoding
     paystackEnabled:document.getElementById('ps-en').checked?'1':'0',
     paystackKey:document.getElementById('ps-pub').value,
     paystackSecret:document.getElementById('ps-secret').value,
     donationTitle:document.getElementById('dtitle').value,
     donationNote:document.getElementById('dnote').value};
-  await api('settings',{method:'POST',body:payload});
+  await api('site',{method:'POST',body:payload}); // /api/site (which updates settings) is same handler; use 'site' since donation/footer/site all live there
   toast('Payment settings saved');DATA.site=await api('site');
 }
 
