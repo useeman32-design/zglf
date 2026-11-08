@@ -278,6 +278,9 @@
     name:"Zee Glow Link Foundation", abbr:"ZGLF",
     motto:"Hope · Empowerment · Service",
     vision:"To uphold unity, peace, excellence and sustainable development for a better world.",
+    heroHeadline:'Spreading <span class="gold-text italic">hope</span>,<br>empowering <span class="gold-text italic">communities</span>,<br>delivering <span class="gold-text italic">service</span>.',
+    heroSubhead:"Registered civil welfare organisation · Gusau, Zamfara State",
+    heroBody:"",
     mission:"To spread hope, empower communities and deliver selfless services with integrity and compassion.",
     hq:"Sabuwar Hanya, Tsamiyar Masaka Road, Tudun Wada, Gusau, Zamfara State, Nigeria",
     pillars:[
@@ -478,17 +481,11 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 py-24 sm:py-28 lg:py-32 relative z-10 w-full">
         <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div>
-            <h1 id="heroHeadline" class="font-serif font-bold text-white leading-[1.08] mb-4 sm:mb-6 hero-text-shadow" style="font-size:clamp(2rem,7vw,4.5rem)">
-              Spreading <span class="gold-text italic">hope</span>,<br>
-              empowering <span class="gold-text italic">communities</span>,<br>
-              delivering <span class="gold-text italic">service</span>.
-            </h1>
+            <h1 id="heroHeadline" class="font-serif font-bold text-white leading-[1.08] mb-4 sm:mb-6 hero-text-shadow" style="font-size:clamp(2rem,7vw,4.5rem)">${CONST.heroHeadline}</h1>
             <p id="heroVisionQuote" class="text-base sm:text-lg md:text-xl text-white/90 leading-relaxed mb-3 sm:mb-4 italic font-serif hero-text-shadow-sm">
               "${CONST.vision}"
             </p>
-            <p id="heroBody" class="text-white/85 leading-relaxed mb-7 sm:mb-10 max-w-xl hero-text-shadow-sm text-sm sm:text-base">
-              ${CONST.name} (${CONST.abbr}) is a civil welfare organisation dedicated to youth empowerment, community development, education, and humanitarian service across Nigeria and beyond.
-            </p>
+            <p id="heroBody" class="text-white/85 leading-relaxed mb-7 sm:mb-10 max-w-xl hero-text-shadow-sm text-sm sm:text-base">${CONST.heroBody||(CONST.name+' ('+CONST.abbr+') is a civil welfare organisation dedicated to youth empowerment, community development, education, and humanitarian service across Nigeria and beyond.')}</p>
             <div class="flex flex-col sm:flex-row flex-wrap gap-3">
               <a href="#/programs" class="btn-gold rounded-full font-bold text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4 justify-center"><i class="fa-solid fa-arrow-right"></i>Support Our Mission</a>
               <a href="#/membership" class="btn-outline rounded-full font-semibold text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4 justify-center"><i class="fa-solid fa-hand-holding-heart text-sm"></i>Get Involved</a>
@@ -1279,41 +1276,55 @@
             }
           }
         }
-        // Hero text (live updates from admin)
+        // Update CONST with live data FIRST (so render() uses new values)
         if(d.hero&&d.hero.text){
           const t=d.hero.text;
-          const hl=document.getElementById('heroHeadline');
-          if(hl&&t.headline)hl.innerHTML=t.headline;
-          const vq=document.getElementById('heroVisionQuote');
-          if(vq&&t.visionquote)vq.innerHTML='"'+t.visionquote+'"';
-          const hb=document.getElementById('heroBody');
-          if(hb&&t.body)hb.innerHTML=t.body;
+          if(t.headline)CONST.heroHeadline=t.headline;
+          if(t.subhead)CONST.heroSubhead=t.subhead;
+          if(t.visionquote)CONST.vision=t.visionquote;
+          if(t.body)CONST.heroBody=t.body;
         }
-        // Site/org info (About page, contact)
         if(d.site){
-          CONST.orgName=d.site.orgName||CONST.name;
+          if(d.site.orgName)CONST.name=d.site.orgName;
+          if(d.site.shortName)CONST.abbr=d.site.shortName;
+          if(d.site.motto)CONST.motto=d.site.motto;
+          if(d.site.tagline)CONST.tagline=d.site.tagline;
           if(d.site.vision)CONST.vision=d.site.vision;
           if(d.site.mission)CONST.mission=d.site.mission;
           if(d.site.address)CONST.hq=d.site.address;
           if(d.site.email)CONST.email=d.site.email;
           if(d.site.phone)CONST.phone=d.site.phone;
-          // Update visible About text blocks
-          const abt=document.getElementById('aboutBody');if(abt&&d.site.about_body)abt.innerHTML=d.site.about_body;
-          const abtTitle=document.getElementById('aboutTitle');if(abtTitle&&d.site.about_title)abtTitle.innerHTML=d.site.about_title;
-          const visionEls=document.querySelectorAll('[data-field="vision"]');visionEls.forEach(el=>{if(d.site.vision)el.innerHTML=d.site.vision;});
-          const missionEls=document.querySelectorAll('[data-field="mission"]');missionEls.forEach(el=>{if(d.site.mission)el.innerHTML=d.site.mission;});
         }
-        // Footer
-        if(d.footer||d.site){
-          const ft=(d.footer&&d.footer.about)?d.footer.about:d.site.footerAbout;
-          const fc=(d.footer&&d.footer.copyright)?d.footer.copyright:d.site.footerCopyright;
-          const fa=document.getElementById('footerAbout');if(fa&&ft)fa.innerHTML=ft;
-          const fcc=document.getElementById('footerCopy');if(fcc&&fc)fcc.textContent=fc;
-        }
-        // Update visible hero, programs, NEC sections immediately (without full re-render)
-        // Re-render current route so all pages reflect latest data
-        setTimeout(render,50);
-      }catch(err){/* offline / first load — static content still displays */}
+        // Now re-render current route with fresh CONST (rebuilds entire DOM from new data)
+        render();
+        // After re-render, patch DOM elements that render() doesn't populate from CONST
+        setTimeout(()=>{
+          // Hero direct DOM patches (in case pages.home uses static text)
+          if(d.hero&&d.hero.text){
+            const t=d.hero.text;
+            const hl=document.getElementById('heroHeadline');if(hl&&t.headline)hl.innerHTML=t.headline;
+            const vq=document.getElementById('heroVisionQuote');if(vq&&t.visionquote)vq.innerHTML='"'+t.visionquote+'"';
+            const hb=document.getElementById('heroBody');if(hb){hb.innerHTML=t.body||CONST.heroBody||(CONST.name+' ('+CONST.abbr+') is a civil welfare organisation dedicated to youth empowerment, community development, education, and humanitarian service across Nigeria and beyond.');}
+            const hs=document.getElementById('heroSubhead');if(hs&&t.subhead)hs.innerHTML='<i class="fa-solid fa-circle-nodes text-gold-400 mr-2"></i>'+t.subhead;
+          }
+          // Bank list
+          const bw=document.getElementById('bankListWrap');
+          if(bw){
+            let banks=(d.donation&&d.donation.bankAccounts)||[];
+            if(typeof banks==='string'){try{banks=JSON.parse(banks)||[];}catch(e){banks=[];}}
+            bw.innerHTML=banks.length?`<div class="grid sm:grid-cols-2 gap-3 sm:gap-4">${banks.map(b=>`<div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 border-l-4 border-gold-500 border border-gold-200/50 shadow-sm"><div class="flex items-start gap-3"><i class="fa-solid fa-university text-gold-600 text-lg mt-1"></i><div class="flex-1"><div class="font-bold text-azure-950 text-sm sm:text-base">${b.bankName||''}</div><div class="font-mono text-lg sm:text-xl font-extrabold text-azure-700 tracking-wide my-1">${b.accountNumber||''}</div><div class="text-xs sm:text-sm text-azure-600">${b.accountName||'Zee Glow Link Foundation'}</div></div></div></div>`).join('')}`:'<p class="text-azure-400 text-sm italic text-center py-4">Bank accounts will appear here once added in the admin dashboard.</p>';
+          }
+          const dn=document.getElementById('donateNoteWrap');
+          if(dn&&d.donation&&d.donation.donationNote)dn.innerHTML=d.donation.donationNote;
+          // Footer
+          if(d.footer||d.site){
+            const ft=(d.footer&&d.footer.about)?d.footer.about:(d.site&&d.site.footerAbout);
+            const fc=(d.footer&&d.footer.copyright)?d.footer.copyright:(d.site&&d.site.footerCopyright);
+            const fa=document.getElementById('footerAbout');if(fa&&ft)fa.innerHTML=ft;
+            const fcc=document.getElementById('footerCopy');if(fcc&&fc)fcc.textContent=fc;
+          }
+        },60);
+      }catch(err){console.error('Sync error:',err);}
     }
     // Auto-refresh content every 5 seconds so admin edits show immediately
     function startAutoSync(){setInterval(sync,5000);}
