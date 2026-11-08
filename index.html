@@ -10,7 +10,7 @@
   <title>Zee Glow Link Foundation — Hope · Empowerment · Service</title>
   <script>
   (function(){
-    const B='43dac83';
+    const B='f374753';
     if(localStorage.getItem('zglf_pub_build')!==B){localStorage.setItem('zglf_pub_build',B);setTimeout(()=>location.reload(true),30);}
   })();
   </script>
@@ -1089,7 +1089,7 @@
   /* === Live data sync: pull content from PHP backend after render === */
   (function(){
     function siteBase(){return _siteBase();}
-    function apiBase(){ return siteBase()+'/api/'; }
+    function apiBase(){ return siteBase()+'/api/index.php/'; }
     function img(u){
       if(!u)return siteBase()+'/images/zglf-logo.jpg';
       if(u.startsWith('http://')||u.startsWith('https://')||u.startsWith('data:'))return u;

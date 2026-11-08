@@ -3,9 +3,17 @@ require_once __DIR__.'/config.php';
 $db=db();
 
 $method=$_SERVER['REQUEST_METHOD'];
-$uri=$_SERVER['REQUEST_URI'];
-$api_pos=strpos($uri,'/api/');
-$path='';if($api_pos!==false)$path=substr($uri,$api_pos+5);
+// Support both /api/content (rewrite) and /api/index.php/content (direct — no rewrite needed)
+$path='';
+if(!empty($_SERVER['PATH_INFO'])){
+  $path=ltrim($_SERVER['PATH_INFO'],'/');
+}else{
+  $uri=strtok($_SERVER['REQUEST_URI'],'?'); // strip query string
+  // Try '/api/index.php/...'
+  if(($p=strpos($uri,'/api/index.php/'))!==false){$path=substr($uri,$p+15);}
+  // Try '/api/...'
+  elseif(($p=strpos($uri,'/api/'))!==false){$path=substr($uri,$p+5);}
+}
 $path=trim($path,'/');
 $parts=explode('/',$path);
 $resource=$parts[0]??'';

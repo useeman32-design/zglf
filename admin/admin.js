@@ -2,9 +2,9 @@
    ZGLF Admin — connects to PHP backend at /api/
 ============================================================ */
 /* From admin/ page, ../ goes to the site root (works for /admin/ AND /zglf/admin/).
-   Use relative paths everywhere so we don't need to detect install folder. */
+   Call api/index.php/RESOURCE directly — no mod_rewrite required. */
 const REL='../';
-const API=REL+'api/';
+const API=REL+'api/index.php/';
 function resolveAsset(url){
   if(!url)return '';
   if(url.startsWith('http://')||url.startsWith('https://')||url.startsWith('data:'))return url;
