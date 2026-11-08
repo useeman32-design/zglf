@@ -1,18 +1,19 @@
-Options -Indexes
+Options -Indexes -MultiViews
 RewriteEngine On
 
-# API routing: send all /api/* to api/index.php
+# API routing: send /api/* to api/index.php (relative to current directory — works at root AND in subfolders)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^api/(.*)$ api/index.php [QSA,L]
+RewriteRule ^api/(.*)$ api/index.php [QSA,L,E=ZGLF_API:1]
 
 # Admin SPA fallback: any /admin path that isn't a real file → admin/index.html
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^admin/.*$ admin/index.html [L]
+RewriteRule ^admin(/.*)?$ admin/index.html [L]
 
-# Public SPA fallback: any other non-file path → index.html
+# Uploaded files and static assets must pass through to real files (no rewrite)
+# Public SPA fallback: any other non-file/non-dir path → index.html (but NOT /api/)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_URI} !^/api/
-RewriteRule ^ index.html [L]
+RewriteCond %{REQUEST_URI} !/api/
+RewriteRule ^ index.html [L,QSA]

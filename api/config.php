@@ -104,19 +104,22 @@ function save_setting($k,$v){
 function handle_upload($field,$subdir='images',$allowed_images=['jpg','jpeg','png','webp','gif'],$allowed_videos=['mp4','webm','mov']){
   if(empty($_FILES[$field]))return null;
   $f=$_FILES[$field];
-  if($f['error']!==UPLOAD_ERR_OK)return null;
+  if($f['error']!==UPLOAD_ERR_OK){
+    $msgs=[UPLOAD_ERR_INI_SIZE=>'File too large (php.ini)',UPLOAD_ERR_FORM_SIZE=>'File too large (form)',UPLOAD_ERR_PARTIAL=>'Partial upload',UPLOAD_ERR_NO_FILE=>'No file',UPLOAD_ERR_NO_TMP_DIR=>'Missing temp folder',UPLOAD_ERR_CANT_WRITE=>'Cannot write to disk',UPLOAD_ERR_EXTENSION=>'Blocked by extension'];
+    throw new Exception('Upload error: '.($msgs[$f['error']]??'code '.$f['error']));
+  }
   $ext=strtolower(pathinfo($f['name'],PATHINFO_EXTENSION));
   $all=array_merge($allowed_images,$allowed_videos);
   if(!in_array($ext,$all))throw new Exception('File type not allowed: '.$ext);
   $is_video=in_array($ext,$allowed_videos);
   $dir=UPLOAD_DIR.$subdir.'/';
-  if(!is_dir($dir))mkdir($dir,0777,true);
+  if(!is_dir($dir)){if(!@mkdir($dir,0777,true))throw new Exception('Cannot create folder: '.$dir);}
+  if(!is_writable($dir))throw new Exception('Upload folder not writable: '.$dir.'. Chmod it to 777.');
   $name=date('Ymd_His').'_'.bin2hex(random_bytes(4)).'.'.$ext;
   $path=$dir.$name;
-  if(!move_uploaded_file($f['tmp_name'],$path))throw new Exception('Upload failed: cannot write to '.$dir);
-  // Resize images to max 1600px wide to save space
+  if(!move_uploaded_file($f['tmp_name'],$path))throw new Exception('Cannot save file to '.$dir.' (disk full or permission denied)');
   if(!$is_video&&function_exists('imagecreatefromjpeg')&&in_array($ext,$allowed_images)){
-    try{resize_image($path,$ext,1600);}catch(Exception $e){}
+    try{@resize_image($path,$ext,1600);}catch(Exception $e){/* non-fatal */}
   }
   return ['type'=>$is_video?'video':'image','url'=>upurl($subdir.'/'.$name),'name'=>$f['name']];
 }

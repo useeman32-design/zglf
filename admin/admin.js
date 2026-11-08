@@ -922,12 +922,12 @@ saveNec=async function(id){
 
 const _origOpenProgram=openProgramModal;
 openProgramModal=function(id){
-  _origOpenProgramModal(id);
+  _origOpenProgram(id);
   setTimeout(()=>{
     const icon=document.getElementById('p-icon');if(icon)makeIconPicker(icon);
     const full=document.getElementById('p-full');if(full)makeWysiwyg(full);
     const sh=document.getElementById('p-short');if(sh)makeWysiwyg(sh);
-  },60);
+  },80);
 };
 const _origSaveProgram=saveProgram;
 saveProgram=async function(id){
