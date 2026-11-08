@@ -75,8 +75,20 @@ document.getElementById('loginForm').addEventListener('submit',async e=>{
   }catch(err){document.getElementById('loginError').style.display='flex';document.querySelector('#loginError span').textContent='Invalid username or password.';}
 });
 async function logout(){
-  try{await api('auth/logout',{method:'POST'});}catch(e){}
-  TOKEN='';USER=null;localStorage.removeItem('zglf_token');localStorage.removeItem('zglf_user');location.hash='#/login';render();
+  // Force logout immediately regardless of server response
+  try{
+    if(TOKEN){const r=await fetch(API+'auth/logout',{method:'POST',headers:{'Authorization':'Bearer '+TOKEN},keepalive:true});}
+  }catch(e){}
+  TOKEN='';USER=null;
+  localStorage.removeItem('zglf_token');
+  localStorage.removeItem('zglf_user');
+  sessionStorage.clear();
+  location.hash='#/login';
+  // Hide app, show login forcibly
+  const lv=document.getElementById('loginView');const av=document.getElementById('appView');
+  if(lv)lv.style.display='flex';if(av)av.style.display='none';
+  // Hard reload to guarantee clean state (clears any JS memory issues)
+  setTimeout(()=>{location.reload();},150);
 }
 function can(p){if(!USER)return false;if(USER.role==='admin')return true;return!!(USER.perms&&USER.perms[p]);}
 
@@ -523,7 +535,7 @@ function evAddUrl(){
 }
 async function saveEvent(id){
   const media=JSON.parse($('#e-mm').value||'[]');
-  const body={title:$('#e-title').value.trim(),date:$('#e-date').value,time:$('#e-time').value,location:$('#e-loc').value,status:$('#e-status').value,description:$('#e-desc').value,media};
+  const body={title:$('#e-title').value.trim(),event_date:$('#e-date').value,date:$('#e-date').value,event_time:$('#e-time').value,time:$('#e-time').value,location:$('#e-loc').value,status:$('#e-status').value,description:$('#e-desc').value,excerpt:($('#e-desc').value||'').substring(0,160),media};
   if(!body.title){toast('Title required','error');return;}
   // Files have already been uploaded via mmAddFiles → body.media already holds {type,url} from server
   // Strip any temporary _file fields / data: URLs that may remain
@@ -923,7 +935,7 @@ saveProgram=async function(id){
   syncWysiwyg(document.getElementById('p-full'));
   syncWysiwyg(document.getElementById('p-short'));
   const cov=await resolveMedia('p-cover','programs');
-  const body={slug:$('#p-slug').value,title:$('#p-name').value,tag:$('#p-tag').value,tag_color:$('#p-color').value,icon:$('#p-icon').value,short_desc:$('#p-short').value,full_desc:$('#p-full').value,published:1};
+  const body={slug:$('#p-slug').value,title:$('#p-title').value,tag:$('#p-tag').value,tag_color:$('#p-color').value,icon:$('#p-icon').value,short_desc:$('#p-short').value,full_desc:$('#p-full').value,published:1};
   if(cov)body.cover=cov.url;
   if(!body.slug)body.slug=(body.title||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
   await api('programs'+(id?'/'+id:''),{body,method:'POST'});
