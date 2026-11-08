@@ -206,6 +206,46 @@ $progs=[
 $chk=$pdo->query("SELECT COUNT(*) FROM programs")->fetchColumn();
 if($chk==0){$ins=$pdo->prepare("INSERT INTO programs(slug,title,tag,tag_color,icon,short_desc,published) VALUES(?,?,?,?,?,?,1)");foreach($progs as $p)$ins->execute($p);echo "Seeded 4 pillar programs.\n";}
 
+// Seed default hero slides so first load isn't empty
+$chk=$pdo->query("SELECT COUNT(*) FROM hero_slides")->fetchColumn();
+if($chk==0){
+  $slides=[
+    ['image','images/hero-children.jpg','Children learning','Education for every child'],
+    ['image','images/hero-community.jpg','Community gathering','Stronger together'],
+    ['image','images/hero-volunteers.jpg','Volunteers in action','Hope · Empowerment · Service'],
+    ['image','images/team-community.jpg','ZGLF team','Building a brighter future']
+  ];
+  $ins=$pdo->prepare("INSERT INTO hero_slides(position,type,url,alt_text,caption) VALUES(?,?,?,?,?)");
+  foreach($slides as $i=>$s)$ins->execute([$i,$s[0],$s[1],$s[2],$s[3]]);
+  echo "Seeded ".count($slides)." hero slides.\n";
+}
+
+// Seed default NEC photos so admin previews show immediately
+$defaults=[
+  'National President'=>'images/nec-president.jpg',
+  'Vice President'=>'images/nec-vice.jpg',
+  'National Secretary'=>'images/nec-secretary.jpg',
+  'Deputy National Secretary'=>'images/nec-assistant.jpg',
+  'National Treasurer'=>'images/nec-treasurer.jpg',
+  'Financial Secretary'=>'images/nec-pro.jpg',
+  'National Publicity Secretary'=>'images/nec-pro.jpg',
+  'National Welfare Officer'=>'images/nec-auditor.jpg'
+];
+$upd=$pdo->prepare("UPDATE nec_members SET photo=? WHERE role_title=? AND (photo IS NULL OR photo='')");
+foreach($defaults as $role=>$photo)$upd->execute([$photo,$role]);
+echo "Applied default NEC photos.\n";
+
+// Seed default program covers
+$pcovers=[
+  'Education & Literacy'=>'images/education-scholarship.jpg',
+  'Healthcare Access'=>'images/medical-outreach.jpg',
+  'Economic Empowerment'=>'images/youth-empowerment.jpg',
+  'Humanitarian Aid'=>'images/humanitarian-food.jpg'
+];
+$upd=$pdo->prepare("UPDATE programs SET cover=? WHERE title=? AND (cover IS NULL OR cover='')");
+foreach($pcovers as $t=>$c)$upd->execute([$c,$t]);
+echo "Applied default program covers.\n";
+
 // Ensure upload dirs
 foreach(['uploads','images','events'] as $d){$p=$root.'/'.$d;if(!is_dir($p)){@mkdir($p,0777,true);}@chmod($p,0777);}
 echo "Upload directories ready.\n";

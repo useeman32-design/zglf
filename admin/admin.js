@@ -1,7 +1,43 @@
 /* ============================================================
    ZGLF Admin — connects to PHP backend at /api/
 ============================================================ */
-const API=(function(){const u=new URL(window.location.href);const p=u.pathname.replace(/\/admin\/.*$/,'/');return p+'api/';})();
+/* From admin/ page, ../ goes to the site root (whether that's / or /zglf/).
+   Use relative paths everywhere so we don't need to detect install folder. */
+const REL='../';
+const API=REL+'api/';
+function resolveAsset(url){
+  if(!url)return '';
+  if(url.startsWith('http://')||url.startsWith('https://')||url.startsWith('data:'))return url;
+  // already relative ../
+  if(url.startsWith('../'))return url;
+  // strip leading slash to avoid server-root absolute
+  url=url.replace(/^\/+/,'');
+  return REL+url;
+}
+const FALLBACK_LOGO=REL+'images/zglf-logo.jpg';
+const DEFAULT_NEC_PHOTO=REL+'images/nec-pro.jpg';
+const DEFAULT_PROG_COVER=REL+'images/team-community.jpg';
+const DEFAULT_EVENT_COVER=REL+'images/hero-volunteers.jpg';
+const NEC_PHOTO_MAP={
+  'National President':'images/nec-president.jpg',
+  'Vice President':'images/nec-vice.jpg',
+  'National Secretary':'images/nec-secretary.jpg',
+  'Deputy National Secretary':'images/nec-assistant.jpg',
+  'National Treasurer':'images/nec-treasurer.jpg',
+  'Financial Secretary':'images/nec-pro.jpg',
+  'National Publicity Secretary':'images/nec-pro.jpg',
+  'National Welfare Officer':'images/nec-auditor.jpg'
+};
+function necDefaultPhoto(role){return resolveAsset(NEC_PHOTO_MAP[role]||'images/nec-pro.jpg');}
+function progDefaultCover(title){
+  if(!title)return DEFAULT_PROG_COVER;
+  const t=title.toLowerCase();
+  if(/health|medical/i.test(t))return REL+'images/medical-outreach.jpg';
+  if(/food|relief|humanitarian/i.test(t))return REL+'images/humanitarian-food.jpg';
+  if(/education|literacy|scholar/i.test(t))return REL+'images/education-scholarship.jpg';
+  if(/empower|skill|microgrant|entrepreneur/i.test(t))return REL+'images/youth-empowerment.jpg';
+  return DEFAULT_PROG_COVER;
+}
 let TOKEN=localStorage.getItem('zglf_token')||'';
 let USER=JSON.parse(localStorage.getItem('zglf_user')||'null');
 let DATA={};
@@ -113,8 +149,12 @@ function mediaUploader(initial,inputId,hint){
 }
 function showMediaThumb(id,data){
   const wrap=$('#'+id+'-preview');const thumb=$('#'+id+'-thumb');
+  if(!wrap||!thumb)return;
   wrap.style.display='flex';
-  thumb.innerHTML=(data.type==='video'?`<video src="${data.url}" muted style="width:100%;height:100px;object-fit:cover"></video>`:`<img src="${data.url}" style="width:100%;height:100px;object-fit:cover" onerror="this.style.opacity=0.3">`)+`<span class="media-type">${data.type==='video'?'Video':'Image'}</span><button type="button" class="remove-btn" onclick="clearMedia('${id}')"><i class="fa-solid fa-xmark"></i></button>`;
+  const url=resolveAsset(data.url);
+  const errFallback=`<i class="fa-solid fa-image" style="font-size:28px;color:var(--gray-400);margin-top:20px"></i><span style="font-size:11px;color:var(--gray-400);padding:6px">Image not found</span>`;
+  thumb.innerHTML=(data.type==='video'?`<video src="${url}" muted style="width:100%;height:100px;object-fit:cover"></video>`:`<img src="${url}" style="width:100%;height:100px;object-fit:cover" onerror="this.outerHTML='${errFallback.replace(/'/g,"\\'")}'">`)+`<span class="media-type">${data.type==='video'?'Video':'Image'}</span><button type="button" class="remove-btn" onclick="clearMedia('${id}')"><i class="fa-solid fa-xmark"></i></button>`;
+  wrap.classList.add('has');
 }
 function handleMediaUpload(e,id){
   const f=e.target.files[0];if(!f)return;
@@ -134,7 +174,7 @@ function applyMediaUrl(id){
   $('#'+id+'-data').value=JSON.stringify(data);
   showMediaThumb(id,data);window['__mu_'+id]=data;
 }
-function clearMedia(id){$('#'+id+'-data').value='';$('#'+id+'-url').value='';$('#'+id+'-preview').style.display='none';$('#'+id+'-file').value='';window['__mu_'+id]=null;}
+function clearMedia(id){$('#'+id+'-data').value='';const u=$('#'+id+'-url');if(u){u.value='';}$('#'+id+'-preview').style.display='none';$('#'+id+'-preview').classList.remove('has');$('#'+id+'-file').value='';window['__mu_'+id]=null;}
 function getMediaVal(id){
   const v=$('#'+id+'-data').value;if(!v)return null;
   try{return JSON.parse(v.replace(/&quot;/g,'"').replace(/&#39;/g,"'"));}catch(e){return null;}
@@ -142,10 +182,7 @@ function getMediaVal(id){
 // Async: upload if file, else return the url
 async function resolveMedia(id,subdir='images'){
   const d=window['__mu_'+id];if(!d)return null;
-  if(d._file){
-    const fd=new FormData();fd.append('file',d._file);fd.append('subdir',subdir);
-    const r=await api('media',{form:fd});return r.media;
-  }
+  if(d._file){return await _doUpload(d._file,subdir);}
   return d;
 }
 
@@ -156,10 +193,12 @@ function mmInit(id,containerId,hiddenId,existing){
   mmRender(id,containerId,hiddenId);
 }
 function mmRender(id,cid,hid){
-  $(hid).value=JSON.stringify(mmItems[id]);
-  $('#'+cid).innerHTML=mmItems[id].map((m,i)=>`
+  const h=$(hid);const c=$('#'+cid);
+  if(!h||!c)return setTimeout(()=>mmRender(id,cid,hid),30);
+  h.value=JSON.stringify(mmItems[id]||[]);
+  c.innerHTML=(mmItems[id]||[]).map((m,i)=>`
     <div class="media-thumb">
-      ${m.type==='video'?`<video src="${m.url}" muted style="width:100%;height:100px;object-fit:cover"></video>`:`<img src="${m.url}" style="width:100%;height:100px;object-fit:cover" onerror="this.style.opacity=0.3">`}
+      ${m.type==='video'?`<video src="${resolveAsset(m.url)}" muted style="width:100%;height:100px;object-fit:cover"></video>`:`<img src="${resolveAsset(m.url)}" style="width:100%;height:100px;object-fit:cover" onerror="this.style.opacity=0.3">`}
       <span class="media-type">${m.type}</span>
       <button type="button" class="remove-btn" onclick="mmRemove('${id}','${cid}','${hid}',${i})"><i class="fa-solid fa-xmark"></i></button>
     </div>`).join('');
@@ -168,10 +207,9 @@ function mmAdd(id,cid,hid,data){mmItems[id].push(data);mmRender(id,cid,hid);}
 function mmRemove(id,cid,hid,i){mmItems[id].splice(i,1);mmRender(id,cid,hid);}
 async function mmAddFiles(id,cid,hid,files,subdir){
   for(const f of files){
-    if(f.type.startsWith('video/')&&f.size>25*1024*1024){toast(`Skipping ${f.name} (too large)`,'error');continue;}
-    // Upload directly
-    const fd=new FormData();fd.append('file',f);fd.append('subdir',subdir);
-    try{const r=await api('media',{form:fd});mmItems[id].push(r.media);}catch(e){}
+    if(f.type.startsWith('video/')&&f.size>50*1024*1024){toast(`Skipping ${f.name} (too large)`,'error');continue;}
+    try{const m=await _doUpload(f,subdir||'images');if(m)mmItems[id].push({type:m.type,url:m.url});}
+    catch(e){toast('Upload failed: '+e.message,'error');}
   }
   mmRender(id,cid,hid);
 }
@@ -238,8 +276,9 @@ async function renderDashboard(){
     </div>
     <style>@media(max-width:900px){.db2{grid-template-columns:1fr!important}}</style>
   `;
-  // Charts
+  // Charts (destroy previous instances if any to avoid "Canvas is already in use")
   setTimeout(()=>{
+    ['c1','c2'].forEach(id=>{const c=Chart.getChart($('#'+id));if(c)c.destroy();});
     const md=s.monthly_donations||[];
     const labels=md.map(x=>x.m);const data=md.map(x=>x.total/1000);
     new Chart($('#c1'),{type:'bar',data:{labels,datasets:[{label:'₦ (thousands)',data,backgroundColor:'rgba(26,55,184,0.8)',borderRadius:8,maxBarThickness:36}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}});
@@ -284,8 +323,8 @@ function renderSlides(){
   $('#slidesGrid').innerHTML=HERO.slides.map((s,i)=>{
     const total=HERO.slides.length;
     return`<div class="hero-slide-preview ${i===0?'active':''}">
-      <div class="thumb" style="${s.type==='image'?`background-image:url('${s.url}')`:''}">
-        ${s.type==='video'?`<video src="${s.url}" muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></video>`:''}
+      <div class="thumb" style="${s.type==='image'?`background-image:url('${resolveAsset(s.url)}')`:''}">
+        ${s.type==='video'?`<video src="${resolveAsset(s.url)}" muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></video>`:''}
         <span class="media-type" style="position:absolute;top:10px;right:10px">${s.type}</span>
         <div class="thumb-info"><h5>${esc(s.alt||'Slide '+(i+1))}</h5><small>${esc(s.caption||'')}</small></div>
       </div>
@@ -335,7 +374,7 @@ async function renderNEC(){
       <div class="card-body p-sm"><div class="table-wrap"><table>
         <thead><tr><th>Photo</th><th>Rank / Role</th><th>Name</th><th>Duty</th><th>Theme</th><th style="width:100px">Actions</th></tr></thead>
         <tbody>${NEC.map(n=>`<tr>
-          <td><div style="width:50px;height:50px;border-radius:10px;background-size:cover;background-position:center;border:2px solid var(--gray-100);background-image:url('${n.photo||'../images/team-community.jpg'}');box-shadow:0 2px 8px rgba(0,0,0,0.08)"></div></td>
+          <td><div style="width:50px;height:50px;border-radius:10px;background-size:cover;background-position:center;border:2px solid var(--gray-100);background-image:url('${n.photo?resolveAsset(n.photo):necDefaultPhoto(n.role_title)}');box-shadow:0 2px 8px rgba(0,0,0,0.08)"></div></td>
           <td style="font-weight:700;color:var(--gray-900)">${esc(n.role_title)}</td>
           <td style="color:${n.name?'var(--gray-800)':'var(--gray-400)'};font-style:${n.name?'normal':'italic'}">${esc(n.name)||'Position vacant'}</td>
           <td style="font-size:12px;color:var(--gray-600);max-width:320px">${esc((n.duty||'').substring(0,100))}${(n.duty||'').length>100?'...':''}</td>
@@ -383,7 +422,7 @@ async function renderPrograms(){
   $('#pageContent').innerHTML=`<div class="card"><div class="card-header"><h3><i class="fa-solid fa-diagram-project"></i>Programs & Initiatives</h3><button class="btn btn-sm btn-gold" onclick="openProgramModal()"><i class="fa-solid fa-plus"></i>New Program</button></div>
     <div class="card-body p-sm"><div class="table-wrap"><table><thead><tr><th>Cover</th><th>Program</th><th>Pillar</th><th>Short Description</th><th>Status</th><th style="width:110px">Actions</th></tr></thead>
       <tbody>${PROGRAMS.map(p=>`<tr>
-        <td><div style="width:60px;height:44px;border-radius:8px;background-size:cover;background-position:center;border:1px solid var(--gray-200);background-image:url('${p.cover||'../images/team-community.jpg'}')"></div></td>
+        <td><div style="width:60px;height:44px;border-radius:8px;background-size:cover;background-position:center;border:1px solid var(--gray-200);background-image:url('${p.cover?resolveAsset(p.cover):progDefaultCover(p.title)}')"></div></td>
         <td style="font-weight:700;color:var(--gray-900)"><i class="fa-solid ${p.icon}" style="color:${p.tag_color};margin-right:8px"></i>${esc(p.title)}</td>
         <td><span class="tag" style="background:${p.tag_color}20;color:${p.tag_color}">${esc(p.tag)}</span></td>
         <td style="max-width:320px;font-size:12px;color:var(--gray-600)">${esc(p.short_desc||'')}</td>
@@ -437,11 +476,14 @@ async function renderEvents(){
     <div class="event-grid">${past.length?past.map(evCard).join(''):'<div class="empty-state" style="grid-column:1/-1"><i class="fa-regular fa-folder-open"></i><p>No past events.</p></div>'}</div>`;
 }
 function evCard(e){
-  const d=dateFmtShort(e.event_date);const cover=e.media&&e.media[0]?e.media[0]:null;
-  const hasVideo=e.media&&e.media.some(m=>m.type==='video');
+  const d=dateFmtShort(e.event_date);
+  let cover=null;
+  if(e.featured_image)cover={type:'image',url:e.featured_image};
+  else if(e.media&&e.media[0])cover=e.media[0];
+  const hasVideo=cover&&cover.type==='video';
   return`<div class="event-card ${hasVideo?'has-video':''}">
     <div class="event-card-media">
-      ${cover?(cover.type==='video'?`<video src="${cover.url}" muted style="width:100%;height:100%;object-fit:cover"></video>`:`<img src="${cover.url}" alt="${esc(e.title)}" onerror="this.src='../images/team-community.jpg'">`):'<div style="width:100%;height:100%;background:var(--gray-100);display:flex;align-items:center;justify-content:center;color:var(--gray-400)"><i class="fa-solid fa-calendar" style="font-size:40px"></i></div>'}
+      ${cover?(cover.type==='video'?`<video src="${resolveAsset(cover.url)}" muted style="width:100%;height:100%;object-fit:cover"></video>`:`<img src="${resolveAsset(cover.url)}" alt="${esc(e.title)}" onerror="this.src='${DEFAULT_EVENT_COVER}'">`):`<img src="${DEFAULT_EVENT_COVER}" alt="" style="width:100%;height:100%;object-fit:cover;opacity:.5">`}
       <div class="event-card-date"><div class="day">${d.day}</div><div class="month">${d.month}</div></div>
       ${hasVideo?'<div class="video-play"><i class="fa-solid fa-play" style="margin-left:3px"></i></div>':''}
       <span class="tag" style="position:absolute;top:12px;right:12px;background:${e.status==='upcoming'?'rgba(16,185,129,.95)':'rgba(148,163,184,.95)'};color:white">${e.status}</span>
@@ -463,6 +505,7 @@ function openEventModal(id){
       <div class="full"><label class="form-label">Description</label><textarea class="form-input" id="e-desc" rows="3">${esc(e.description||'')}</textarea></div>
       <div class="full"><label class="form-label">Photos & Videos</label>
         <p class="form-help">Upload multiple photos and/or videos. First item becomes the cover.</p>
+        <input type="hidden" id="e-mm" value="[]">
         <div class="upload-zone" onclick="document.getElementById('e-file').click()"><i class="fa-solid fa-cloud-arrow-up"></i><p><strong>Click to add files</strong></p><small>Images or MP4/WebM videos</small><input type="file" id="e-file" accept="image/*,video/*" multiple style="display:none"></div>
         <div class="media-preview" id="e-mp"></div>
         <div style="margin-top:8px;display:flex;gap:8px"><input class="form-input" id="e-url" placeholder="...or paste URL, then Add" style="flex:1"><button type="button" class="btn btn-sm btn-outline" onclick="evAddUrl()"><i class="fa-solid fa-plus"></i>Add</button></div>
@@ -482,13 +525,20 @@ async function saveEvent(id){
   const media=JSON.parse($('#e-mm').value||'[]');
   const body={title:$('#e-title').value.trim(),date:$('#e-date').value,time:$('#e-time').value,location:$('#e-loc').value,status:$('#e-status').value,description:$('#e-desc').value,media};
   if(!body.title){toast('Title required','error');return;}
-  // Upload any base64 / File items in media
-  for(let i=0;i<body.media.length;i++){const m=body.media[i];if(m.url&&m.url.startsWith('data:')){
-    // convert to blob
-    const res=await fetch(m.url);const blob=await res.blob();const fd=new FormData();fd.append('file',blob,'upload.'+(m.type==='video'?'mp4':'jpg'));fd.append('subdir','events');
-    const r=await api('media',{form:fd});body.media[i]={type:r.media.type,url:r.media.url};
-  }}
-  const r=await api('events'+(id?'/'+id:''),{body,method:'POST'});
+  // Files have already been uploaded via mmAddFiles → body.media already holds {type,url} from server
+  // Strip any temporary _file fields / data: URLs that may remain
+  const clean=[];
+  for(const m of body.media){
+    if(!m||!m.url)continue;
+    if(m.url.startsWith('data:')){// pasted or dragged image not yet uploaded — skip to avoid crash
+      toast('Some media not uploaded; please re-add.','error');return;
+    }
+    if(m._file)continue;
+    clean.push({type:m.type,url:m.url});
+  }
+  body.media=clean;
+  if(!body.date)body.date=body.event_date;
+  await api('events'+(id?'/'+id:''),{body,method:'POST'});
   toast(id?'Event updated':'Event created');closeModal();renderEvents();
 }
 async function deleteEvent(id){if(!confirm('Delete event?'))return;await api('events/'+id,{method:'DELETE'});toast('Deleted');renderEvents();}
@@ -508,7 +558,7 @@ async function renderMedia(){
 function renderMediaGrid(){
   const list=mCat==='All'?MEDIA:MEDIA.filter(m=>m.category===mCat);
   $('#mgrid').innerHTML=list.length?list.map(m=>`<div class="photo-card"><div class="thumb">
-    ${m.type==='video'?`<video src="${m.url}" muted style="width:100%;height:100%;object-fit:cover"></video><span class="media-badge"><i class="fa-solid fa-video"></i> Video</span>`:`<img src="${m.url}" onerror="this.src='../images/team-community.jpg'"><span class="media-badge"><i class="fa-solid fa-image"></i> Photo</span>`}
+    ${m.type==='video'?`<video src="${resolveAsset(m.url)}" muted style="width:100%;height:100%;object-fit:cover"></video><span class="media-badge"><i class="fa-solid fa-video"></i> Video</span>`:`<img src="${resolveAsset(m.url)}" onerror="this.src='${DEFAULT_PROG_COVER}';this.style.objectFit='contain';this.style.padding='10px'"><span class="media-badge"><i class="fa-solid fa-image"></i> Photo</span>`}
     <div class="photo-card-actions"><button onclick="deleteMedia(${m.id})"><i class="fa-solid fa-trash"></i></button></div>
     </div><div class="photo-card-meta"><h5>${esc(m.title||'Untitled')}</h5><p>${esc(m.category)}</p></div></div>`).join(''):'<div class="empty-state" style="grid-column:1/-1"><i class="fa-regular fa-images"></i><p>No media here.</p></div>';
 }
@@ -527,8 +577,9 @@ async function uploadMedia(){
   const f=$('#m-file').files[0];const url=$('#m-url').value.trim();
   if(f){
     const subdir=f.type.startsWith('video/')?'videos':'images';
-    const fd=new FormData();fd.append('file',f);fd.append('title',title);fd.append('category',cat);fd.append('subdir',subdir);
-    await api('media',{form:fd});
+    const m=await _doUpload(f,subdir);
+    // Also register in media_library
+    await api('media',{body:{title,category:cat,type:m.type,url:m.url},method:'POST'});
   }else if(url){
     const type=/\.(mp4|webm|mov)($|\?)/i.test(url)?'video':'image';
     await api('media',{body:{title,category:cat,type,url},method:'POST'});
@@ -850,7 +901,12 @@ openNecModal=function(id){
 const _origSaveNec=saveNec;
 saveNec=async function(id){
   syncWysiwyg(document.getElementById('n-duty'));
-  await _origSaveNec(id);
+  // Properly upload file if present
+  const ph=await resolveMedia('n-photo','nec');
+  const body={role_title:$('#n-role').value,name:$('#n-name').value,gradient:$('#n-grad').value,icon:$('#n-icon').value,duty:$('#n-duty').value,published:$('#n-pub').checked?1:0};
+  if(ph)body.photo=ph.url;
+  await api('nec'+(id?'/'+id:''),{body,method:'POST'});
+  toast(id?'Position updated':'Position added');closeModal();renderNEC();
 };
 
 const _origOpenProgram=openProgramModal;
@@ -866,34 +922,25 @@ const _origSaveProgram=saveProgram;
 saveProgram=async function(id){
   syncWysiwyg(document.getElementById('p-full'));
   syncWysiwyg(document.getElementById('p-short'));
-  // Read wysiwyg values before save — the original saveProgram reads from #p-full / #p-short directly;
-  // since textarea display=none but value synced, it already works.
-  await _origSaveProgram(id);
+  const cov=await resolveMedia('p-cover','programs');
+  const body={slug:$('#p-slug').value,title:$('#p-name').value,tag:$('#p-tag').value,tag_color:$('#p-color').value,icon:$('#p-icon').value,short_desc:$('#p-short').value,full_desc:$('#p-full').value,published:1};
+  if(cov)body.cover=cov.url;
+  if(!body.slug)body.slug=(body.title||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  await api('programs'+(id?'/'+id:''),{body,method:'POST'});
+  toast(id?'Program updated':'Program added');closeModal();renderPrograms();
 };
 
 const _origOpenEvent=openEventModal;
 openEventModal=function(id){
   _origOpenEvent(id);
   setTimeout(()=>{
-    // Add hidden #e-mm if original modal is missing it
-    if(!document.getElementById('e-mm')){
-      const hidden=document.createElement('input');hidden.type='hidden';hidden.id='e-mm';hidden.value='[]';
-      document.getElementById('e-file')?.closest('.full')?.appendChild(hidden);
-    }
     const desc=document.getElementById('e-desc');if(desc)makeWysiwyg(desc);
-    // Re-init mmInit now that #e-mm exists (the original mmInit fires before modal DOM is added)
-    const e=id?EVENTS.find(x=>x.id==id):null;
-    if(e){
-      mmItems['ev']=(e.media||[]).map(m=>({type:m.type,url:m.url}));
-      mmRender('ev','e-mp','e-mm');
-    }
-    // Re-bind file listener (original bound before #e-mm existed)
+    // Re-bind file listener to use _doUpload (single, reliable path)
     const fileInp=document.getElementById('e-file');
     if(fileInp){
       const newInp=fileInp.cloneNode(true);fileInp.parentNode.replaceChild(newInp,fileInp);
       newInp.addEventListener('change',async ev=>{await mmAddFiles('ev','e-mp','e-mm',[...ev.target.files],'events');ev.target.value='';});
     }
-    const urlBtn=document.querySelector('#e-url + button');if(urlBtn)urlBtn.onclick=evAddUrl;
   },80);
 };
 
@@ -904,32 +951,12 @@ function evAddUrl(){
   document.getElementById('e-url').value='';
 }
 
-/* Fix mmAddFiles to use _doUpload properly (it already uses api/media which is correct for library; but
-   ensure it uses upload endpoint that returns the media url in the right shape). api('media',{form:fd}) returns {ok,id,media} so r.media is correct. */
-
-/* Fix saveEvent: sync wysiwyg desc, don't double-upload already-server-resident media */
+/* Wrap saveEvent to sync wysiwyg before the original runs */
 const _origSaveEvent=saveEvent;
 saveEvent=async function(id){
   try{
     syncWysiwyg(document.getElementById('e-desc'));
-    const media=JSON.parse(document.getElementById('e-mm').value||'[]');
-    const body={title:document.getElementById('e-title').value.trim(),
-      event_date:document.getElementById('e-date').value,date:document.getElementById('e-date').value,
-      time:document.getElementById('e-time').value,event_time:document.getElementById('e-time').value,
-      location:document.getElementById('e-loc').value,
-      status:document.getElementById('e-status').value,
-      description:document.getElementById('e-desc').value,media:[]};
-    if(!body.title){toast('Title required','error');return;}
-    for(let i=0;i<media.length;i++){
-      const m=media[i];
-      if(m.url&&m.url.startsWith('data:')){
-        const res=await fetch(m.url);const blob=await res.blob();
-        const up=await _doUpload(new File([blob],'upload.'+(m.type==='video'?'mp4':'jpg'),{type:blob.type}),'events');
-        body.media.push({type:up.type,url:up.url});
-      }else{body.media.push(m);}
-    }
-    await api('events'+(id?'/'+id:''),{body,method:'POST'});
-    toast(id?'Event updated':'Event created');closeModal();renderEvents();
+    await _origSaveEvent(id);
   }catch(e){toast(e.message,'error');console.error(e);}
 };
 

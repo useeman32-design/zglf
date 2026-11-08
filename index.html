@@ -250,6 +250,14 @@
   </footer>
 
   <script>
+  /* ============ URL helper (subfolder-safe) ============ */
+  function uimg(u){
+    if(!u)return '';
+    if(u.startsWith('http://')||u.startsWith('https://')||u.startsWith('data:'))return u;
+    const base=window.location.pathname.replace(/\/$/,'').replace(/\/[^/]*$/,'');
+    if(u.startsWith('/'))return base+u;
+    return base+'/'+u.replace(/^\.\//,'');
+  }
   /* ============ DATA ============ */
   const CONST = {
     name:"Zee Glow Link Foundation", abbr:"ZGLF",
@@ -354,6 +362,12 @@
       {name:"Become a Partner →",initials:"+",color:"#c4910f",link:"#/contact"}
     ]
   };
+  // Normalize image URLs for subfolder installs
+  (function(){
+    if(CONST.heroImgs)CONST.heroImgs=CONST.heroImgs.map(uimg);
+    (CONST.programs||[]).forEach(p=>{if(p.img)p.img=uimg(p.img);});
+    (CONST.nec||[]).forEach(n=>{if(n.img)n.img=uimg(n.img);});
+  })();
 
   const app = document.getElementById('app');
   function setActiveNav(route){
@@ -383,12 +397,16 @@
       t.addEventListener('click',()=>{const l=t.dataset.link;if(l.startsWith('#/'))location.hash=l;else window.open(l,'_blank','noopener,noreferrer');});
     });
   }
+  let __heroTimer=null;
   function startHeroCarousel(){
+    if(__heroTimer){clearInterval(__heroTimer);__heroTimer=null;}
     const slides=document.querySelectorAll('.hero-photo'),dots=document.querySelectorAll('.carousel-dot');
     if(!slides.length)return;let cur=0;
-    const go=i=>{slides[cur].classList.remove('active');if(dots[cur])dots[cur].classList.remove('active');cur=i;slides[cur].classList.add('active');if(dots[cur])dots[cur].classList.add('active');};
-    let t=setInterval(()=>go((cur+1)%slides.length),4500);
-    dots.forEach(d=>d.addEventListener('click',()=>{clearInterval(t);go(+d.dataset.slide);t=setInterval(()=>go((cur+1)%slides.length),4500);}));
+    const go=i=>{if(!slides[cur])return;slides[cur].classList.remove('active');if(dots[cur])dots[cur].classList.remove('active');cur=i;if(!slides[cur])return;slides[cur].classList.add('active');if(dots[cur])dots[cur].classList.add('active');};
+    __heroTimer=setInterval(()=>go((cur+1)%slides.length),4500);
+    dots.forEach(d=>{
+      d.onclick=()=>{clearInterval(__heroTimer);go(+d.dataset.slide);__heroTimer=setInterval(()=>go((cur+1)%slides.length),4500);};
+    });
   }
 
   function shieldSvg(){
@@ -1055,16 +1073,19 @@
 
   /* === Live data sync: pull content from PHP backend after render === */
   (function(){
-    function apiBase(){
-      // /zglf/index.html → /zglf/api/ ;  /index.html → /api/
-      const p=window.location.pathname.replace(/\/$/,'').replace(/\/[^/]*$/,'');
-      return p+'/api/';
+    function siteBase(){
+      // /zglf/index.html → /zglf ;  /index.html → ''
+      return window.location.pathname.replace(/\/$/,'').replace(/\/[^/]*$/,'');
     }
+    function apiBase(){ return siteBase()+'/api/'; }
     function img(u){
-      if(!u)return 'images/zglf-logo.jpg';
-      if(u.startsWith('http')||u.startsWith('/'))return u;
-      return u;
+      if(!u)return siteBase()+'/images/zglf-logo.jpg';
+      if(u.startsWith('http://')||u.startsWith('https://')||u.startsWith('data:'))return u;
+      if(u.startsWith('/'))return siteBase()+u;
+      // relative path — resolve against site base so it works in both root and subfolder
+      return siteBase()+'/'+u.replace(/^\.\//,'');
     }
+    window.__zglfImg=img;window.__zglfBase=siteBase;
     function fmtDate(d){
       if(!d)return '';
       try{const dt=new Date(d);return dt.toLocaleDateString('en-NG',{year:'numeric',month:'long',day:'numeric'});}catch(e){return d;}
@@ -1083,13 +1104,13 @@
       const list=[...upcoming,...past].slice(0,3);
       if(!list.length){grid.innerHTML='<div class="col-span-full text-azure-400 text-sm text-center py-8">Check back soon for upcoming events.</div>';return;}
       grid.innerHTML=list.map(e=>{
-        const cover=e.featured_image?img(e.featured_image.startsWith('/')?e.featured_image:'/'+e.featured_image):(e.media&&e.media[0]?img(e.media[0].url):'images/zglf-logo.jpg');
+        const cover=img(e.featured_image||(e.media&&e.media[0]&&e.media[0].url)||'images/zglf-logo.jpg');
         const loc=e.location?'<span class="text-azure-500 text-[11px] sm:text-xs"><i class="fa-solid fa-location-dot mr-1"></i>'+e.location+'</span>':'';
         const dt=e.event_date?'<span class="text-gold-700 text-[11px] sm:text-xs font-semibold"><i class="fa-solid fa-calendar mr-1"></i>'+fmtDate(e.event_date)+'</span>':'';
         const desc=e.excerpt||(e.description?e.description.substring(0,120)+'…':'');
         return `<div class="bg-white rounded-2xl sm:rounded-3xl overflow-hidden card-hover shadow-sm border border-gold-400/15 reveal cursor-pointer" onclick='showEventModal(${JSON.stringify(e).replace(/'/g,"&#39;")})'>
           <div class="relative h-44 sm:h-52 overflow-hidden">
-            <img src="${cover}" alt="${e.title||''}" class="w-full h-full object-cover" onerror="this.src='images/zglf-logo.jpg';this.classList.add('object-contain','p-8','bg-azure-50')">
+            <img src="${cover}" alt="${e.title||''}" class="w-full h-full object-cover" onerror="this.src='${img('images/zglf-logo.jpg')}';this.classList.add('object-contain','p-8','bg-azure-50')">
             <div class="absolute inset-0 bg-gradient-to-t from-azure-950/80 via-azure-950/10 to-transparent"></div>
             <div class="absolute top-3 sm:top-4 left-3 sm:left-4">${statusBadge(e.status)}</div>
             <div class="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 right-3 sm:right-4 flex items-center justify-between gap-2 text-white">
@@ -1127,7 +1148,7 @@
           if(p.title)c.title=p.title;
           if(p.short_desc)c.short=p.short_desc;
           if(p.full_desc)c.full=p.full_desc;
-          if(p.cover)c.img=p.cover;
+          if(p.cover)c.img=uimg(p.cover);
           if(p.tag)c.tag=p.tag;
         }
       });
@@ -1140,18 +1161,38 @@
         let c=CONST.nec.find(x=>x.role===n.position);
         if(!c)c=CONST.nec.find(x=>(n.position||'').toLowerCase().indexOf(x.role.toLowerCase().replace(/\s*\/.*$/,''))>=0);
         if(c){
-          if(n.photo)c.img=n.photo;
+          if(n.photo)c.img=uimg(n.photo);
           if(n.name)c.name=n.name;
         }
       });
     }
     function patchHeroSlides(slides){
       if(!slides||!slides.length)return;
-      CONST.heroImgs=slides.map(s=>s.url).filter(Boolean);
+      const urls=slides.map(s=>uimg(s.url)).filter(Boolean);
+      if(!urls.length)return;
+      CONST.heroImgs=urls;
+      // Re-render hero slideshow in place without full page re-render
+      const heroWrap=document.querySelector('.hero-photo')?.parentNode;
+      if(heroWrap){
+        // Rebuild hero-photo divs + dots
+        const existing=heroWrap.querySelectorAll('.hero-photo');
+        existing.forEach(el=>el.remove());
+        const dotsHost=heroWrap.querySelector('.carousel-dot')?.parentNode;
+        if(dotsHost){const ds=dotsHost.querySelectorAll('.carousel-dot');ds.forEach(d=>d.remove());}
+        const gradient=heroWrap.querySelector('.absolute.inset-0');
+        urls.forEach((u,i)=>{
+          const d=document.createElement('div');
+          d.className='hero-photo'+(i===0?' active':'');
+          d.style.backgroundImage="url('"+u+"')";
+          if(gradient)heroWrap.insertBefore(d,gradient);else heroWrap.appendChild(d);
+        });
+        // Restart carousel with new slides
+        startHeroCarousel();
+      }
     }
     async function sync(){
       try{
-        const r=await fetch(apiBase()+'content',{cache:'no-store'});
+        const r=await fetch(apiBase()+'content?ts='+Date.now(),{cache:'no-store',headers:{'Cache-Control':'no-cache'}});
         if(!r.ok)return;
         const d=await r.json();
         if(d.programs)patchPrograms(d.programs);
@@ -1163,12 +1204,12 @@
         if(d.stats)updateCounters(d.stats);
         // Donation page: bank accounts + Paystack button
         window.showEventModal=function(e){
-          const cover=(e.featured_image?(e.featured_image.startsWith('/')?e.featured_image:'/'+e.featured_image):(e.media&&e.media[0]?e.media[0].url:'images/zglf-logo.jpg'));
+          const cover=img(e.featured_image||(e.media&&e.media[0]&&e.media[0].url)||'images/zglf-logo.jpg');
           const ov=document.createElement('div');
           ov.className='fixed inset-0 bg-azure-950/80 z-[100] flex items-center justify-center p-4 overflow-y-auto';
           ov.innerHTML=`<div class="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full my-8 overflow-hidden shadow-2xl">
             <div class="relative h-64 sm:h-80 overflow-hidden">
-              <img src="${cover}" class="w-full h-full object-cover" onerror="this.src='images/zglf-logo.jpg'">
+              <img src="${cover}" class="w-full h-full object-cover" onerror="this.src='${img('images/zglf-logo.jpg')}'">
               <div class="absolute inset-0 bg-gradient-to-t from-azure-950/80 to-transparent"></div>
               <button onclick="this.closest('.fixed').remove()" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur text-white hover:bg-white/30 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
               <div class="absolute bottom-4 left-4 right-4 text-white">
@@ -1213,11 +1254,9 @@
           const fa=document.getElementById('footerAbout');if(fa&&ft)fa.innerHTML=ft;
           const fcc=document.getElementById('footerCopy');if(fcc&&fc)fcc.textContent=fc;
         }
-        // Re-render current route so program detail pages use fresh CONST
-        const rt=(location.hash||'#/').replace('#','');
-        if(rt.startsWith('/program/')||rt==='/programs'||rt==='/about'){
-          setTimeout(render,100);
-        }
+        // Update visible hero, programs, NEC sections immediately (without full re-render)
+        // Re-render current route so all pages reflect latest data
+        setTimeout(render,50);
       }catch(err){/* offline / first load — static content still displays */}
     }
     // Sync after initial render
