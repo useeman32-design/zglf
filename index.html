@@ -10,7 +10,7 @@
   <title>Zee Glow Link Foundation — Hope · Empowerment · Service</title>
   <script>
   (function(){
-    const B='f374753';
+    const B='b37fa9e';
     if(localStorage.getItem('zglf_pub_build')!==B){localStorage.setItem('zglf_pub_build',B);setTimeout(()=>location.reload(true),30);}
   })();
   </script>
@@ -478,15 +478,15 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 py-24 sm:py-28 lg:py-32 relative z-10 w-full">
         <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div>
-            <h1 class="font-serif font-bold text-white leading-[1.08] mb-4 sm:mb-6 hero-text-shadow" style="font-size:clamp(2rem,7vw,4.5rem)">
+            <h1 id="heroHeadline" class="font-serif font-bold text-white leading-[1.08] mb-4 sm:mb-6 hero-text-shadow" style="font-size:clamp(2rem,7vw,4.5rem)">
               Spreading <span class="gold-text italic">hope</span>,<br>
               empowering <span class="gold-text italic">communities</span>,<br>
               delivering <span class="gold-text italic">service</span>.
             </h1>
-            <p class="text-base sm:text-lg md:text-xl text-white/90 leading-relaxed mb-3 sm:mb-4 italic font-serif hero-text-shadow-sm">
+            <p id="heroVisionQuote" class="text-base sm:text-lg md:text-xl text-white/90 leading-relaxed mb-3 sm:mb-4 italic font-serif hero-text-shadow-sm">
               "${CONST.vision}"
             </p>
-            <p class="text-white/85 leading-relaxed mb-7 sm:mb-10 max-w-xl hero-text-shadow-sm text-sm sm:text-base">
+            <p id="heroBody" class="text-white/85 leading-relaxed mb-7 sm:mb-10 max-w-xl hero-text-shadow-sm text-sm sm:text-base">
               ${CONST.name} (${CONST.abbr}) is a civil welfare organisation dedicated to youth empowerment, community development, education, and humanitarian service across Nigeria and beyond.
             </p>
             <div class="flex flex-col sm:flex-row flex-wrap gap-3">
@@ -1206,9 +1206,28 @@
         const r=await fetch(apiBase()+'content?ts='+Date.now(),{cache:'no-store',headers:{'Cache-Control':'no-cache'}});
         if(!r.ok)return;
         const d=await r.json();
+        // Update CONST from live data so re-render picks up changes
+        if(d.hero&&d.hero.text){
+          CONST.heroHeadline=d.hero.text.headline||CONST.heroHeadline;
+          CONST.heroSubhead=d.hero.text.subhead||CONST.heroSubhead;
+          CONST.vision=d.hero.text.visionquote||CONST.vision;
+          CONST.heroBody=d.hero.text.body||CONST.heroBody;
+        }
+        if(d.site){
+          CONST.name=d.site.orgName||d.site.name||CONST.name;
+          CONST.shortName=d.site.shortName||CONST.abbr;
+          if(d.site.motto)CONST.motto=d.site.motto;
+          if(d.site.tagline)CONST.tagline=d.site.tagline;
+          if(d.site.vision)CONST.vision=d.site.vision;
+          if(d.site.mission)CONST.mission=d.site.mission;
+          if(d.site.address)CONST.hq=d.site.address;
+          if(d.site.email)CONST.email=d.site.email;
+          if(d.site.phone)CONST.phone=d.site.phone;
+        }
         if(d.programs)patchPrograms(d.programs);
         if(d.nec)patchNec(d.nec);
         if(d.hero&&d.hero.slides)patchHeroSlides(d.hero.slides);
+        if(window.DEBUG_ZGLF)console.log('[ZGLF sync] got data:',d);
         // Render events immediately (they live in DOM after page render)
         if(d.events)renderEvents(d.events);
         // Animate counters with live stats
@@ -1257,6 +1276,30 @@
               pb.innerHTML='<i class="fa-solid fa-lock"></i> Coming Soon';
             }
           }
+        }
+        // Hero text (live updates from admin)
+        if(d.hero&&d.hero.text){
+          const t=d.hero.text;
+          const hl=document.getElementById('heroHeadline');
+          if(hl&&t.headline)hl.innerHTML=t.headline;
+          const vq=document.getElementById('heroVisionQuote');
+          if(vq&&t.visionquote)vq.innerHTML='"'+t.visionquote+'"';
+          const hb=document.getElementById('heroBody');
+          if(hb&&t.body)hb.innerHTML=t.body;
+        }
+        // Site/org info (About page, contact)
+        if(d.site){
+          CONST.orgName=d.site.orgName||CONST.name;
+          if(d.site.vision)CONST.vision=d.site.vision;
+          if(d.site.mission)CONST.mission=d.site.mission;
+          if(d.site.address)CONST.hq=d.site.address;
+          if(d.site.email)CONST.email=d.site.email;
+          if(d.site.phone)CONST.phone=d.site.phone;
+          // Update visible About text blocks
+          const abt=document.getElementById('aboutBody');if(abt&&d.site.about_body)abt.innerHTML=d.site.about_body;
+          const abtTitle=document.getElementById('aboutTitle');if(abtTitle&&d.site.about_title)abtTitle.innerHTML=d.site.about_title;
+          const visionEls=document.querySelectorAll('[data-field="vision"]');visionEls.forEach(el=>{if(d.site.vision)el.innerHTML=d.site.vision;});
+          const missionEls=document.querySelectorAll('[data-field="mission"]');missionEls.forEach(el=>{if(d.site.mission)el.innerHTML=d.site.mission;});
         }
         // Footer
         if(d.footer||d.site){
