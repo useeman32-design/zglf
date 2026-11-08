@@ -1,16 +1,15 @@
 /* ============================================================
    ZGLF Admin — connects to PHP backend at /api/
 ============================================================ */
-/* From admin/ page, ../ goes to the site root (whether that's / or /zglf/).
+/* From admin/ page, ../ goes to the site root (works for /admin/ AND /zglf/admin/).
    Use relative paths everywhere so we don't need to detect install folder. */
 const REL='../';
 const API=REL+'api/';
 function resolveAsset(url){
   if(!url)return '';
   if(url.startsWith('http://')||url.startsWith('https://')||url.startsWith('data:'))return url;
-  // already relative ../
   if(url.startsWith('../'))return url;
-  // strip leading slash to avoid server-root absolute
+  // DB seeded values look like 'images/x.jpg' or '/uploads/...' — resolve to ../
   url=url.replace(/^\/+/,'');
   return REL+url;
 }

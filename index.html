@@ -3,8 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <link rel="icon" type="image/jpeg" href="images/zglf-logo.jpg">
   <title>Zee Glow Link Foundation — Hope · Empowerment · Service</title>
+  <script>
+  (function(){
+    const B='b3e02f6';
+    if(localStorage.getItem('zglf_pub_build')!==B){localStorage.setItem('zglf_pub_build',B);setTimeout(()=>location.reload(true),30);}
+  })();
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -251,10 +260,16 @@
 
   <script>
   /* ============ URL helper (subfolder-safe) ============ */
+  function _siteBase(){
+    const segs=window.location.pathname.replace(/^\//,'').replace(/\/$/,'').split('/').filter(Boolean);
+    if(segs.length && segs[segs.length-1].indexOf('.')>=0)segs.pop();
+    while(segs.length && ['admin','api','uploads','images'].includes(segs[segs.length-1]))segs.pop();
+    return segs.length?'/'+segs.join('/'):'';
+  }
   function uimg(u){
     if(!u)return '';
     if(u.startsWith('http://')||u.startsWith('https://')||u.startsWith('data:'))return u;
-    const base=window.location.pathname.replace(/\/$/,'').replace(/\/[^/]*$/,'');
+    const base=_siteBase();
     if(u.startsWith('/'))return base+u;
     return base+'/'+u.replace(/^\.\//,'');
   }
@@ -1073,16 +1088,12 @@
 
   /* === Live data sync: pull content from PHP backend after render === */
   (function(){
-    function siteBase(){
-      // /zglf/index.html → /zglf ;  /index.html → ''
-      return window.location.pathname.replace(/\/$/,'').replace(/\/[^/]*$/,'');
-    }
+    function siteBase(){return _siteBase();}
     function apiBase(){ return siteBase()+'/api/'; }
     function img(u){
       if(!u)return siteBase()+'/images/zglf-logo.jpg';
       if(u.startsWith('http://')||u.startsWith('https://')||u.startsWith('data:'))return u;
       if(u.startsWith('/'))return siteBase()+u;
-      // relative path — resolve against site base so it works in both root and subfolder
       return siteBase()+'/'+u.replace(/^\.\//,'');
     }
     window.__zglfImg=img;window.__zglfBase=siteBase;
