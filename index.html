@@ -281,6 +281,8 @@
     heroHeadline:'Spreading <span class="gold-text italic">hope</span>,<br>empowering <span class="gold-text italic">communities</span>,<br>delivering <span class="gold-text italic">service</span>.',
     heroSubhead:"Registered civil welfare organisation · Gusau, Zamfara State",
     heroBody:"",
+    heroCta1Text:"Support Our Mission",heroCta1Href:"#/donate",heroCta1Icon:"fa-arrow-right",
+    heroCta2Text:"Get Involved",heroCta2Href:"#/membership",heroCta2Icon:"fa-hand-holding-heart",
     mission:"To spread hope, empower communities and deliver selfless services with integrity and compassion.",
     hq:"Sabuwar Hanya, Tsamiyar Masaka Road, Tudun Wada, Gusau, Zamfara State, Nigeria",
     pillars:[
@@ -487,8 +489,8 @@
             </p>
             <p id="heroBody" class="text-white/85 leading-relaxed mb-7 sm:mb-10 max-w-xl hero-text-shadow-sm text-sm sm:text-base">${CONST.heroBody||(CONST.name+' ('+CONST.abbr+') is a civil welfare organisation dedicated to youth empowerment, community development, education, and humanitarian service across Nigeria and beyond.')}</p>
             <div class="flex flex-col sm:flex-row flex-wrap gap-3">
-              <a href="#/programs" class="btn-gold rounded-full font-bold text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4 justify-center"><i class="fa-solid fa-arrow-right"></i>Support Our Mission</a>
-              <a href="#/membership" class="btn-outline rounded-full font-semibold text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4 justify-center"><i class="fa-solid fa-hand-holding-heart text-sm"></i>Get Involved</a>
+              <a id="heroCta1" href="${CONST.heroCta1Href}" class="btn-gold rounded-full font-bold text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4 justify-center"><i class="fa-solid ${CONST.heroCta1Icon}"></i>${CONST.heroCta1Text}</a>
+              <a id="heroCta2" href="${CONST.heroCta2Href}" class="btn-outline rounded-full font-semibold text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4 justify-center"><i class="fa-solid ${CONST.heroCta2Icon} text-sm"></i>${CONST.heroCta2Text}</a>
             </div>
             <div class="mt-8 sm:mt-12 flex flex-wrap gap-2 sm:gap-3">
               <div class="glass hero-pill rounded-full px-4 sm:px-5 py-2.5 sm:py-2 text-white text-xs sm:text-sm font-medium flex items-center gap-2 hero-text-shadow-sm"><i class="fa-solid fa-sun text-gold-400"></i>Hope</div>
@@ -748,7 +750,7 @@
           <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-azure-950 leading-tight mb-3 sm:mb-4">National Executive Council</h2>
           <p class="text-azure-600 text-sm sm:text-lg max-w-2xl mx-auto">Democratically elected NEC with State Executive Councils. The National Delegate Conference is the supreme authority. Office tenure is four (4) years, maximum two consecutive terms.</p>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5" data-nec-grid="1">
           ${CONST.nec.map(n=>`
             <div class="bg-cream rounded-2xl overflow-hidden card-hover border border-azure-100 reveal">
               <div class="aspect-square overflow-hidden relative">
@@ -934,7 +936,7 @@
             <h2 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-azure-950 mb-3 sm:mb-4">National Executive Council</h2>
             <p class="text-azure-600 text-sm sm:text-lg max-w-2xl mx-auto">Democratically elected · Four year tenure · Maximum two consecutive terms · National Delegate Conference is the supreme authority.</p>
           </div>
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5" data-nec-grid="1">
             ${CONST.nec.map(n=>`<div class="bg-cream rounded-2xl overflow-hidden card-hover border border-azure-100 reveal"><div class="aspect-square overflow-hidden relative"><img src="${n.img}" alt="${n.role}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-azure-950/50 to-transparent"></div><div class="absolute top-3 right-3 w-10 h-10 rounded-full bg-gradient-to-br ${n.gradient} flex items-center justify-center shadow-lg"><i class="fa-solid ${n.icon} text-white text-sm"></i></div></div><div class="p-4 sm:p-5 text-center"><h5 class="font-bold text-azure-950 text-sm sm:text-base">${n.role}</h5><p class="text-azure-500 text-[10px] sm:text-xs mt-1 leading-relaxed">${n.duty}</p></div></div>`).join('')}
           </div>
           <div class="mt-8 sm:mt-10 bg-azure-50 border border-azure-200 rounded-2xl p-5 sm:p-8 reveal">
@@ -1163,15 +1165,30 @@
     }
     function patchNec(nec){
       if(!nec||!nec.length)return;
+      // Reset non-constitutional extras so re-sync doesn't duplicate
+      CONST._extraNec=[];
       nec.forEach(n=>{
         const rt=(n.role_title||'').toLowerCase();
-        // Match by exact role_title then fuzzy contains
         let c=CONST.nec.find(x=>x.role.toLowerCase()===rt);
-        if(!c)c=CONST.nec.find(x=>rt.indexOf(x.role.toLowerCase().replace(/\s*\/.*$/,''))>=0||x.role.toLowerCase().indexOf(rt.replace(/\s*\/.*$/,''))>=0);
+        if(!c)c=CONST.nec.find(x=>x.role.toLowerCase().replace(/\s*\/.*$/,'').includes(rt.replace(/\s*\/.*$/,''))||rt.includes(x.role.toLowerCase().replace(/\s*\/.*$/,'')));
         if(c){
           if(n.photo)c.img=uimg(n.photo);
           if(n.name)c.name=n.name;
+          if(n.duty)c.duty=n.duty;
+          if(n.gradient)c.gradient=n.gradient;
+          if(n.icon)c.icon=n.icon;
+          c.published=+n.published!==0;
+        }else{
+          // New extra role — add to list (if published)
+          if(+n.published!==0){
+            CONST._extraNec.push({role:n.role_title,name:n.name||'',img:uimg(n.photo)||'images/default-avatar.jpg',gradient:n.gradient||'from-gold-500 to-gold-700',icon:n.icon||'fa-user-tie',duty:n.duty||''});
+          }
         }
+      });
+      // Rebuild NEC grids on current page if they exist
+      const allNec=[...CONST.nec.filter(n=>n.published!==false),...(CONST._extraNec||[])];
+      document.querySelectorAll('[data-nec-grid]').forEach(g=>{
+        g.innerHTML=allNec.map(n=>`<div class="bg-cream rounded-2xl overflow-hidden card-hover border border-azure-100 reveal"><div class="aspect-square overflow-hidden relative"><img src="${n.img}" alt="${n.role}" class="w-full h-full object-cover" onerror="this.src='images/default-avatar.jpg'"><div class="absolute inset-0 bg-gradient-to-t from-azure-950/50 to-transparent"></div><div class="absolute top-3 right-3 w-10 h-10 rounded-full bg-gradient-to-br ${n.gradient} flex items-center justify-center shadow-lg"><i class="fa-solid ${n.icon} text-white text-sm"></i></div></div><div class="p-4 sm:p-5 text-center"><h5 class="font-bold text-azure-950 text-sm sm:text-base">${n.role}</h5>${n.name?`<p class="text-azure-700 font-semibold text-xs sm:text-sm mt-0.5">${n.name}</p>`:''}<p class="text-azure-500 text-[10px] sm:text-xs mt-1 leading-relaxed">${n.duty||''}</p></div></div>`).join('');
       });
     }
     function patchHeroSlides(slides){
@@ -1262,6 +1279,10 @@
           if(t.subhead)CONST.heroSubhead=t.subhead;
           if(t.visionquote)CONST.vision=t.visionquote;
           if(t.body)CONST.heroBody=t.body;
+          if(t.ctaPrimary||t.cta1)CONST.heroCta1Text=t.ctaPrimary||t.cta1;
+          if(t.ctaPrimaryHref||t.cta1Href)CONST.heroCta1Href=t.ctaPrimaryHref||t.cta1Href;
+          if(t.ctaSecondary||t.cta2)CONST.heroCta2Text=t.ctaSecondary||t.cta2;
+          if(t.ctaSecondaryHref||t.cta2Href)CONST.heroCta2Href=t.ctaSecondaryHref||t.cta2Href;
         }
         if(d.site){
           if(d.site.orgName)CONST.name=d.site.orgName;
@@ -1282,6 +1303,20 @@
           const vq=document.getElementById('heroVisionQuote');if(vq&&t.visionquote)vq.innerHTML='"'+t.visionquote+'"';
           const hb=document.getElementById('heroBody');
           if(hb){const txt=t.body||(CONST.name+' ('+CONST.abbr+') is a civil welfare organisation dedicated to youth empowerment, community development, education, and humanitarian service across Nigeria and beyond.');if(hb.innerHTML!==txt)hb.innerHTML=txt;}
+          // CTA buttons
+          const cta1=document.getElementById('heroCta1');const cta2=document.getElementById('heroCta2');
+          if(cta1){
+            const txt=(t.ctaPrimary||t.cta1||CONST.heroCta1Text);
+            const href=(t.ctaPrimaryHref||t.cta1Href||CONST.heroCta1Href);
+            const icon=(t.ctaPrimaryIcon||t.cta1Icon||CONST.heroCta1Icon);
+            cta1.href=href;cta1.innerHTML=`<i class="fa-solid ${icon}"></i>${txt}`;
+          }
+          if(cta2){
+            const txt=(t.ctaSecondary||t.cta2||CONST.heroCta2Text);
+            const href=(t.ctaSecondaryHref||t.cta2Href||CONST.heroCta2Href);
+            const icon=(t.ctaSecondaryIcon||t.cta2Icon||CONST.heroCta2Icon);
+            cta2.href=href;cta2.innerHTML=`<i class="fa-solid ${icon} text-sm"></i>${txt}`;
+          }
         }
         // BANK LIST
         const bw=document.getElementById('bankListWrap');

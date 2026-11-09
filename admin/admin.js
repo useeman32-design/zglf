@@ -48,8 +48,11 @@ async function api(endpoint,opts={}){
   if(TOKEN)o.headers['Authorization']='Bearer '+TOKEN;
   if(opts.body)o.body=typeof opts.body==='string'?opts.body:JSON.stringify(opts.body);
   if(opts.form){
-    const fd=new FormData();
-    for(const k in opts.form)if(opts.form[k]!==null&&opts.form[k]!==undefined)fd.append(k,opts.form[k]);
+    let fd=opts.form;
+    if(!(fd instanceof FormData)){
+      fd=new FormData();
+      for(const k in opts.form)if(opts.form[k]!==null&&opts.form[k]!==undefined)fd.append(k,opts.form[k]);
+    }
     delete o.headers['Content-Type'];o.body=fd;o.method='POST';
   }
   const r=await fetch(API+endpoint,o);
@@ -328,12 +331,14 @@ async function renderHero(){
     <div class="card"><div class="card-header"><h3><i class="fa-solid fa-pen-to-square"></i>Hero Text & CTAs</h3></div>
     <div class="card-body">
       <div class="form-grid">
-        <div class="full"><label class="form-label">Headline <span class="req">*</span></label><textarea class="form-input" id="h-hl" rows="3">${esc(HERO.text.headline)}</textarea><p class="form-help">Use &lt;em&gt;word&lt;/em&gt; to highlight words in gold italics.</p></div>
+        <div class="full"><label class="form-label">Headline <span class="req">*</span></label><textarea class="form-input" id="h-hl" rows="3">${esc(HERO.text.headline)}</textarea><p class="form-help">Wrap words with <code>&lt;span class="gold-text italic"&gt;word&lt;/span&gt;</code> for gold highlight.</p></div>
         <div class="full"><label class="form-label">Top badge</label><input class="form-input" id="h-sub" value="${esc(HERO.text.subhead)}"></div>
         <div class="full"><label class="form-label">Vision quote</label><textarea class="form-input" id="h-vq" rows="2">${esc(HERO.text.visionquote)}</textarea></div>
         <div class="full"><label class="form-label">Body paragraph</label><textarea class="form-input" id="h-bd" rows="3">${esc(HERO.text.body)}</textarea></div>
-        <div><label class="form-label">Primary button</label><input class="form-input" id="h-c1" value="${esc(HERO.text.ctaPrimary)}"></div>
-        <div><label class="form-label">Secondary button</label><input class="form-input" id="h-c2" value="${esc(HERO.text.ctaSecondary)}"></div>
+        <div><label class="form-label">Primary button text</label><input class="form-input" id="h-c1" value="${esc(HERO.text.cta1||'Support Our Mission')}"></div>
+        <div><label class="form-label">Primary button link</label><input class="form-input" id="h-c1h" value="${esc(HERO.text.cta1_href||'#/donate')}" placeholder="#/donate or https://..."></div>
+        <div><label class="form-label">Secondary button text</label><input class="form-input" id="h-c2" value="${esc(HERO.text.cta2||'Get Involved')}"></div>
+        <div><label class="form-label">Secondary button link</label><input class="form-input" id="h-c2h" value="${esc(HERO.text.cta2_href||'#/membership')}" placeholder="#/membership or https://..."></div>
       </div>
       <div style="margin-top:18px;display:flex;justify-content:flex-end"><button class="btn btn-primary" style="width:auto" onclick="saveHeroText()"><i class="fa-solid fa-save"></i>Save Text</button></div>
     </div></div>
@@ -361,7 +366,7 @@ function renderSlides(){
       </div></div>`;}).join('');
 }
 async function saveHeroText(){
-  await api('hero',{body:{headline:$('#h-hl').value,subhead:$('#h-sub').value,visionquote:$('#h-vq').value,body:$('#h-bd').value,cta1:$('#h-c1').value,cta2:$('#h-c2').value},method:'POST'});
+  await api('hero',{body:{headline:$('#h-hl').value,subhead:$('#h-sub').value,visionquote:$('#h-vq').value,body:$('#h-bd').value,cta1:$('#h-c1').value,cta2:$('#h-c2').value,cta1_href:$('#h-c1h').value,cta2_href:$('#h-c2h').value},method:'POST'});
   toast('Hero text saved.');HERO=await api('hero');
 }
 function openSlideModal(id){
@@ -378,9 +383,9 @@ async function saveSlide(id){
   let m=getMediaVal('sl');
   if(m&&m._file){const up=await api('media',{form:{file:m._file,subdir:'images',category:'Hero',title:'Hero slide'}});m={type:up.media.type,url:up.media.url};}
   if(!m){toast('Add an image or video','error');return;}
-  const alt=$('#sl-alt').value,cap=$('#sl-cap').value;
-  if(id)await api('hero/slides/'+id,{body:{type:m.type,url:m.url,alt,caption},method:'PUT'});
-  else await api('hero/slides',{body:{type:m.type,url:m.url,alt,caption},method:'POST'});
+  const alt=$('#sl-alt').value;const cap=$('#sl-cap').value;
+  if(id)await api('hero/slides/'+id,{body:{type:m.type,url:m.url,alt:alt,caption:cap},method:'PUT'});
+  else await api('hero/slides',{body:{type:m.type,url:m.url,alt:alt,caption:cap},method:'POST'});
   toast(id?'Slide updated':'Slide added');closeModal();HERO=await api('hero');renderSlides();
 }
 async function moveSlide(i,dir){const s=HERO.slides[i];await api('hero/'+s.id+'/move',{body:{dir},method:'PUT'});HERO=await api('hero');renderSlides();}
@@ -869,14 +874,10 @@ function makeIconPicker(input){
 async function _doUpload(file,subdir){
   if(!file)throw new Error('No file selected');
   const fd=new FormData();fd.append('file',file);fd.append('subdir',subdir||'images');
-  console.log('[ZGLF upload] uploading',file.name,file.type,file.size,'bytes to',API+'upload');
-  const r=await fetch(API+'upload',{method:'POST',headers:TOKEN?{'Authorization':'Bearer '+TOKEN}:{},body:fd});
-  const ct=r.headers.get('content-type')||'';
-  let data;
-  if(ct.includes('application/json'))data=await r.json();else data={error:'Server returned '+r.status+' '+r.statusText};
-  if(!r.ok){console.error('[ZGLF upload] server error',r.status,data);throw new Error(data.error||('Upload failed ('+r.status+')'));}
-  if(!data.media)throw new Error('Upload succeeded but no media returned');
-  return data.media;
+  console.log('[ZGLF upload] uploading',file.name,file.type,file.size,'bytes to upload endpoint');
+  const r=await api('upload',{form:fd});
+  if(!r.media)throw new Error('Upload succeeded but no media returned (server said: '+JSON.stringify(r).slice(0,100)+')');
+  return r.media;
 }
 
 /* Wrap the original handleMediaUpload to use direct /upload */
@@ -1000,12 +1001,7 @@ renderHero=async function(){
     const help=document.querySelector('p.form-help');if(help&&help.innerHTML.includes('&lt;em&gt;'))help.remove();
   },60);
 };
-const _origSaveHero=saveHeroText;
-saveHeroText=async function(){
-  syncWysiwyg(document.getElementById('h-bd'));
-  await api('hero',{body:{headline:document.getElementById('h-hl').value,subhead:document.getElementById('h-sub').value,visionquote:document.getElementById('h-vq').value,body:document.getElementById('h-bd').value,cta1:document.getElementById('h-c1').value,cta2:document.getElementById('h-c2').value},method:'POST'});
-  toast('Hero text saved.');HERO=await api('hero');
-};
+// saveHeroText already defined above with cta hrefs — no override needed.
 
 /* Site page WYSIWYG on vision/mission */
 const _origRenderSite=renderSite;

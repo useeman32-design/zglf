@@ -47,7 +47,7 @@ if($resource==='public'){
 
 if($resource==='content'&&$method==='GET'){
   $out=['site'=>settings_all()];
-  $out['hero']=['headline'=>setting('hero_headline'),'subhead'=>setting('hero_subhead'),'visionquote'=>setting('hero_visionquote'),'body'=>setting('hero_body'),'ctaPrimary'=>setting('hero_cta1'),'ctaSecondary'=>setting('hero_cta2'),'slides'=>$db->query("SELECT id,type,url,alt_text as alt,caption FROM hero_slides ORDER BY position ASC")->fetchAll()];
+  $out['hero']=['headline'=>setting('hero_headline'),'subhead'=>setting('hero_subhead'),'visionquote'=>setting('hero_visionquote'),'body'=>setting('hero_body'),'ctaPrimary'=>setting('hero_cta1','Support Our Mission'),'ctaSecondary'=>setting('hero_cta2','Get Involved'),'ctaPrimaryHref'=>setting('hero_cta1_href','#/donate'),'ctaSecondaryHref'=>setting('hero_cta2_href','#/membership'),'ctaPrimaryIcon'=>setting('hero_cta1_icon','fa-arrow-right'),'ctaSecondaryIcon'=>setting('hero_cta2_icon','fa-hand-holding-heart'),'slides'=>$db->query("SELECT id,type,url,alt_text as alt,caption FROM hero_slides ORDER BY position ASC")->fetchAll()];
   $out['programs']=$db->query("SELECT * FROM programs WHERE published=1 ORDER BY id ASC")->fetchAll();
   foreach($out['programs'] as &$p)$p['published']=(bool)$p['published'];
   $events=$db->query("SELECT * FROM events ORDER BY event_date ASC")->fetchAll();
@@ -141,12 +141,12 @@ if($resource==='site'&&$id==='homepage'&&$method==='GET'){json(settings_all());}
 if($resource==='hero'){
   require_perm('hero');
   if($method==='GET'){
-    $text=['headline'=>setting('hero_headline'),'subhead'=>setting('hero_subhead'),'visionquote'=>setting('hero_visionquote'),'body'=>setting('hero_body'),'cta1'=>setting('hero_cta1','Support Our Mission'),'cta2'=>setting('hero_cta2','Join us')];
+    $text=['headline'=>setting('hero_headline'),'subhead'=>setting('hero_subhead'),'visionquote'=>setting('hero_visionquote'),'body'=>setting('hero_body'),'cta1'=>setting('hero_cta1','Support Our Mission'),'cta2'=>setting('hero_cta2','Get Involved'),'cta1_href'=>setting('hero_cta1_href','#/donate'),'cta2_href'=>setting('hero_cta2_href','#/membership'),'cta1_icon'=>setting('hero_cta1_icon','fa-arrow-right'),'cta2_icon'=>setting('hero_cta2_icon','fa-hand-holding-heart')];
     $slides=$db->query("SELECT * FROM hero_slides ORDER BY position ASC")->fetchAll();
     json(['text'=>$text,'slides'=>$slides]);
   }
   if($method==='POST'){
-    foreach(['headline','subhead','visionquote','body','cta1','cta2'] as $k){if(isset($body[$k])){save_setting('hero_'.$k,$body[$k]);}}
+    foreach(['headline','subhead','visionquote','body','cta1','cta2','cta1_href','cta2_href','cta1_icon','cta2_icon'] as $k){if(isset($body[$k])){save_setting('hero_'.$k,$body[$k]);}}
     log_action('hero_edit','Updated hero text');json(['ok'=>1]);
   }
   if($id==='slides'&&$method==='POST'){
