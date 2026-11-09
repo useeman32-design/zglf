@@ -1208,25 +1208,6 @@
         if(d.hero&&d.hero.slides)patchHeroSlides(d.hero.slides);
         if(d.programs)patchPrograms(d.programs);
         if(d.nec)patchNec(d.nec);
-        // Update CONST cache (for when user navigates between routes later)
-        if(d.hero&&d.hero.text){
-          const t=d.hero.text;
-          if(t.headline)CONST.heroHeadline=t.headline;
-          if(t.subhead)CONST.heroSubhead=t.subhead;
-          if(t.visionquote)CONST.vision=t.visionquote;
-          if(t.body)CONST.heroBody=t.body;
-        }
-        if(d.site){
-          if(d.site.orgName)CONST.name=d.site.orgName;
-          if(d.site.shortName)CONST.abbr=d.site.shortName;
-          if(d.site.motto)CONST.motto=d.site.motto;
-          if(d.site.tagline)CONST.tagline=d.site.tagline;
-          if(d.site.vision)CONST.vision=d.site.vision;
-          if(d.site.mission)CONST.mission=d.site.mission;
-          if(d.site.address)CONST.hq=d.site.address;
-          if(d.site.email)CONST.email=d.site.email;
-          if(d.site.phone)CONST.phone=d.site.phone;
-        }
         // Event modal (re-define fresh)
         window.showEventModal=function(e){
           const cover=img(e.featured_image||(e.media&&e.media[0]&&e.media[0].url)||'images/zglf-logo.jpg');
@@ -1275,8 +1256,8 @@
           }
         }
         // Update CONST cache (for when user navigates between routes later)
-        if(d.hero&&d.hero.text){
-          const t=d.hero.text;
+        if(d.hero){
+          const t=d.hero.text||d.hero;
           if(t.headline)CONST.heroHeadline=t.headline;
           if(t.subhead)CONST.heroSubhead=t.subhead;
           if(t.visionquote)CONST.vision=t.visionquote;
@@ -1295,8 +1276,8 @@
         }
         // ---- Targeted DOM patches (NO full page re-render — no flash, no scroll jump) ----
         // HERO
-        if(d.hero&&d.hero.text){
-          const t=d.hero.text;
+        if(d.hero){
+          const t=d.hero.text||d.hero;
           const hl=document.getElementById('heroHeadline');if(hl&&t.headline)hl.innerHTML=t.headline;
           const vq=document.getElementById('heroVisionQuote');if(vq&&t.visionquote)vq.innerHTML='"'+t.visionquote+'"';
           const hb=document.getElementById('heroBody');

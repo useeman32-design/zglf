@@ -867,10 +867,16 @@ function makeIconPicker(input){
 
 /* ---- Fix media upload to use /api/upload directly AND show existing thumb ---- */
 async function _doUpload(file,subdir){
-  if(!file)return null;
+  if(!file)throw new Error('No file selected');
   const fd=new FormData();fd.append('file',file);fd.append('subdir',subdir||'images');
-  const r=await api('upload',{form:fd});
-  return r.media;
+  console.log('[ZGLF upload] uploading',file.name,file.type,file.size,'bytes to',API+'upload');
+  const r=await fetch(API+'upload',{method:'POST',headers:TOKEN?{'Authorization':'Bearer '+TOKEN}:{},body:fd});
+  const ct=r.headers.get('content-type')||'';
+  let data;
+  if(ct.includes('application/json'))data=await r.json();else data={error:'Server returned '+r.status+' '+r.statusText};
+  if(!r.ok){console.error('[ZGLF upload] server error',r.status,data);throw new Error(data.error||('Upload failed ('+r.status+')'));}
+  if(!data.media)throw new Error('Upload succeeded but no media returned');
+  return data.media;
 }
 
 /* Wrap the original handleMediaUpload to use direct /upload */
