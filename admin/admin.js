@@ -1,3 +1,4 @@
+const ZGLF_BUILD="FIXED-v3"; console.log("%c[ZGLF Admin] BUILD="+ZGLF_BUILD+" — if you don`t see FIXED-v3, hard refresh (Ctrl+Shift+R) until you do","color:#d4af37;font-weight:bold");
 /* ============================================================
    ZGLF Admin — connects to PHP backend at /api/
 ============================================================ */
