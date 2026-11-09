@@ -1203,16 +1203,22 @@
         const r=await fetch(apiBase()+'content?ts='+Date.now(),{cache:'no-store',headers:{'Cache-Control':'no-cache'}});
         if(!r.ok)return;
         const d=await r.json();
-        // Update CONST from live data so re-render picks up changes
+        if(window.DEBUG_ZGLF)console.log('[ZGLF sync] got data:',d);
+        // Slides (rebuild carousel)
+        if(d.hero&&d.hero.slides)patchHeroSlides(d.hero.slides);
+        if(d.programs)patchPrograms(d.programs);
+        if(d.nec)patchNec(d.nec);
+        // Update CONST cache (for when user navigates between routes later)
         if(d.hero&&d.hero.text){
-          CONST.heroHeadline=d.hero.text.headline||CONST.heroHeadline;
-          CONST.heroSubhead=d.hero.text.subhead||CONST.heroSubhead;
-          CONST.vision=d.hero.text.visionquote||CONST.vision;
-          CONST.heroBody=d.hero.text.body||CONST.heroBody;
+          const t=d.hero.text;
+          if(t.headline)CONST.heroHeadline=t.headline;
+          if(t.subhead)CONST.heroSubhead=t.subhead;
+          if(t.visionquote)CONST.vision=t.visionquote;
+          if(t.body)CONST.heroBody=t.body;
         }
         if(d.site){
-          CONST.name=d.site.orgName||d.site.name||CONST.name;
-          CONST.shortName=d.site.shortName||CONST.abbr;
+          if(d.site.orgName)CONST.name=d.site.orgName;
+          if(d.site.shortName)CONST.abbr=d.site.shortName;
           if(d.site.motto)CONST.motto=d.site.motto;
           if(d.site.tagline)CONST.tagline=d.site.tagline;
           if(d.site.vision)CONST.vision=d.site.vision;
@@ -1221,15 +1227,7 @@
           if(d.site.email)CONST.email=d.site.email;
           if(d.site.phone)CONST.phone=d.site.phone;
         }
-        if(d.programs)patchPrograms(d.programs);
-        if(d.nec)patchNec(d.nec);
-        if(d.hero&&d.hero.slides)patchHeroSlides(d.hero.slides);
-        if(window.DEBUG_ZGLF)console.log('[ZGLF sync] got data:',d);
-        // Render events immediately (they live in DOM after page render)
-        if(d.events)renderEvents(d.events);
-        // Animate counters with live stats
-        if(d.stats)updateCounters(d.stats);
-        // Donation page: bank accounts + Paystack button
+        // Event modal (re-define fresh)
         window.showEventModal=function(e){
           const cover=img(e.featured_image||(e.media&&e.media[0]&&e.media[0].url)||'images/zglf-logo.jpg');
           const ov=document.createElement('div');
@@ -1276,7 +1274,7 @@
             }
           }
         }
-        // Update CONST with live data FIRST (so render() uses new values)
+        // Update CONST cache (for when user navigates between routes later)
         if(d.hero&&d.hero.text){
           const t=d.hero.text;
           if(t.headline)CONST.heroHeadline=t.headline;
@@ -1295,43 +1293,44 @@
           if(d.site.email)CONST.email=d.site.email;
           if(d.site.phone)CONST.phone=d.site.phone;
         }
-        // Now re-render current route with fresh CONST (rebuilds entire DOM from new data)
-        render();
-        // After re-render, patch DOM elements that render() doesn't populate from CONST
-        setTimeout(()=>{
-          // Hero direct DOM patches (in case pages.home uses static text)
-          if(d.hero&&d.hero.text){
-            const t=d.hero.text;
-            const hl=document.getElementById('heroHeadline');if(hl&&t.headline)hl.innerHTML=t.headline;
-            const vq=document.getElementById('heroVisionQuote');if(vq&&t.visionquote)vq.innerHTML='"'+t.visionquote+'"';
-            const hb=document.getElementById('heroBody');if(hb){hb.innerHTML=t.body||CONST.heroBody||(CONST.name+' ('+CONST.abbr+') is a civil welfare organisation dedicated to youth empowerment, community development, education, and humanitarian service across Nigeria and beyond.');}
-            const hs=document.getElementById('heroSubhead');if(hs&&t.subhead)hs.innerHTML='<i class="fa-solid fa-circle-nodes text-gold-400 mr-2"></i>'+t.subhead;
-          }
-          // Bank list
-          const bw=document.getElementById('bankListWrap');
-          if(bw){
-            let banks=(d.donation&&d.donation.bankAccounts)||[];
-            if(typeof banks==='string'){try{banks=JSON.parse(banks)||[];}catch(e){banks=[];}}
-            bw.innerHTML=banks.length?`<div class="grid sm:grid-cols-2 gap-3 sm:gap-4">${banks.map(b=>`<div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 border-l-4 border-gold-500 border border-gold-200/50 shadow-sm"><div class="flex items-start gap-3"><i class="fa-solid fa-university text-gold-600 text-lg mt-1"></i><div class="flex-1"><div class="font-bold text-azure-950 text-sm sm:text-base">${b.bankName||''}</div><div class="font-mono text-lg sm:text-xl font-extrabold text-azure-700 tracking-wide my-1">${b.accountNumber||''}</div><div class="text-xs sm:text-sm text-azure-600">${b.accountName||'Zee Glow Link Foundation'}</div></div></div></div>`).join('')}`:'<p class="text-azure-400 text-sm italic text-center py-4">Bank accounts will appear here once added in the admin dashboard.</p>';
-          }
-          const dn=document.getElementById('donateNoteWrap');
-          if(dn&&d.donation&&d.donation.donationNote)dn.innerHTML=d.donation.donationNote;
-          // Footer
-          if(d.footer||d.site){
-            const ft=(d.footer&&d.footer.about)?d.footer.about:(d.site&&d.site.footerAbout);
-            const fc=(d.footer&&d.footer.copyright)?d.footer.copyright:(d.site&&d.site.footerCopyright);
-            const fa=document.getElementById('footerAbout');if(fa&&ft)fa.innerHTML=ft;
-            const fcc=document.getElementById('footerCopy');if(fcc&&fc)fcc.textContent=fc;
-          }
-        },60);
+        // ---- Targeted DOM patches (NO full page re-render — no flash, no scroll jump) ----
+        // HERO
+        if(d.hero&&d.hero.text){
+          const t=d.hero.text;
+          const hl=document.getElementById('heroHeadline');if(hl&&t.headline)hl.innerHTML=t.headline;
+          const vq=document.getElementById('heroVisionQuote');if(vq&&t.visionquote)vq.innerHTML='"'+t.visionquote+'"';
+          const hb=document.getElementById('heroBody');
+          if(hb){const txt=t.body||(CONST.name+' ('+CONST.abbr+') is a civil welfare organisation dedicated to youth empowerment, community development, education, and humanitarian service across Nigeria and beyond.');if(hb.innerHTML!==txt)hb.innerHTML=txt;}
+        }
+        // BANK LIST
+        const bw=document.getElementById('bankListWrap');
+        if(bw){
+          let banks=(d.donation&&d.donation.bankAccounts)||[];
+          if(typeof banks==='string'){try{banks=JSON.parse(banks)||[];}catch(e){banks=[];}}
+          const html=banks.length?`<div class="grid sm:grid-cols-2 gap-3 sm:gap-4">${banks.map(b=>`<div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 border-l-4 border-gold-500 border border-gold-200/50 shadow-sm"><div class="flex items-start gap-3"><i class="fa-solid fa-university text-gold-600 text-lg mt-1"></i><div class="flex-1"><div class="font-bold text-azure-950 text-sm sm:text-base">${b.bankName||''}</div><div class="font-mono text-lg sm:text-xl font-extrabold text-azure-700 tracking-wide my-1">${b.accountNumber||''}</div><div class="text-xs sm:text-sm text-azure-600">${b.accountName||'Zee Glow Link Foundation'}</div></div></div></div>`).join('')}</div>`:'<p class="text-azure-400 text-sm italic text-center py-4">Bank accounts will appear here once added in the admin dashboard.</p>';
+          if(bw.innerHTML!==html)bw.innerHTML=html;
+        }
+        const dn=document.getElementById('donateNoteWrap');
+        if(dn&&d.donation&&d.donation.donationNote){if(dn.innerHTML!==d.donation.donationNote)dn.innerHTML=d.donation.donationNote;}
+        // FOOTER
+        if(d.footer||d.site){
+          const ft=(d.footer&&d.footer.about)?d.footer.about:(d.site&&d.site.footerAbout);
+          const fc=(d.footer&&d.footer.copyright)?d.footer.copyright:(d.site&&d.site.footerCopyright);
+          const fa=document.getElementById('footerAbout');if(fa&&ft&&fa.innerHTML!==ft)fa.innerHTML=ft;
+          const fcc=document.getElementById('footerCopy');if(fcc&&fc&&fcc.textContent!==fc)fcc.textContent=fc;
+        }
+        // EVENTS list
+        if(d.events){
+          const grid=document.getElementById('events-grid');
+          if(grid&&typeof renderEvents==='function')renderEvents(d.events);
+        }
       }catch(err){console.error('Sync error:',err);}
     }
-    // Auto-refresh content every 5 seconds so admin edits show immediately
-    function startAutoSync(){setInterval(sync,5000);}
-    // Sync after initial render, then start polling
+    // Sync every 5 seconds (targeted patches only — no full page rebuild, no flash)
+    let __syncTimer=null;
+    function startAutoSync(){if(__syncTimer)clearInterval(__syncTimer);__syncTimer=setInterval(sync,5000);}
     window.addEventListener('load',()=>{setTimeout(()=>{sync();startAutoSync();},400);});
-    // Also re-sync when user navigates to a new route (hash change)
-    window.addEventListener('hashchange',()=>{setTimeout(sync,100);});
+    window.addEventListener('hashchange',()=>{setTimeout(()=>{sync();},100);});
   })();
   </script>
   <style>.coming-soon-btn{display:inline-block;padding:8px 18px;border-radius:50px;background:linear-gradient(135deg,#94a3b8,#cbd5e1);color:#fff;font-weight:700;font-size:12px;cursor:not-allowed;border:none}.cs-btn{padding:10px 22px;border-radius:50px;background:linear-gradient(135deg,#94a3b8,#cbd5e1);color:#fff;font-weight:600;cursor:not-allowed;border:none;font-size:13px;display:inline-flex;align-items:center;gap:6px}</style>
