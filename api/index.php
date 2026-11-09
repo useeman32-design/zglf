@@ -1,4 +1,9 @@
 <?php
+// Increase upload limits for large photos (e.g. 7MB logos)
+@ini_set('upload_max_filesize','25M');
+@ini_set('post_max_size','26M');
+@ini_set('memory_limit','256M');
+@ini_set('max_execution_time','60');
 require_once __DIR__.'/config.php';
 $db=db();
 

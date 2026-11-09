@@ -215,10 +215,10 @@
           <p class="text-sm italic text-gold-400/80 mb-2 font-serif">"Hope · Empowerment · Service"</p>
           <p class="text-sm leading-relaxed mb-4" id="footerAbout">Spreading hope, empowering communities, delivering selfless service with integrity.</p>
           <div class="flex gap-2">
-            <a href="#" class="w-9 h-9 rounded-full bg-white/5 hover:bg-gold-400/20 hover:text-gold-400 flex items-center justify-center transition"><i class="fa-brands fa-facebook-f text-sm"></i></a>
-            <a href="#" class="w-9 h-9 rounded-full bg-white/5 hover:bg-gold-400/20 hover:text-gold-400 flex items-center justify-center transition"><i class="fa-brands fa-x-twitter text-sm"></i></a>
-            <a href="#" class="w-9 h-9 rounded-full bg-white/5 hover:bg-gold-400/20 hover:text-gold-400 flex items-center justify-center transition"><i class="fa-brands fa-instagram text-sm"></i></a>
-            <a href="#" class="w-9 h-9 rounded-full bg-white/5 hover:bg-gold-400/20 hover:text-gold-400 flex items-center justify-center transition"><i class="fa-brands fa-whatsapp text-sm"></i></a>
+            <a href="#" data-social="facebook" class="w-9 h-9 rounded-full bg-white/5 hover:bg-gold-400/20 hover:text-gold-400 flex items-center justify-center transition"><i class="fa-brands fa-facebook-f text-sm"></i></a>
+            <a href="#" data-social="twitter" class="w-9 h-9 rounded-full bg-white/5 hover:bg-gold-400/20 hover:text-gold-400 flex items-center justify-center transition"><i class="fa-brands fa-x-twitter text-sm"></i></a>
+            <a href="#" data-social="instagram" class="w-9 h-9 rounded-full bg-white/5 hover:bg-gold-400/20 hover:text-gold-400 flex items-center justify-center transition"><i class="fa-brands fa-instagram text-sm"></i></a>
+            <a href="#" data-social="whatsapp" class="w-9 h-9 rounded-full bg-white/5 hover:bg-gold-400/20 hover:text-gold-400 flex items-center justify-center transition"><i class="fa-brands fa-whatsapp text-sm"></i></a>
           </div>
         </div>
         <div>
@@ -284,6 +284,8 @@
     heroCta1Text:"Support Our Mission",heroCta1Href:"#/donate",heroCta1Icon:"fa-arrow-right",
     heroCta2Text:"Get Involved",heroCta2Href:"#/membership",heroCta2Icon:"fa-hand-holding-heart",
     mission:"To spread hope, empower communities and deliver selfless services with integrity and compassion.",
+    hours:"Monday – Friday · 9:00 AM – 5:00 PM · NEC meetings quarterly",
+    facebook:"#",twitter:"#",instagram:"#",whatsapp:"#",
     hq:"Sabuwar Hanya, Tsamiyar Masaka Road, Tudun Wada, Gusau, Zamfara State, Nigeria",
     pillars:[
       {title:"Youth Empowerment",tag:"Pillar One",tagColor:"text-gold-400",gradient:"from-gold-400 to-gold-600",icon:"fa-user-graduate",img:"images/youth-empowerment.jpg",
@@ -648,8 +650,8 @@
           </div>
           <a href="#/programs" class="px-5 sm:px-6 py-2.5 sm:py-3 rounded-full font-semibold text-xs sm:text-sm text-azure-700 border-2 border-azure-200 hover:border-azure-500 transition inline-flex items-center gap-2 self-start">View all programs <i class="fa-solid fa-arrow-right text-xs"></i></a>
         </div>
-        <div class="grid md:grid-cols-3 gap-4 sm:gap-6">
-          ${CONST.programs.slice(0,3).map(p=>`
+        <div class="grid md:grid-cols-3 gap-4 sm:gap-6" data-programs-grid-home="1">
+          ${[...CONST.programs,...(CONST._extraPrograms||[])].slice(0,3).map(p=>`
             <a href="#/program/${p.slug}" class="program-card-link rounded-2xl sm:rounded-3xl overflow-hidden card-hover shadow-sm bg-white reveal">
               <div class="h-44 sm:h-52 overflow-hidden relative"><img src="${p.img}" alt="${p.title}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-azure-950/80 via-transparent to-transparent"></div>
                 <span class="absolute top-3 sm:top-4 left-3 sm:left-4 bg-gold-400 text-azure-950 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold">${p.tag}</span>
@@ -805,7 +807,7 @@
     </section>`,
 
     program:(slug)=>{
-      const p = CONST.programs.find(x=>x.slug===slug);
+      const p = [...CONST.programs,...(CONST._extraPrograms||[])].find(x=>x.slug===slug);
       if(!p) return pages['404']();
       return `
       <section class="pt-28 sm:pt-32 pb-16 sm:pb-20 relative overflow-hidden" style="background:linear-gradient(135deg,#0c1a42,#122660);">
@@ -862,8 +864,8 @@
       </section>
       <section class="pb-16 sm:pb-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
-          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            ${CONST.programs.map((p,i)=>`
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" data-programs-grid="1">
+            ${[...CONST.programs,...(CONST._extraPrograms||[])].map((p,i)=>`
               <a href="#/program/${p.slug}" class="program-card-link rounded-2xl sm:rounded-3xl overflow-hidden card-hover shadow-sm bg-white reveal" style="transition-delay:${i*60}ms">
                 <div class="h-48 sm:h-56 overflow-hidden relative"><img src="${p.img}" alt="${p.title}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-azure-950/80 via-transparent to-transparent"></div>
                   <span class="absolute top-3 sm:top-4 left-3 sm:left-4 bg-gold-400 text-azure-950 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold">${p.tag}</span>
@@ -997,14 +999,14 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
           <div class="grid lg:grid-cols-5 gap-6 lg:gap-8">
             <div class="lg:col-span-2 space-y-3 sm:space-y-4 reveal">
-              <div class="bg-azure-50 border border-azure-200 rounded-xl sm:rounded-2xl p-5 sm:p-6"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400 flex items-center justify-center mb-3"><i class="fa-solid fa-location-dot text-azure-950"></i></div><h4 class="font-bold text-azure-950 mb-1 text-sm sm:text-base">National Headquarters</h4><p class="text-azure-700 text-xs sm:text-sm leading-relaxed">Sabuwar Hanya, Tsamiyar Masaka Road<br>Tudun Wada, Gusau<br>Zamfara State, Nigeria</p></div>
-              <div class="bg-azure-50 border border-azure-200 rounded-xl sm:rounded-2xl p-5 sm:p-6"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400 flex items-center justify-center mb-3"><i class="fa-solid fa-clock text-azure-950"></i></div><h4 class="font-bold text-azure-950 mb-1 text-sm sm:text-base">Office Hours</h4><p class="text-azure-700 text-xs sm:text-sm leading-relaxed">Monday – Friday · 9:00 AM – 5:00 PM<br>NEC meetings quarterly</p></div>
+              <div class="bg-azure-50 border border-azure-200 rounded-xl sm:rounded-2xl p-5 sm:p-6"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400 flex items-center justify-center mb-3"><i class="fa-solid fa-location-dot text-azure-950"></i></div><h4 class="font-bold text-azure-950 mb-1 text-sm sm:text-base">National Headquarters</h4><p id="contactAddress" class="text-azure-700 text-xs sm:text-sm leading-relaxed">${CONST.hq.replace(/,/g,',<br>')}</p></div>
+              <div class="bg-azure-50 border border-azure-200 rounded-xl sm:rounded-2xl p-5 sm:p-6"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400 flex items-center justify-center mb-3"><i class="fa-solid fa-clock text-azure-950"></i></div><h4 class="font-bold text-azure-950 mb-1 text-sm sm:text-base">Office Hours</h4><p id="contactHours" class="text-azure-700 text-xs sm:text-sm leading-relaxed">${(CONST.hours||'').replace(/ · /g,'<br>')}</p></div>
               <div class="bg-azure-50 border border-azure-200 rounded-xl sm:rounded-2xl p-5 sm:p-6"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400 flex items-center justify-center mb-3"><i class="fa-solid fa-handshake text-azure-950"></i></div><h4 class="font-bold text-azure-950 mb-1 text-sm sm:text-base">Partnerships</h4><p class="text-azure-700 text-xs sm:text-sm leading-relaxed">ZGLF welcomes affiliations with genuine INGOs, NGOs and government bodies (Article 17).</p></div>
               <div class="flex gap-2 sm:gap-3 pt-2">
-                <a href="#" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-azure-100 hover:bg-gold-400 text-azure-700 hover:text-azure-950 flex items-center justify-center transition"><i class="fa-brands fa-facebook-f text-sm"></i></a>
-                <a href="#" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-azure-100 hover:bg-gold-400 text-azure-700 hover:text-azure-950 flex items-center justify-center transition"><i class="fa-brands fa-x-twitter text-sm"></i></a>
-                <a href="#" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-azure-100 hover:bg-gold-400 text-azure-700 hover:text-azure-950 flex items-center justify-center transition"><i class="fa-brands fa-instagram text-sm"></i></a>
-                <a href="#" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-azure-100 hover:bg-gold-400 text-azure-700 hover:text-azure-950 flex items-center justify-center transition"><i class="fa-brands fa-whatsapp text-sm"></i></a>
+                <a href="${CONST.facebook||'#'}" data-social="facebook" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-azure-100 hover:bg-gold-400 text-azure-700 hover:text-azure-950 flex items-center justify-center transition"><i class="fa-brands fa-facebook-f text-sm"></i></a>
+                <a href="${CONST.twitter||'#'}" data-social="twitter" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-azure-100 hover:bg-gold-400 text-azure-700 hover:text-azure-950 flex items-center justify-center transition"><i class="fa-brands fa-x-twitter text-sm"></i></a>
+                <a href="${CONST.instagram||'#'}" data-social="instagram" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-azure-100 hover:bg-gold-400 text-azure-700 hover:text-azure-950 flex items-center justify-center transition"><i class="fa-brands fa-instagram text-sm"></i></a>
+                <a href="${CONST.whatsapp||'#'}" data-social="whatsapp" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-azure-100 hover:bg-gold-400 text-azure-700 hover:text-azure-950 flex items-center justify-center transition"><i class="fa-brands fa-whatsapp text-sm"></i></a>
               </div>
             </div>
             <div class="lg:col-span-3 reveal">
@@ -1151,16 +1153,45 @@
     }
     function patchPrograms(programs){
       if(!programs||!programs.length)return;
-      // Merge DB programs into CONST.programs (DB overrides title/short_desc/full_desc/cover)
+      // Map slug → pillar index for merging into the 4 default pillars
+      const slugMap={'youth-empowerment':0,'community-development':1,'education-scholarship':2,'humanitarian-service':3};
       programs.forEach(p=>{
-        const c=CONST.programs.find(x=>x.slug===p.slug);
-        if(c){
+        const s=p.slug||'';
+        const idx=slugMap[s];
+        if(idx!==undefined&&CONST.programs[idx]){
+          const c=CONST.programs[idx];
           if(p.title)c.title=p.title;
           if(p.short_desc)c.short=p.short_desc;
           if(p.full_desc)c.full=p.full_desc;
-          if(p.cover)c.img=uimg(p.cover);
-          if(p.tag)c.tag=p.tag;
+          if(p.cover_image||p.image||p.cover)c.img=uimg(p.cover_image||p.image||p.cover);
+          if(p.tag||p.tagline)c.tag=p.tag||p.tagline;
+          c.published=+p.published!==0;
+        }else if(+p.published!==0){
+          // New program — add to CONST
+          if(!CONST._extraPrograms)CONST._extraPrograms=[];
+          // De-duplicate by id/slug
+          if(!CONST._extraPrograms.find(x=>x.id===p.id||x.slug===p.slug)){
+            CONST._extraPrograms.push({
+              id:p.id,slug:p.slug||('prog-'+p.id),title:p.title||'Program',
+              short:p.short_desc||p.excerpt||'',full:p.full_desc||p.description||'',
+              img:uimg(p.cover_image||p.image||p.cover)||'images/zglf-logo.jpg',
+              tag:p.tag||p.tagline||'Program',gradient:'from-azure-500 to-azure-700',icon:'fa-hands-holding-child',
+              tags:['Community'],published:true
+            });
+          }
         }
+      });
+      // Rebuild programs grids on current page if they exist
+      document.querySelectorAll('[data-programs-grid]').forEach(g=>{
+        const all=[...CONST.programs.filter((_,i)=>i<4&&CONST.programs[i].published!==false),...(CONST._extraPrograms||[])];
+        g.innerHTML=all.map((p,i)=>`<a href="#/program/${p.slug}" class="program-card-link rounded-2xl sm:rounded-3xl overflow-hidden card-hover shadow-sm bg-white reveal" style="transition-delay:${i*60}ms"><div class="h-48 sm:h-56 overflow-hidden relative"><img src="${p.img}" alt="${p.title}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-azure-950/80 via-transparent to-transparent"></div><span class="absolute top-3 sm:top-4 left-3 sm:top-4 bg-gold-400 text-azure-950 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold">${p.tag}</span></div><div class="p-5 sm:p-6"><h4 class="font-serif text-lg sm:text-xl font-bold text-azure-950 mb-2">${p.title}</h4><p class="text-azure-600 text-xs sm:text-sm leading-relaxed mb-3">${p.short||''}</p><span class="text-azure-700 font-semibold text-xs sm:text-sm inline-flex items-center gap-1">Read details <i class="fa-solid fa-arrow-right text-xs program-arrow"></i></span></div></a>`).join('');
+        g.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'));
+      });
+      // Home programs grid (3 cards)
+      document.querySelectorAll('[data-programs-grid-home]').forEach(g=>{
+        const all=[...CONST.programs.filter((_,i)=>i<4&&CONST.programs[i].published!==false),...(CONST._extraPrograms||[])].slice(0,3);
+        g.innerHTML=all.map(p=>`<a href="#/program/${p.slug}" class="program-card-link rounded-2xl sm:rounded-3xl overflow-hidden card-hover shadow-sm bg-white reveal"><div class="h-44 sm:h-52 overflow-hidden relative"><img src="${p.img}" alt="${p.title}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-azure-950/80 via-transparent to-transparent"></div><span class="absolute top-3 sm:top-4 left-3 sm:top-4 bg-gold-400 text-azure-950 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold">${p.tag}</span><div class="absolute bottom-3 sm:bottom-4 left-3 sm:left-4"><i class="fa-solid ${p.icon} text-white text-2xl sm:text-3xl drop-shadow-lg"></i></div></div><div class="p-5 sm:p-6"><h4 class="font-serif text-lg sm:text-xl font-bold text-azure-950 mb-2">${p.title}</h4><p class="text-azure-600 text-xs sm:text-sm leading-relaxed mb-3">${p.short||''}</p><span class="text-azure-700 font-semibold text-xs sm:text-sm inline-flex items-center gap-1">Learn more <i class="fa-solid fa-arrow-right text-xs program-arrow"></i></span></div></a>`).join('');
+        g.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'));
       });
     }
     function patchNec(nec){
@@ -1294,6 +1325,11 @@
           if(d.site.address)CONST.hq=d.site.address;
           if(d.site.email)CONST.email=d.site.email;
           if(d.site.phone)CONST.phone=d.site.phone;
+          if(d.site.hours)CONST.hours=d.site.hours;
+          if(d.site.facebook)CONST.facebook=d.site.facebook;
+          if(d.site.twitter)CONST.twitter=d.site.twitter;
+          if(d.site.instagram)CONST.instagram=d.site.instagram;
+          if(d.site.whatsapp)CONST.whatsapp=d.site.whatsapp;
         }
         // ---- Targeted DOM patches (NO full page re-render — no flash, no scroll jump) ----
         // HERO
@@ -1335,6 +1371,13 @@
           const fa=document.getElementById('footerAbout');if(fa&&ft&&fa.innerHTML!==ft)fa.innerHTML=ft;
           const fcc=document.getElementById('footerCopy');if(fcc&&fc&&fcc.textContent!==fc)fcc.textContent=fc;
         }
+        // CONTACT page info patches (address, hours, socials)
+        const addrEl=document.getElementById('contactAddress');if(addrEl)addrEl.innerHTML=CONST.hq.replace(/,/g,',<br>');
+        const hoursEl=document.getElementById('contactHours');if(hoursEl)hoursEl.innerHTML=(CONST.hours||'').replace(/ · /g,'<br>');
+        document.querySelectorAll('[data-social="facebook"]').forEach(a=>a.href=CONST.facebook||'#');
+        document.querySelectorAll('[data-social="twitter"]').forEach(a=>a.href=CONST.twitter||'#');
+        document.querySelectorAll('[data-social="instagram"]').forEach(a=>a.href=CONST.instagram||'#');
+        document.querySelectorAll('[data-social="whatsapp"]').forEach(a=>a.href=CONST.whatsapp||(CONST.phone?'https://wa.me/'+String(CONST.phone).replace(/\D/g,''):'#'));
         // EVENTS list
         if(d.events){
           const grid=document.getElementById('events-grid');
