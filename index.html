@@ -372,6 +372,7 @@
        duty:"Respected, de-tribalised Nigerians of impeccable record — one per geopolitical zone (six total) — who assist the foundation when needed."}
     ],
     heroImgs:["images/hero-children.jpg","images/hero-community.jpg","images/hero-volunteers.jpg","images/team-community.jpg"],
+    _extraNec:[],_extraPrograms:[],
     partners:[
       {name:"Federal Ministry of Education",initials:"FME",color:"#1a37b8",link:null},
       {name:"Nigerian Red Cross Society",initials:"NRCS",color:"#d32f2f",link:null},
@@ -583,8 +584,8 @@
             <p class="text-azure-700 text-base sm:text-lg leading-relaxed mb-5 sm:mb-6">${CONST.name} (${CONST.abbr}) is a registered civil welfare organisation headquartered in Gusau, Zamfara State, Nigeria. Founded on the principles of integrity and compassion, we are an indivisible and indissoluble union of members committed to uplifting lives across Nigeria and beyond.</p>
             <p class="text-azure-600 leading-relaxed mb-6 sm:mb-8 text-sm sm:text-base">Membership is open to all Nigerians — at home and in the diaspora — and to people of all nationalities, regardless of religion, gender, political belief, or ethnic origin. We welcome everyone of good character, aged 18 and above, who shares our vision of a better world.</p>
             <div class="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-              <div class="flex items-start gap-3"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-azure-50 flex items-center justify-center shrink-0 mt-1"><i class="fa-solid fa-eye text-azure-700"></i></div><div><h4 class="font-semibold text-azure-900 mb-1 text-sm sm:text-base">Our Vision</h4><p class="text-azure-600 text-xs sm:text-sm leading-relaxed">${CONST.vision}</p></div></div>
-              <div class="flex items-start gap-3"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400/20 flex items-center justify-center shrink-0 mt-1"><i class="fa-solid fa-bullseye text-gold-600"></i></div><div><h4 class="font-semibold text-azure-900 mb-1 text-sm sm:text-base">Our Mission</h4><p class="text-azure-600 text-xs sm:text-sm leading-relaxed">${CONST.mission}</p></div></div>
+              <div class="flex items-start gap-3"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-azure-50 flex items-center justify-center shrink-0 mt-1"><i class="fa-solid fa-eye text-azure-700"></i></div><div><h4 class="font-semibold text-azure-900 mb-1 text-sm sm:text-base">Our Vision</h4><p id="visionText" class="text-azure-600 text-xs sm:text-sm leading-relaxed">${CONST.vision}</p></div></div>
+              <div class="flex items-start gap-3"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400/20 flex items-center justify-center shrink-0 mt-1"><i class="fa-solid fa-bullseye text-gold-600"></i></div><div><h4 class="font-semibold text-azure-900 mb-1 text-sm sm:text-base">Our Mission</h4><p id="missionText" class="text-azure-600 text-xs sm:text-sm leading-relaxed">${CONST.mission}</p></div></div>
             </div>
             <div class="flex flex-wrap gap-3">
               <a href="#/about" class="btn-gold rounded-full font-bold text-xs sm:text-sm px-5 sm:px-6 py-2.5 sm:py-3">Learn More <i class="fa-solid fa-arrow-right text-xs"></i></a>
@@ -903,8 +904,8 @@
             </div>
             <div class="reveal">
               <div class="grid sm:grid-cols-2 gap-4 sm:gap-5 mb-6 sm:mb-8">
-                <div class="bg-cream rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gold-400/20"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400/20 flex items-center justify-center mb-3"><i class="fa-solid fa-eye text-gold-600"></i></div><h4 class="font-bold text-azure-950 mb-2 text-sm sm:text-base">Our Vision</h4><p class="text-azure-600 text-xs sm:text-sm leading-relaxed">${CONST.vision}</p></div>
-                <div class="bg-cream rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-azure-200"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-azure-100 flex items-center justify-center mb-3"><i class="fa-solid fa-bullseye text-azure-700"></i></div><h4 class="font-bold text-azure-950 mb-2 text-sm sm:text-base">Our Mission</h4><p class="text-azure-600 text-xs sm:text-sm leading-relaxed">${CONST.mission}</p></div>
+                <div class="bg-cream rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gold-400/20"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400/20 flex items-center justify-center mb-3"><i class="fa-solid fa-eye text-gold-600"></i></div><h4 class="font-bold text-azure-950 mb-2 text-sm sm:text-base">Our Vision</h4><p id="visionText" class="text-azure-600 text-xs sm:text-sm leading-relaxed">${CONST.vision}</p></div>
+                <div class="bg-cream rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-azure-200"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-azure-100 flex items-center justify-center mb-3"><i class="fa-solid fa-bullseye text-azure-700"></i></div><h4 class="font-bold text-azure-950 mb-2 text-sm sm:text-base">Our Mission</h4><p id="missionText" class="text-azure-600 text-xs sm:text-sm leading-relaxed">${CONST.mission}</p></div>
               </div>
               <h3 class="font-serif text-xl sm:text-2xl font-bold text-azure-950 mb-4">Our Motto</h3>
               <div class="flex gap-2 sm:gap-3 mb-6 sm:mb-8">
@@ -1194,32 +1195,35 @@
         g.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'));
       });
     }
+    let __necInited=false;
     function patchNec(nec){
       if(!nec||!nec.length)return;
-      // Reset non-constitutional extras so re-sync doesn't duplicate
+      let hasChanges=!__necInited;
       CONST._extraNec=[];
       nec.forEach(n=>{
         const rt=(n.role_title||'').toLowerCase();
         let c=CONST.nec.find(x=>x.role.toLowerCase()===rt);
         if(!c)c=CONST.nec.find(x=>x.role.toLowerCase().replace(/\s*\/.*$/,'').includes(rt.replace(/\s*\/.*$/,''))||rt.includes(x.role.toLowerCase().replace(/\s*\/.*$/,'')));
         if(c){
-          if(n.photo)c.img=uimg(n.photo);
-          if(n.name)c.name=n.name;
-          if(n.duty)c.duty=n.duty;
-          if(n.gradient)c.gradient=n.gradient;
-          if(n.icon)c.icon=n.icon;
-          c.published=+n.published!==0;
+          if(n.photo){const ni=uimg(n.photo);if(ni&&ni!==c.img){c.img=ni;hasChanges=true;}}
+          if(n.name&&n.name!==c.name){c.name=n.name;hasChanges=true;}
+          if(n.duty&&n.duty!==c.duty){c.duty=n.duty;hasChanges=true;}
+          if(n.gradient&&n.gradient!==c.gradient){c.gradient=n.gradient;hasChanges=true;}
+          if(n.icon&&n.icon!==c.icon){c.icon=n.icon;hasChanges=true;}
         }else{
-          // New extra role — add to list (if published)
           if(+n.published!==0){
             CONST._extraNec.push({role:n.role_title,name:n.name||'',img:uimg(n.photo)||'images/default-avatar.jpg',gradient:n.gradient||'from-gold-500 to-gold-700',icon:n.icon||'fa-user-tie',duty:n.duty||''});
+            hasChanges=true;
           }
         }
       });
+      __necInited=true;
+      if(!hasChanges)return;
       // Rebuild NEC grids on current page if they exist
       const allNec=[...CONST.nec.filter(n=>n.published!==false),...(CONST._extraNec||[])];
       document.querySelectorAll('[data-nec-grid]').forEach(g=>{
         g.innerHTML=allNec.map(n=>`<div class="bg-cream rounded-2xl overflow-hidden card-hover border border-azure-100 reveal"><div class="aspect-square overflow-hidden relative"><img src="${n.img}" alt="${n.role}" class="w-full h-full object-cover" onerror="this.src='images/default-avatar.jpg'"><div class="absolute inset-0 bg-gradient-to-t from-azure-950/50 to-transparent"></div><div class="absolute top-3 right-3 w-10 h-10 rounded-full bg-gradient-to-br ${n.gradient} flex items-center justify-center shadow-lg"><i class="fa-solid ${n.icon} text-white text-sm"></i></div></div><div class="p-4 sm:p-5 text-center"><h5 class="font-bold text-azure-950 text-sm sm:text-base">${n.role}</h5>${n.name?`<p class="text-azure-700 font-semibold text-xs sm:text-sm mt-0.5">${n.name}</p>`:''}<p class="text-azure-500 text-[10px] sm:text-xs mt-1 leading-relaxed">${n.duty||''}</p></div></div>`).join('');
+        g.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'));
       });
     }
     function patchHeroSlides(slides){
@@ -1371,6 +1375,9 @@
           const fa=document.getElementById('footerAbout');if(fa&&ft&&fa.innerHTML!==ft)fa.innerHTML=ft;
           const fcc=document.getElementById('footerCopy');if(fcc&&fc&&fcc.textContent!==fc)fcc.textContent=fc;
         }
+        // Vision & mission (anywhere on page)
+        document.querySelectorAll('#visionText').forEach(el=>{if(el.textContent!==CONST.vision)el.textContent=CONST.vision;});
+        document.querySelectorAll('#missionText').forEach(el=>{if(el.textContent!==CONST.mission)el.textContent=CONST.mission;});
         // CONTACT page info patches (address, hours, socials)
         const addrEl=document.getElementById('contactAddress');if(addrEl)addrEl.innerHTML=CONST.hq.replace(/,/g,',<br>');
         const hoursEl=document.getElementById('contactHours');if(hoursEl)hoursEl.innerHTML=(CONST.hours||'').replace(/ · /g,'<br>');
