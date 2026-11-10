@@ -1113,19 +1113,19 @@
     function renderEvents(events){
       const grid=document.getElementById('events-grid');
       if(!grid||!events||!events.length)return;
-      // Show upcoming first, then latest completed (up to 3)
       const upcoming=events.filter(e=>e.status==='upcoming').sort((a,b)=>new Date(a.event_date)-new Date(b.event_date));
-      const past=events.filter(e=>e.status==='completed').sort((a,b)=>new Date(b.event_date)-new Date(a.event_date));
+      const past=events.filter(e=>e.status==='completed').sort((a,b)=>new Date(b.event_date)-new Date(b.event_date));
       const list=[...upcoming,...past].slice(0,3);
       if(!list.length){grid.innerHTML='<div class="col-span-full text-azure-400 text-sm text-center py-8">Check back soon for upcoming events.</div>';return;}
-      grid.innerHTML=list.map(e=>{
+      grid.innerHTML=list.map((e,i)=>{
         const cover=img(e.featured_image||(e.media&&e.media[0]&&e.media[0].url)||'images/zglf-logo.jpg');
         const loc=e.location?'<span class="text-azure-500 text-[11px] sm:text-xs"><i class="fa-solid fa-location-dot mr-1"></i>'+e.location+'</span>':'';
         const dt=e.event_date?'<span class="text-gold-700 text-[11px] sm:text-xs font-semibold"><i class="fa-solid fa-calendar mr-1"></i>'+fmtDate(e.event_date)+'</span>':'';
-        const desc=e.excerpt||(e.description?e.description.substring(0,120)+'…':'');
-        return `<div class="bg-white rounded-2xl sm:rounded-3xl overflow-hidden card-hover shadow-sm border border-gold-400/15 reveal cursor-pointer" onclick='showEventModal(${JSON.stringify(e).replace(/'/g,"&#39;")})'>
+        const safeTitle=String(e.title||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+        const desc=String(e.excerpt||(e.description?e.description.substring(0,120)+'…':'')).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        return `<div class="bg-white rounded-2xl sm:rounded-3xl overflow-hidden card-hover shadow-sm border border-gold-400/15 reveal cursor-pointer" data-event-idx="${i}">
           <div class="relative h-44 sm:h-52 overflow-hidden">
-            <img src="${cover}" alt="${e.title||''}" class="w-full h-full object-cover" onerror="this.src='${img('images/zglf-logo.jpg')}';this.classList.add('object-contain','p-8','bg-azure-50')">
+            <img src="${cover}" alt="${safeTitle}" class="w-full h-full object-cover" onerror="this.src='${img('images/zglf-logo.jpg')}';this.classList.add('object-contain','p-8','bg-azure-50')">
             <div class="absolute inset-0 bg-gradient-to-t from-azure-950/80 via-azure-950/10 to-transparent"></div>
             <div class="absolute top-3 sm:top-4 left-3 sm:left-4">${statusBadge(e.status)}</div>
             <div class="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 right-3 sm:right-4 flex items-center justify-between gap-2 text-white">
@@ -1139,8 +1139,17 @@
           </div>
         </div>`;
       }).join('');
-      // Reveal newly added cards
-      document.querySelectorAll('#events-grid .reveal').forEach(el=>{el.classList.add('in');});
+      // Store current event list for delegated click
+      window.__eventList=list;
+      // Reveal newly added cards + attach clicks
+      grid.querySelectorAll('.reveal').forEach(el=>{el.classList.add('in');});
+      grid.querySelectorAll('[data-event-idx]').forEach(card=>{
+        card.addEventListener('click',()=>{
+          const idx=+card.dataset.eventIdx;
+          const ev=window.__eventList&&window.__eventList[idx];
+          if(ev&&window.showEventModal)window.showEventModal(ev);
+        });
+      });
     }
     function updateCounters(stats){
       if(!stats)return;

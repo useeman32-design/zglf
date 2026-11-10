@@ -1,4 +1,4 @@
-const ZGLF_BUILD="FIXED-v5-final"; console.log("%c[ZGLF Admin] BUILD="+ZGLF_BUILD+" — if you don`t see FIXED-v5-final, hard refresh (Ctrl+Shift+R) until you do","color:#d4af37;font-weight:bold");
+const ZGLF_BUILD="FIXED-v6-client"; console.log("%c[ZGLF Admin] BUILD="+ZGLF_BUILD+" — if you don`t see FIXED-v6-client, hard refresh (Ctrl+Shift+R) until you do","color:#d4af37;font-weight:bold");
 /* ============================================================
    ZGLF Admin — connects to PHP backend at /api/
 ============================================================ */
@@ -115,7 +115,7 @@ function money(n){const sym=DATA.settings?.currencySymbol||'₦';return sym+Numb
 function dateFmt(d){try{return new Date(d).toLocaleDateString('en-NG',{year:'numeric',month:'short',day:'numeric'});}catch(e){return d;}}
 function dateFmtShort(d){try{const dt=new Date(d);return{day:dt.getDate(),month:dt.toLocaleString('en-US',{month:'short'})};}catch(e){return{day:'?',month:'?'};}}
 function initials(n){return(n||'').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';}
-function esc(s){if(s===null||s===undefined)return'';return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function esc(s){if(s===null||s===undefined)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/`/g,'&#96;').replace(/\$/g,'&#36;').replace(/\r?\n/g,'&#10;');}
 function toast(msg,type='success'){const t=$('#toast');t.className='toast '+type;t.innerHTML=`<i class="fa-solid ${type==='error'?'fa-circle-xmark':'fa-circle-check'}"></i>${msg}`;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 function openModal(html,xl=false){const m=$('#modal'),i=$('#modalInner');i.className='modal'+(xl?' xl':'');i.innerHTML=html;m.classList.add('open');i.scrollTop=0;}
 function closeModal(){$('#modal').classList.remove('open');}
