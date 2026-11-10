@@ -1002,6 +1002,8 @@
             <div class="lg:col-span-2 space-y-3 sm:space-y-4 reveal">
               <div class="bg-azure-50 border border-azure-200 rounded-xl sm:rounded-2xl p-5 sm:p-6"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400 flex items-center justify-center mb-3"><i class="fa-solid fa-location-dot text-azure-950"></i></div><h4 class="font-bold text-azure-950 mb-1 text-sm sm:text-base">National Headquarters</h4><p id="contactAddress" class="text-azure-700 text-xs sm:text-sm leading-relaxed">${CONST.hq.replace(/,/g,',<br>')}</p></div>
               <div class="bg-azure-50 border border-azure-200 rounded-xl sm:rounded-2xl p-5 sm:p-6"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400 flex items-center justify-center mb-3"><i class="fa-solid fa-clock text-azure-950"></i></div><h4 class="font-bold text-azure-950 mb-1 text-sm sm:text-base">Office Hours</h4><p id="contactHours" class="text-azure-700 text-xs sm:text-sm leading-relaxed">${(CONST.hours||'').replace(/ · /g,'<br>')}</p></div>
+              <div class="bg-azure-50 border border-azure-200 rounded-xl sm:rounded-2xl p-5 sm:p-6"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400 flex items-center justify-center mb-3"><i class="fa-solid fa-envelope text-azure-950"></i></div><h4 class="font-bold text-azure-950 mb-1 text-sm sm:text-base">Email</h4><a id="contactEmail" href="mailto:${CONST.email}" class="text-azure-700 text-xs sm:text-sm leading-relaxed hover:text-gold-600 break-all">${CONST.email||'Contact us via form'}</a></div>
+              <div class="bg-azure-50 border border-azure-200 rounded-xl sm:rounded-2xl p-5 sm:p-6"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400 flex items-center justify-center mb-3"><i class="fa-solid fa-phone text-azure-950"></i></div><h4 class="font-bold text-azure-950 mb-1 text-sm sm:text-base">Phone / WhatsApp</h4><a id="contactPhone" href="tel:${CONST.phone}" class="text-azure-700 text-xs sm:text-sm leading-relaxed hover:text-gold-600">${CONST.phone||''}</a></div>
               <div class="bg-azure-50 border border-azure-200 rounded-xl sm:rounded-2xl p-5 sm:p-6"><div class="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gold-400 flex items-center justify-center mb-3"><i class="fa-solid fa-handshake text-azure-950"></i></div><h4 class="font-bold text-azure-950 mb-1 text-sm sm:text-base">Partnerships</h4><p class="text-azure-700 text-xs sm:text-sm leading-relaxed">ZGLF welcomes affiliations with genuine INGOs, NGOs and government bodies (Article 17).</p></div>
               <div class="flex gap-2 sm:gap-3 pt-2">
                 <a href="${CONST.facebook||'#'}" data-social="facebook" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-azure-100 hover:bg-gold-400 text-azure-700 hover:text-azure-950 flex items-center justify-center transition"><i class="fa-brands fa-facebook-f text-sm"></i></a>
@@ -1152,36 +1154,45 @@
         requestAnimationFrame(a);
       });
     }
+    let __programsInited=false;
     function patchPrograms(programs){
       if(!programs||!programs.length)return;
-      // Map slug → pillar index for merging into the 4 default pillars
-      const slugMap={'youth-empowerment':0,'community-development':1,'education-scholarship':2,'humanitarian-service':3};
+      let hasChanges=!__programsInited;
+      // Map slug → pillar index for merging into the 4 default pillars (fuzzy match by slug OR title)
+      const pillarKeys=[
+        {k:'youth',i:0},{k:'empowerment',i:0},
+        {k:'community',i:1},{k:'development',i:1},
+        {k:'education',i:2},{k:'scholar',i:2},
+        {k:'humanitarian',i:3},{k:'relief',i:3},{k:'medical',i:3},{k:'food',i:3}
+      ];
+      const extras=(CONST._extraPrograms=[]);
       programs.forEach(p=>{
-        const s=p.slug||'';
-        const idx=slugMap[s];
-        if(idx!==undefined&&CONST.programs[idx]){
+        const s=(p.slug||'').toLowerCase();
+        const t=(p.title||'').toLowerCase();
+        let idx=-1;
+        for(const pk of pillarKeys){if(s.includes(pk.k)||t.includes(pk.k)){idx=pk.i;break;}}
+        const coverUrl=p.cover_image||p.image||p.cover||p.cover_url||null;
+        if(idx>=0&&CONST.programs[idx]){
           const c=CONST.programs[idx];
-          if(p.title)c.title=p.title;
-          if(p.short_desc)c.short=p.short_desc;
-          if(p.full_desc)c.full=p.full_desc;
-          if(p.cover_image||p.image||p.cover)c.img=uimg(p.cover_image||p.image||p.cover);
-          if(p.tag||p.tagline)c.tag=p.tag||p.tagline;
+          if(p.title&&p.title!==c.title){c.title=p.title;hasChanges=true;}
+          if(p.short_desc&&p.short_desc!==c.short){c.short=p.short_desc;hasChanges=true;}
+          if(p.full_desc&&p.full_desc!==c.full){c.full=p.full_desc;hasChanges=true;}
+          if(coverUrl){const ni=uimg(coverUrl);if(ni&&ni!==c.img){c.img=ni;hasChanges=true;}}
+          if(p.tag&&p.tag!==c.tag){c.tag=p.tag;hasChanges=true;}
           c.published=+p.published!==0;
         }else if(+p.published!==0){
-          // New program — add to CONST
-          if(!CONST._extraPrograms)CONST._extraPrograms=[];
-          // De-duplicate by id/slug
-          if(!CONST._extraPrograms.find(x=>x.id===p.id||x.slug===p.slug)){
-            CONST._extraPrograms.push({
-              id:p.id,slug:p.slug||('prog-'+p.id),title:p.title||'Program',
-              short:p.short_desc||p.excerpt||'',full:p.full_desc||p.description||'',
-              img:uimg(p.cover_image||p.image||p.cover)||'images/zglf-logo.jpg',
-              tag:p.tag||p.tagline||'Program',gradient:'from-azure-500 to-azure-700',icon:'fa-hands-holding-child',
-              tags:['Community'],published:true
-            });
-          }
+          extras.push({
+            id:p.id,slug:p.slug||('prog-'+p.id),title:p.title||'Program',
+            short:p.short_desc||p.excerpt||'',full:p.full_desc||p.description||'',
+            img:uimg(coverUrl)||(p.img?uimg(p.img):'images/zglf-logo.jpg'),
+            tag:p.tag||p.tagline||'Program',gradient:'from-azure-500 to-azure-700',icon:p.icon||'fa-hands-holding-child',
+            tags:['Community'],published:true
+          });
+          hasChanges=true;
         }
       });
+      __programsInited=true;
+      if(!hasChanges)return;
       // Rebuild programs grids on current page if they exist
       document.querySelectorAll('[data-programs-grid]').forEach(g=>{
         const all=[...CONST.programs.filter((_,i)=>i<4&&CONST.programs[i].published!==false),...(CONST._extraPrograms||[])];
@@ -1378,9 +1389,16 @@
         // Vision & mission (anywhere on page)
         document.querySelectorAll('#visionText').forEach(el=>{if(el.textContent!==CONST.vision)el.textContent=CONST.vision;});
         document.querySelectorAll('#missionText').forEach(el=>{if(el.textContent!==CONST.mission)el.textContent=CONST.mission;});
-        // CONTACT page info patches (address, hours, socials)
+        // Document title
+        document.title=CONST.name+' — '+(CONST.motto||'Hope · Empowerment · Service');
+        // Footer copyright (dynamic year + org name)
+        const fcc=document.getElementById('footerCopy');
+        if(fcc)fcc.textContent='© '+new Date().getFullYear()+' '+CONST.name+' ('+CONST.abbr+'). All rights reserved. Registered civil welfare organisation, Nigeria.';
+        // CONTACT page info patches (address, hours, email, phone, socials)
         const addrEl=document.getElementById('contactAddress');if(addrEl)addrEl.innerHTML=CONST.hq.replace(/,/g,',<br>');
         const hoursEl=document.getElementById('contactHours');if(hoursEl)hoursEl.innerHTML=(CONST.hours||'').replace(/ · /g,'<br>');
+        const ce=document.getElementById('contactEmail');if(ce&&CONST.email){ce.href='mailto:'+CONST.email;ce.textContent=CONST.email;}
+        const cp=document.getElementById('contactPhone');if(cp&&CONST.phone){cp.href='tel:'+String(CONST.phone).replace(/\s/g,'');cp.textContent=CONST.phone;}
         document.querySelectorAll('[data-social="facebook"]').forEach(a=>a.href=CONST.facebook||'#');
         document.querySelectorAll('[data-social="twitter"]').forEach(a=>a.href=CONST.twitter||'#');
         document.querySelectorAll('[data-social="instagram"]').forEach(a=>a.href=CONST.instagram||'#');

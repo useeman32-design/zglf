@@ -1,4 +1,4 @@
-const ZGLF_BUILD="FIXED-v4-nec-vision"; console.log("%c[ZGLF Admin] BUILD="+ZGLF_BUILD+" — if you don`t see FIXED-v4-nec-vision, hard refresh (Ctrl+Shift+R) until you do","color:#d4af37;font-weight:bold");
+const ZGLF_BUILD="FIXED-v5-final"; console.log("%c[ZGLF Admin] BUILD="+ZGLF_BUILD+" — if you don`t see FIXED-v5-final, hard refresh (Ctrl+Shift+R) until you do","color:#d4af37;font-weight:bold");
 /* ============================================================
    ZGLF Admin — connects to PHP backend at /api/
 ============================================================ */
