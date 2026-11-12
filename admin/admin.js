@@ -1,4 +1,4 @@
-const ZGLF_BUILD="FIXED-v6-client"; console.log("%c[ZGLF Admin] BUILD="+ZGLF_BUILD+" — if you don`t see FIXED-v6-client, hard refresh (Ctrl+Shift+R) until you do","color:#d4af37;font-weight:bold");
+const ZGLF_BUILD="DEPLOY-v1"; console.log("%c[ZGLF Admin] BUILD="+ZGLF_BUILD+" — if you don`t see DEPLOY-v1, hard refresh (Ctrl+Shift+R) until you do","color:#d4af37;font-weight:bold");
 /* ============================================================
    ZGLF Admin — connects to PHP backend at /api/
 ============================================================ */

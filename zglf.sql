@@ -1,0 +1,89 @@
+CREATE TABLE IF NOT EXISTS users(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(64) UNIQUE NOT NULL,
+  name VARCHAR(128),email VARCHAR(128),
+  password_hash VARCHAR(255) NOT NULL,
+  role ENUM('admin','editor','staff') DEFAULT 'staff',
+  perms JSON,status ENUM('active','disabled') DEFAULT 'active',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS site_settings(
+  k VARCHAR(64) PRIMARY KEY,v TEXT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS hero_slides(
+  id INT AUTO_INCREMENT PRIMARY KEY,position INT DEFAULT 0,
+  type ENUM('image','video') DEFAULT 'image',
+  url VARCHAR(512),alt_text VARCHAR(255),caption VARCHAR(255)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS programs(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  slug VARCHAR(128) UNIQUE,title VARCHAR(255) NOT NULL,
+  tag VARCHAR(64),tag_color VARCHAR(16) DEFAULT '#1a37b8',
+  icon VARCHAR(64) DEFAULT 'fa-star',
+  cover VARCHAR(512),short_desc TEXT,full_desc TEXT,
+  published TINYINT DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS events(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  slug VARCHAR(128),title VARCHAR(255) NOT NULL,
+  event_date DATE,event_time VARCHAR(32),location VARCHAR(255),
+  status ENUM('upcoming','ongoing','completed') DEFAULT 'upcoming',
+  description TEXT,excerpt TEXT,featured_image VARCHAR(512),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS event_media(
+  id INT AUTO_INCREMENT PRIMARY KEY,event_id INT,
+  type ENUM('image','video') DEFAULT 'image',url VARCHAR(512),position INT DEFAULT 0,
+  FOREIGN KEY(event_id) REFERENCES events(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS media_library(
+  id INT AUTO_INCREMENT PRIMARY KEY,title VARCHAR(255),category VARCHAR(64),
+  type ENUM('image','video') DEFAULT 'image',url VARCHAR(512),
+  uploaded_by INT,created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS nec_members(
+  id INT AUTO_INCREMENT PRIMARY KEY,position INT DEFAULT 0,
+  role_title VARCHAR(128),name VARCHAR(128),photo VARCHAR(512),
+  gradient VARCHAR(64) DEFAULT 'from-azure-500 to-azure-700',
+  icon VARCHAR(64) DEFAULT 'fa-star',duty TEXT,published TINYINT DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS donations(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  donor VARCHAR(128),email VARCHAR(128),amount DECIMAL(12,2),
+  campaign VARCHAR(64) DEFAULT 'General',method VARCHAR(64),
+  anonymous TINYINT DEFAULT 0,note TEXT,
+  status ENUM('pending','verified','rejected') DEFAULT 'pending',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS members(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(128),email VARCHAR(128),phone VARCHAR(32),state VARCHAR(64),
+  tier VARCHAR(64) DEFAULT 'Applicant',
+  status ENUM('pending','active','suspended') DEFAULT 'pending',
+  joined DATE,created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS messages(
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(128),email VARCHAR(128),subject VARCHAR(255),message TEXT,
+  source VARCHAR(32) DEFAULT 'contact',
+  is_read TINYINT DEFAULT 0,created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS user_tokens(
+  id INT AUTO_INCREMENT PRIMARY KEY,user_id INT,token VARCHAR(128) UNIQUE,created_at DATETIME,
+  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS activity_log(
+  id INT AUTO_INCREMENT PRIMARY KEY,user_id INT,action VARCHAR(64),detail TEXT,created_at DATETIME
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
